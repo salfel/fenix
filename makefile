@@ -4,7 +4,7 @@ build:
 	# arm-none-eabi-gcc -c _start.S -o start.o
 	cargo build --release
 	cp target/armv7a-none-eabi/release/fenix out/boot.elf
-	arm-none-eabi-objcopy -O binary target/armv7a-none-eabi/release/fenix out/boot.bin
+	arm-none-eabi-objcopy -O binary out/boot.elf out/boot.bin
 	cat boot/toc.bin boot/header.bin out/boot.bin > out/fenix.img
 
 qemu: 
@@ -20,5 +20,7 @@ test:
 	rm -rf out/boot.o out/boot.elf out/boot.bin
 
 flash:
-	sudo dd if=./out/fenix.img of=/dev/sda bs=4M status=progress
+	sudo dd if=./out/fenix.img of=/dev/sda oflag=direct bs=4M status=progress
 	sync
+	sudo partprobe /dev/sda
+	udisksctl power-off -b /dev/sda
