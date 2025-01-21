@@ -1,7 +1,6 @@
 build:
 	rm -rf out
 	mkdir out
-	# arm-none-eabi-gcc -c _start.S -o start.o
 	cargo build --release
 	cp target/armv7a-none-eabi/release/fenix out/boot.elf
 	arm-none-eabi-objcopy -O binary out/boot.elf out/boot.bin
