@@ -1,0 +1,25 @@
+pub fn write_addr(address: u32, value: u32) {
+    unsafe {
+        *(address as *mut u32) = value;
+    }
+}
+
+pub fn read_addr(address: u32) -> u32 {
+    unsafe { *(address as *const u32) }
+}
+
+pub fn set_bit(address: u32, bit: u32) {
+    let value = read_addr(address);
+    write_addr(address, value | (1 << bit));
+}
+
+pub fn clear_bit(address: u32, bit: u32) {
+    let value = read_addr(address);
+    write_addr(address, value & !(1 << bit));
+}
+
+pub fn read_bit(address: u32, bit: u32) -> bool {
+    let value = read_addr(address);
+
+    value & (1 << bit) == 0
+}
