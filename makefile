@@ -1,7 +1,9 @@
 build:
-	mkdir -p out
+	rm -rf out
+	mkdir out
 	# arm-none-eabi-gcc -c _start.S -o start.o
 	cargo build --release
+	cp target/armv7a-none-eabi/release/fenix out/boot.elf
 	arm-none-eabi-objcopy -O binary target/armv7a-none-eabi/release/fenix out/boot.bin
 	cat boot/toc.bin boot/header.bin out/boot.bin > out/fenix.img
 
@@ -17,6 +19,6 @@ test:
 	cat boot/toc.bin boot/header.bin out/boot.bin > out/fenix.img
 	rm -rf out/boot.o out/boot.elf out/boot.bin
 
-write:
+flash:
 	sudo dd if=./out/fenix.img of=/dev/sda bs=4M status=progress
 	sync
