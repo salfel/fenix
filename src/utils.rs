@@ -21,5 +21,5 @@ pub fn clear_bit(address: u32, bit: u32) {
 pub fn read_bit(address: u32, bit: u32) -> bool {
     let value = read_addr(address);
 
-    value & (1 << bit) == 0
+    (value & (1 << bit)) >> bit == 1
 }
