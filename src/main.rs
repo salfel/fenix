@@ -1,18 +1,33 @@
 #![no_std]
 #![no_main]
 
-use interfaces::gpio::{self, PinMode};
+use interfaces::gpio::{self, GpioMode};
 
 pub mod interfaces;
+pub mod pinmux;
 pub mod utils;
 
 #[no_mangle]
 pub fn main() {
+    pinmux::configure();
     gpio::initialize();
-    gpio::pin_mode(21, PinMode::Output);
-    gpio::write(21, true);
 
-    loop {}
+    for i in 21..=24 {
+        gpio::pin_mode(i, GpioMode::Output);
+    }
+
+    gpio::pin_mode(28, GpioMode::Input);
+
+    gpio::write(24, true);
+    gpio::write(23, true);
+
+    loop {
+        if gpio::read(28) {
+            gpio::write(21, true);
+        } else {
+            gpio::write(21, false);
+        }
+    }
 }
 
 #[panic_handler]

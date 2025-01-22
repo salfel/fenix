@@ -12,12 +12,12 @@ pub fn initialize() {
     write_addr(CM_PER + CM_PER_GPIO1_CLKCTRL, 2);
 }
 
-pub fn pin_mode(pin: u32, mode: PinMode) {
+pub fn pin_mode(pin: u32, mode: GpioMode) {
     match mode {
-        PinMode::Input => {
+        GpioMode::Input => {
             set_bit(GPIO1 + GPIO_OE, pin);
         }
-        PinMode::Output => {
+        GpioMode::Output => {
             clear_bit(GPIO1 + GPIO_OE, pin);
         }
     }
@@ -35,7 +35,7 @@ pub fn read(pin: u32) -> bool {
     read_bit(GPIO1 + GPIO_DATAIN, pin)
 }
 
-pub enum PinMode {
+pub enum GpioMode {
     Input,
     Output,
 }
