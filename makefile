@@ -1,8 +1,9 @@
-build:
+build: 
 	rm -rf out
 	mkdir out
-	cargo build --release
-	cp target/armv7a-none-eabi/release/fenix out/boot.elf
+	arm-none-eabi-as --noexecstack boot/start.asm -o out/start.o
+	rustc -C lto --target armv7a-none-eabi -o out/kernel.o -C panic=abort -O --emit=obj src/main.rs
+	arm-none-eabi-ld -T boot/linker.ld -o out/boot.elf out/start.o out/kernel.o
 	arm-none-eabi-objcopy -O binary out/boot.elf out/boot.bin
 	cat boot/toc.bin boot/header.bin out/boot.bin > out/fenix.img
 

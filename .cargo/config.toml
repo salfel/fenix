@@ -1,8 +1,0 @@
-[build]
-target = "armv7a-none-eabi"
-
-[target.armv7a-none-eabi]
-linker = "arm-none-eabi-ld"
-rustflags = [
-    "-C", "link-arg=-Tboot/linker.ld",
-]
