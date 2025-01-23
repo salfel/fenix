@@ -9,7 +9,7 @@
       pkgs = import nixpkgs { inherit system; };
     in {
       devShells.${system}.default = pkgs.mkShell {
-        buildInputs = with pkgs; [ gcc-arm-embedded cargo qemu ];
+        buildInputs = with pkgs; [ gcc-arm-embedded cargo qemu parted ];
         shellHook = ''
           zsh
         '';
