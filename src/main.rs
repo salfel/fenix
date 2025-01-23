@@ -8,7 +8,7 @@ pub mod pinmux;
 pub mod utils;
 
 #[no_mangle]
-pub fn main() {
+pub fn rmain() {
     pinmux::configure();
     gpio::initialize();
 

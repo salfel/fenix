@@ -1,4 +1,4 @@
-.global _start
+.global main
 
-_start:
-    b main
+main:
+    b rmain
