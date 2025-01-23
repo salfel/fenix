@@ -19,6 +19,7 @@ test:
 	rm -rf out/boot.o out/boot.elf out/boot.bin
 
 flash:
+	while ! lsblk | grep -q 'sda'; do sleep 1; done
 	sudo dd if=./out/fenix.img of=/dev/sda oflag=direct bs=4M status=progress
 	sync
 	sudo partprobe /dev/sda
