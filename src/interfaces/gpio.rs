@@ -1,9 +1,7 @@
-use crate::sys::{clear_bit, read_bit, set_bit, write_addr};
+use crate::sys::{clear_bit, read_bit, set_bit, write_addr, CM_PER, GPIO1};
 
-const CM_PER: u32 = 0x44E00000;
 const CM_PER_GPIO1_CLKCTRL: u32 = 0xAC;
 
-const GPIO1: u32 = 0x4804C000;
 const GPIO_OE: u32 = 0x134;
 const GPIO_DATAIN: u32 = 0x138;
 const GPIO_DATAOUT: u32 = 0x13C;
