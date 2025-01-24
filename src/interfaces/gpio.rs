@@ -1,4 +1,4 @@
-use crate::utils::{clear_bit, read_bit, set_bit, write_addr};
+use crate::sys::{clear_bit, read_bit, set_bit, write_addr};
 
 const CM_PER: u32 = 0x44E00000;
 const CM_PER_GPIO1_CLKCTRL: u32 = 0xAC;

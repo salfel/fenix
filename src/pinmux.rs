@@ -1,4 +1,4 @@
-use crate::utils::write_addr;
+use crate::sys::write_addr;
 
 const CONTROL_MODULE_BASE: u32 = 0x44E10000;
 pub const CONF_GPMC_BEN1: u32 = 0x878;

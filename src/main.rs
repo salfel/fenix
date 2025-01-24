@@ -5,7 +5,7 @@ use interfaces::gpio::{self, GpioMode};
 
 pub mod interfaces;
 pub mod pinmux;
-pub mod utils;
+pub mod sys;
 
 #[no_mangle]
 pub fn rmain() {
