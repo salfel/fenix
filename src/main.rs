@@ -18,9 +18,9 @@ pub fn rmain() {
         gpio::pin_mode(i, GpioMode::Output);
     }
 
-    interrupts::initialize();
-
     gpio::pin_mode(28, GpioMode::Input);
+
+    interrupts::initialize();
 
     gpio::write(24, true);
 
@@ -31,7 +31,6 @@ pub fn rmain() {
 
 #[no_mangle]
 fn handle_interrupt() {
-    gpio::write(23, true);
     let interrupt = Interrupt::get_current();
     interrupt.execute();
 }

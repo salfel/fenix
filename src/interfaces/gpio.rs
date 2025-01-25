@@ -13,7 +13,7 @@ const GPIO_IRQWAKEN_1: u32 = 0x48;
 
 pub fn initialize() {
     write_addr(CM_PER + CM_PER_GPIO1_CLKCTRL, 2);
-    enable_interrupt(28, GpioInterrupt::Level0);
+    enable_interrupt(28, GpioInterrupt::Rising);
 }
 
 pub fn pin_mode(pin: u32, mode: GpioMode) {
@@ -41,6 +41,7 @@ pub fn read(pin: u32) -> bool {
 
 fn enable_interrupt(pin: u32, interrupt: GpioInterrupt) {
     set_bit(GPIO1 + GPIO_IRQSTATUS_SET0, pin);
+    set_bit(GPIO1 + GPIO_IRQSTATUS_SET1, pin);
 
     set_bit(GPIO1 + interrupt as u32, pin);
 }

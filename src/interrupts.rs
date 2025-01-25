@@ -11,14 +11,10 @@ const GPIOINT1A: u32 = 98;
 const GPIOINT1B: u32 = 99;
 
 pub fn initialize() {
-    // reset all interrupts
-    for bank in InterruptBank::all() {
-        write_addr(INTC + bank.get_mir() + 4, 0xFFFFFFFF);
-    }
-
-    //enable_interrupt(GPIOINT1A, Mode::IRQ, 0);
-    //enable_interrupt(GPIOINT1B, Mode::IRQ, 0);
+    enable_interrupt(GPIOINT1B, Mode::IRQ, 0);
 }
+
+fn handle_interrupt() {}
 
 fn enable_interrupt(n: u32, mode: Mode, priority: u8) {
     let addr = INTC + INTC_ILR + (4 * n);
@@ -32,7 +28,7 @@ fn enable_interrupt(n: u32, mode: Mode, priority: u8) {
     };
 
     write_addr(addr, enable_fiq | (priority << 2) as u32);
-    set_bit(INTC + bank.get_mir() + 8, n);
+    set_bit(INTC + bank.get_mir() + 4, n);
 }
 
 pub struct Interrupt {
@@ -49,7 +45,7 @@ impl Interrupt {
 
     pub fn execute(self) {
         match self.number as u32 {
-            GPIOINT1A | GPIOINT1B => {
+            GPIOINT1B => {
                 gpio::write(21, true);
             }
             _ => {}
@@ -81,15 +77,6 @@ impl InterruptBank {
             96..128 => Some(InterruptBank::Int3),
             _ => None,
         }
-    }
-
-    pub fn all<'a>() -> &'a [InterruptBank] {
-        &[
-            InterruptBank::Int0,
-            InterruptBank::Int1,
-            InterruptBank::Int2,
-            InterruptBank::Int3,
-        ]
     }
 
     fn get_mir(&self) -> u32 {
