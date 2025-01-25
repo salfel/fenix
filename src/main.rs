@@ -2,8 +2,10 @@
 #![no_main]
 
 use interfaces::gpio::{self, GpioMode};
+use interrupts::Interrupt;
 
 pub mod interfaces;
+pub mod interrupts;
 pub mod pinmux;
 pub mod sys;
 
@@ -16,22 +18,25 @@ pub fn rmain() {
         gpio::pin_mode(i, GpioMode::Output);
     }
 
+    interrupts::initialize();
+
     gpio::pin_mode(28, GpioMode::Input);
 
     gpio::write(24, true);
-    gpio::write(23, true);
 
     loop {
-        if gpio::read(28) {
-            gpio::write(21, true);
-        } else {
-            gpio::write(21, false);
-        }
+        gpio::write(22, gpio::read(28));
     }
 }
 
-#[panic_handler]
 #[no_mangle]
-fn my_panic(_info: &core::panic::PanicInfo) -> ! {
+fn handle_interrupt() {
+    gpio::write(23, true);
+    let interrupt = Interrupt::get_current();
+    interrupt.execute();
+}
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}
 }
