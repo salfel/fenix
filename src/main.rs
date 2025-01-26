@@ -24,7 +24,7 @@ pub fn rmain() {
     gpio::write(GPIO1_24, true);
 
     loop {
-        gpio::write(GPIO1_22, gpio::read(28));
+        gpio::write(GPIO1_22, gpio::read(GPIO1_28));
     }
 }
 

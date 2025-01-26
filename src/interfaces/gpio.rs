@@ -46,8 +46,8 @@ pub fn write((pin, bank): GpioPin, value: bool) {
     }
 }
 
-pub fn read(pin: u32) -> bool {
-    read_bit(GPIO1 + GPIO_DATAIN, pin)
+pub fn read((pin, bank): GpioPin) -> bool {
+    read_bit(bank as u32 + GPIO_DATAIN, pin)
 }
 
 pub enum GpioBank {
