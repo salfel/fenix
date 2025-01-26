@@ -28,3 +28,5 @@ pub fn read_bit(address: u32, bit: u32) -> bool {
 
     (value & (1 << bit)) >> bit == 1
 }
+
+pub fn noop() {}

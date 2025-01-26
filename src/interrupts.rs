@@ -1,22 +1,14 @@
-use crate::{
-    interfaces::gpio,
-    sys::{read_addr, set_bit, write_addr, INTC},
-};
+use crate::sys::{noop, read_addr, set_bit, write_addr, INTC};
 
 const INTC_ILR: u32 = 0x100;
 const INTC_SIR_IRQ: u32 = 0x40;
 const INTC_CONTROL: u32 = 0x48;
 
-const GPIOINT1A: u32 = 98;
-const GPIOINT1B: u32 = 99;
-
 pub fn initialize() {
-    enable_interrupt(GPIOINT1B, Mode::IRQ, 0);
+    //enable_interrupt(GPIOINT1A, Mode::IRQ, 0);
 }
 
-fn handle_interrupt() {}
-
-fn enable_interrupt(n: u32, mode: Mode, priority: u8) {
+pub fn enable_interrupt(n: u32, mode: Mode, priority: u8) {
     let addr = INTC + INTC_ILR + (4 * n);
     let enable_fiq = match mode {
         Mode::IRQ => 0,
@@ -31,6 +23,14 @@ fn enable_interrupt(n: u32, mode: Mode, priority: u8) {
     set_bit(INTC + bank.get_mir() + 4, n);
 }
 
+static mut INTERRUPT_HANDLERS: &mut [fn(); 128] = &mut [noop; 128];
+
+pub fn register_handler(handler: fn(), number: usize) {
+    unsafe {
+        INTERRUPT_HANDLERS[number] = handler;
+    }
+}
+
 pub struct Interrupt {
     number: u8,
 }
@@ -43,19 +43,18 @@ impl Interrupt {
         }
     }
 
-    pub fn execute(self) {
-        match self.number as u32 {
-            GPIOINT1B => {
-                gpio::write(21, true);
-            }
-            _ => {}
+    pub fn execute(&self) {
+        unsafe {
+            INTERRUPT_HANDLERS[self.number as usize]();
         }
+    }
 
-        set_bit(INTC + INTC_CONTROL, 1);
+    pub fn clear(self) {
+        write_addr(INTC + INTC_CONTROL, 0x3);
     }
 }
 
-enum Mode {
+pub enum Mode {
     IRQ,
     FIQ,
 }
