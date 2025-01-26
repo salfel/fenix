@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use interfaces::gpio::{self, GpioInterrupt, GpioMode};
+use interfaces::gpio::{self, pins::{GPIO1_22, GPIO1_24, GPIO1_28}, GpioBank, GpioMode};
 use interrupts::Interrupt;
 
 pub mod interfaces;
@@ -16,15 +16,15 @@ pub fn rmain() {
     gpio::initialize();
 
     for i in 21..=24 {
-        gpio::pin_mode(i, GpioMode::Output);
+        gpio::pin_mode((i, GpioBank::Gpio1), GpioMode::Output);
     }
 
-    gpio::pin_mode(28, GpioMode::Input);
+    gpio::pin_mode(GPIO1_28, GpioMode::Input);
 
-    gpio::write(24, true);
+    gpio::write(GPIO1_24, true);
 
     loop {
-        gpio::write(22, gpio::read(28));
+        gpio::write(GPIO1_22, gpio::read(28));
     }
 }
 
