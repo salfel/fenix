@@ -12,6 +12,7 @@ pub mod sys;
 #[no_mangle]
 pub fn rmain() {
     pinmux::configure();
+    interrupts::initialize();
     gpio::initialize();
 
     for i in 21..=24 {
@@ -20,19 +21,11 @@ pub fn rmain() {
 
     gpio::pin_mode(28, GpioMode::Input);
 
-    interrupts::initialize();
-
     gpio::write(24, true);
-
-    gpio::enable_interrupt(28, GpioInterrupt::Rising, handle_rising);
 
     loop {
         gpio::write(22, gpio::read(28));
     }
-}
-
-fn handle_rising() {
-    gpio::write(21, true);
 }
 
 #[no_mangle]
