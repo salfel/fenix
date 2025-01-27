@@ -1,11 +1,11 @@
 #![no_std]
 #![no_main]
 
-use interfaces::gpio::{self, pins::{GPIO1_22, GPIO1_24, GPIO1_28}, GpioBank, GpioMode};
+use peripherals::gpio::{self, pins::{GPIO1_22, GPIO1_24, GPIO1_28}, GpioBank, GpioMode};
 use interrupts::Interrupt;
 
-pub mod interfaces;
 pub mod interrupts;
+pub mod peripherals;
 pub mod pinmux;
 pub mod sys;
 
