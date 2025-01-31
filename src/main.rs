@@ -12,7 +12,6 @@ pub mod sys;
 #[no_mangle]
 pub fn rmain() {
     pinmux::configure();
-    interrupts::initialize();
     gpio::initialize();
 
     for i in 21..=24 {

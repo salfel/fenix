@@ -4,10 +4,6 @@ const INTC_ILR: u32 = 0x100;
 const INTC_SIR_IRQ: u32 = 0x40;
 const INTC_CONTROL: u32 = 0x48;
 
-pub fn initialize() {
-    //enable_interrupt(GPIOINT1A, Mode::IRQ, 0);
-}
-
 pub fn enable_interrupt(n: u32, mode: Mode, priority: u8) {
     let addr = INTC + INTC_ILR + (4 * n);
     let enable_fiq = match mode {
