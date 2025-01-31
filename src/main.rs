@@ -1,9 +1,15 @@
 #![no_std]
 #![no_main]
 
-use peripherals::gpio::{self, pins::{GPIO1_22, GPIO1_24, GPIO1_28}, GpioBank, GpioMode};
+use internals::timer;
 use interrupts::Interrupt;
+use peripherals::gpio::{
+    self,
+    pins::{GPIO1_24, GPIO1_28},
+    GpioBank, GpioMode,
+};
 
+pub mod internals;
 pub mod interrupts;
 pub mod peripherals;
 pub mod pinmux;
@@ -13,6 +19,7 @@ pub mod sys;
 pub fn rmain() {
     pinmux::configure();
     gpio::initialize();
+    timer::initialize();
 
     for i in 21..=24 {
         gpio::pin_mode((i, GpioBank::Gpio1), GpioMode::Output);
@@ -22,9 +29,7 @@ pub fn rmain() {
 
     gpio::write(GPIO1_24, true);
 
-    loop {
-        gpio::write(GPIO1_22, gpio::read(GPIO1_28));
-    }
+    loop {}
 }
 
 #[no_mangle]
