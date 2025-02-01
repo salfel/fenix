@@ -16,7 +16,7 @@ pub mod pinmux;
 pub mod sys;
 
 #[no_mangle]
-pub fn rmain() {
+pub fn main() {
     pinmux::configure();
     gpio::initialize();
     timer::initialize();

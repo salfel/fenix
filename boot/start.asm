@@ -1,6 +1,6 @@
 .global main
 
-main:
+start:
     @ Assign the IRQ interrupt method
     LDR r0, base_irq_addr
     LDR r1, basic_handler
@@ -25,7 +25,7 @@ main:
     mov r0, #0x53
     msr cpsr_c, r0
 
-    bl rmain
+    bl main
     b hang
 
 
