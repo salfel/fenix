@@ -1,4 +1,4 @@
-.global main
+.global start
 
 start:
     @ Assign the IRQ interrupt method
