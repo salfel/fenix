@@ -78,6 +78,7 @@ impl Timer {
 
     fn irq_acknowledge(&self) {
         write_addr(TIMER2 + TIMER_IRQ_EOI, 0x0);
+        write_addr(TIMER2 + TIMER_IRQSTATUS, 0x2);
     }
 
     fn increment(&mut self) {
