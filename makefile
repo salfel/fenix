@@ -24,4 +24,3 @@ flash:
 	sudo dd if=./out/fenix.img of=/dev/sda oflag=direct bs=4M status=progress
 	sync
 	sudo partprobe /dev/sda
-	udisksctl power-off -b /dev/sda
