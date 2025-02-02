@@ -6,25 +6,6 @@ start:
     LDR r1, basic_handler
     STR r1,[r0]
 
-    @ Setup sp in IRQ mode
-    mov r0, #0xD2
-    msr cpsr_c, r0
-    ldr r0, stack_base
-    ADD r0, #1024
-    mov sp, r0
-
-    @ Enter supervisor mode, irq disabled
-    mov r0, #0xD3
-    msr cpsr_c, r0
-    ldr r0, stack_base
-    ADD r0, #1024
-    ADD r0, #1024
-    mov sp, r0
-
-    @ Enter supervisor mode, irq enabled
-    mov r0, #0x53
-    msr cpsr_c, r0
-
     bl main
     b hang
 
