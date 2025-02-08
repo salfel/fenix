@@ -96,6 +96,20 @@ impl Timer {
     }
 }
 
+pub fn millis() -> u32 {
+    let timer = get_timer();
+    timer.counter
+}
+
+pub fn wait(ms: u32) {
+    let target = millis() + ms;
+    loop {
+        if millis() == target {
+            break;
+        }
+    }
+}
+
 fn handle_timer_interrupt() {
     let timer = get_timer();
 
