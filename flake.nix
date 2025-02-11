@@ -9,7 +9,7 @@
       pkgs = import nixpkgs { inherit system; };
     in {
       devShells.${system}.default = pkgs.mkShell {
-        buildInputs = with pkgs; [ gcc-arm-embedded cargo qemu parted rustup ];
+        buildInputs = with pkgs; [ gcc-arm-embedded cargo qemu rustup ];
         shellHook = ''
           TARGET="armv7a-none-eabi"
 
