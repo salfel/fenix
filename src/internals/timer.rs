@@ -1,5 +1,3 @@
-use core::sync::atomic::{AtomicU32, Ordering};
-
 use crate::{
     interrupts::{enable_interrupt, register_handler, Mode},
     sys::{read_addr, write_addr, CM_DPLL, CM_PER},
@@ -7,7 +5,6 @@ use crate::{
 
 const TIMER2: u32 = 0x4804_0000;
 
-const CM_PER_L4LS_CLKSTCTRL: u32 = 0x0;
 const CM_PER_L4LS_CLKCTRL: u32 = 0x60;
 const CM_PER_TIMER2_CLKCTRL: u32 = 0x80;
 
@@ -44,14 +41,12 @@ pub fn initialize() {
 }
 
 pub struct Timer {
-    counter: AtomicU32,
+    counter: u32,
 }
 
 impl Timer {
     const fn new() -> Self {
-        Timer {
-            counter: AtomicU32::new(0),
-        }
+        Timer { counter: 0 }
     }
 
     fn init_clocks(&self) {
@@ -97,14 +92,14 @@ impl Timer {
         write_addr(TIMER2 + TIMER_IRQSTATUS, 0x2);
     }
 
-    fn increment(&self) {
-        self.counter.fetch_add(1, Ordering::SeqCst);
+    fn increment(&mut self) {
+        self.counter += 1;
     }
 }
 
 pub fn millis() -> u32 {
     let timer = get_timer();
-    timer.counter.load(Ordering::Relaxed)
+    timer.counter
 }
 
 pub fn wait(ms: u32) {
