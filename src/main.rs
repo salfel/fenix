@@ -1,11 +1,11 @@
 #![no_std]
 #![no_main]
 
-use internals::timer;
+use internals::timer::{self, wait};
 use interrupts::Interrupt;
 use peripherals::gpio::{
     self,
-    pins::{GPIO1_22, GPIO1_23, GPIO1_24, GPIO1_28},
+    pins::{GPIO1_23, GPIO1_24, GPIO1_28},
     GpioBank, GpioMode,
 };
 
@@ -30,7 +30,8 @@ pub fn main() {
     gpio::write(GPIO1_24, true);
 
     loop {
-        gpio::write(GPIO1_22, gpio::read(GPIO1_28));
+        wait(1);
+        gpio::write(GPIO1_23, true);
     }
 }
 

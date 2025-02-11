@@ -1,7 +1,8 @@
+use core::sync::atomic::{AtomicU32, Ordering};
+
 use crate::{
     interrupts::{enable_interrupt, register_handler, Mode},
-    peripherals::gpio::{self, pins::GPIO1_21},
-    sys::{read_addr, write_addr, CM_PER},
+    sys::{read_addr, write_addr, CM_DPLL, CM_PER},
 };
 
 const TIMER2: u32 = 0x4804_0000;
@@ -9,6 +10,8 @@ const TIMER2: u32 = 0x4804_0000;
 const CM_PER_L4LS_CLKSTCTRL: u32 = 0x0;
 const CM_PER_L4LS_CLKCTRL: u32 = 0x60;
 const CM_PER_TIMER2_CLKCTRL: u32 = 0x80;
+
+const CLKSEL_TIMER2_CLK: u32 = 0x8;
 
 const TIMER_CONTROL: u32 = 0x38;
 const TIMER_COUNTER: u32 = 0x3C;
@@ -41,21 +44,24 @@ pub fn initialize() {
 }
 
 pub struct Timer {
-    counter: u32,
+    counter: AtomicU32,
 }
 
 impl Timer {
     const fn new() -> Self {
-        Timer { counter: 0 }
+        Timer {
+            counter: AtomicU32::new(0),
+        }
     }
 
     fn init_clocks(&self) {
-        write_addr(CM_PER + CM_PER_L4LS_CLKSTCTRL, 0x2);
         write_addr(CM_PER + CM_PER_L4LS_CLKCTRL, 0x2);
         write_addr(CM_PER + CM_PER_TIMER2_CLKCTRL, 0x2);
 
-        while read_addr(CM_PER + CM_PER_TIMER2_CLKCTRL) & 0x3 != 0x2 {}
-        gpio::write(GPIO1_21, true);
+        write_addr(CM_DPLL + CLKSEL_TIMER2_CLK, 0x2);
+
+        while read_addr(CM_PER + CM_PER_L4LS_CLKCTRL) & (0x3 << 16) != 0 {}
+        while read_addr(CM_PER + CM_PER_TIMER2_CLKCTRL) & (0x3 << 16) != 0 {}
     }
 
     fn init_timer(&self) {
@@ -87,32 +93,30 @@ impl Timer {
     }
 
     fn irq_acknowledge(&self) {
+        write_addr(TIMER2 + TIMER_IRQ_EOI, 0x0);
         write_addr(TIMER2 + TIMER_IRQSTATUS, 0x2);
-        write_addr(TIMER2 + TIMER_IRQ_EOI, 0x2);
     }
 
-    fn increment(&mut self) {
-        self.counter += 1;
+    fn increment(&self) {
+        self.counter.fetch_add(1, Ordering::SeqCst);
     }
 }
 
 pub fn millis() -> u32 {
     let timer = get_timer();
-    timer.counter
+    timer.counter.load(Ordering::Relaxed)
 }
 
 pub fn wait(ms: u32) {
     let target = millis() + ms;
-    loop {
-        if millis() == target {
-            break;
-        }
-    }
+    while millis() < target {}
 }
 
 fn handle_timer_interrupt() {
     let timer = get_timer();
 
+    timer.irq_disable();
     timer.irq_acknowledge();
     timer.increment();
+    timer.irq_enable();
 }
