@@ -12,6 +12,10 @@ It is a WIP operating system for the AM335 controller and is paired with a custo
 ### Nix Setup
 
 As I'm using NixOS as my primary operating system I have included a nix flake, which make setting up the project much easier.
+run the following command to enter the devShell
+```
+nix develop
+```
 
 ### Non Nix Setup
 
@@ -24,6 +28,7 @@ You will need to have the following packages installed
 After installing these packages install the needed rustup target
 
 ```
+rustup default stable
 rustup target add armv7a-none-eabi
 ```
 
