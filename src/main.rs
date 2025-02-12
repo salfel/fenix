@@ -5,10 +5,11 @@ use internals::timer;
 use interrupts::Interrupt;
 use peripherals::gpio::{
     self,
-    pins::{GPIO1_22, GPIO1_23, GPIO1_24, GPIO1_28},
+    pins::{GPIO1_22, GPIO1_24, GPIO1_28},
     GpioBank, GpioMode,
 };
 
+pub mod clock;
 pub mod internals;
 pub mod interrupts;
 pub mod peripherals;
