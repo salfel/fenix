@@ -1,5 +1,7 @@
 use crate::sys::{read_addr, write_addr};
 
+const IDLEST_BITS: u32 = 0x3 << 16;
+
 #[repr(u32)]
 enum ClockModule {
     CmPer = 0x44E0_0000,
@@ -40,6 +42,8 @@ impl FunctionalClock {
 
     pub fn enable(&self) {
         write_addr(self.clock_module() as u32 + self.offset(), 0x2);
+
+        while read_addr(self.clock_module() as u32 + self.offset()) & IDLEST_BITS != 0 {}
 
         while read_addr(self.clock_module() as u32 + self.interface_clock() as u32)
             & self.clkactivity_mask()
