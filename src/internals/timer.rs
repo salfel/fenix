@@ -1,3 +1,5 @@
+use core::sync::atomic::{AtomicU32, Ordering};
+
 use crate::{
     interrupts::{enable_interrupt, register_handler, Mode},
     sys::{read_addr, write_addr, CM_DPLL, CM_PER},
@@ -26,8 +28,8 @@ const TINT2: u32 = 68;
 static mut TIMER: Timer = Timer::new();
 
 #[allow(static_mut_refs)]
-pub fn get_timer<'a>() -> &'a mut Timer {
-    unsafe { &mut TIMER }
+pub fn get_timer() -> &'static Timer {
+    unsafe { &TIMER }
 }
 
 pub fn initialize() {
@@ -41,12 +43,14 @@ pub fn initialize() {
 }
 
 pub struct Timer {
-    counter: u32,
+    counter: AtomicU32,
 }
 
 impl Timer {
     const fn new() -> Self {
-        Timer { counter: 0 }
+        Timer {
+            counter: AtomicU32::new(0),
+        }
     }
 
     fn init_clocks(&self) {
@@ -92,14 +96,14 @@ impl Timer {
         write_addr(TIMER2 + TIMER_IRQSTATUS, 0x2);
     }
 
-    fn increment(&mut self) {
-        self.counter += 1;
+    fn increment(&self) {
+        self.counter.fetch_add(1, Ordering::Relaxed);
     }
 }
 
 pub fn millis() -> u32 {
     let timer = get_timer();
-    timer.counter
+    timer.counter.load(Ordering::Relaxed)
 }
 
 pub fn wait(ms: u32) {

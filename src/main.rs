@@ -1,11 +1,11 @@
 #![no_std]
 #![no_main]
 
-use internals::timer::{self, wait};
+use internals::timer::{self, millis, wait};
 use interrupts::Interrupt;
 use peripherals::gpio::{
     self,
-    pins::{GPIO1_23, GPIO1_24, GPIO1_28},
+    pins::{GPIO1_22, GPIO1_23, GPIO1_24, GPIO1_28},
     GpioBank, GpioMode,
 };
 
@@ -29,9 +29,13 @@ pub fn main() {
 
     gpio::write(GPIO1_24, true);
 
+    let start = millis();
     loop {
-        wait(1);
-        gpio::write(GPIO1_23, true);
+        if millis() - start >= 1{
+            gpio::write(GPIO1_23, true);
+        }
+
+        gpio::write(GPIO1_22, gpio::read(GPIO1_28));
     }
 }
 
