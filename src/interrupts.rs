@@ -46,7 +46,7 @@ impl Interrupt {
     }
 
     pub fn clear(self) {
-        write_addr(INTC + INTC_CONTROL, 0x3);
+        write_addr(INTC + INTC_CONTROL, 0x1);
     }
 }
 
