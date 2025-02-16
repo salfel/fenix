@@ -2,7 +2,7 @@ use core::arch::asm;
 
 use crate::{interrupts, sys::write_addr};
 
-use super::clocks::{self, FuncClock};
+use super::clock::{self, FuncClock};
 
 const TIMER_IRQ_EOI: u32 = 0x20;
 const TIMER_IRQSTATUS: u32 = 0x28;
@@ -43,7 +43,7 @@ impl Timer {
     }
 
     fn init_clock(&self) {
-        clocks::enable(FuncClock::Timer2);
+        clock::enable(FuncClock::Timer2);
     }
 
     fn init(&self) {

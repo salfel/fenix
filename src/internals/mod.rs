@@ -1,2 +1,2 @@
 pub mod timer;
-pub mod clocks;
+pub mod clock;

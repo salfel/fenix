@@ -1,5 +1,4 @@
 // Memory Map
-pub const CM_PER: u32 = 0x44E00000;
 pub const CM_DPLL: u32 = 0x44E05000;
 pub const GPIO1: u32 = 0x4804C000;
 pub const INTC: u32 = 0x48200000;
