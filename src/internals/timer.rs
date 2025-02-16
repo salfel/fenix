@@ -1,121 +1,125 @@
-use core::sync::atomic::{AtomicU32, Ordering};
+use core::arch::asm;
 
-use crate::{
-    interrupts::{enable_interrupt, register_handler, Mode},
-    sys::{read_addr, write_addr, CM_DPLL, CM_PER},
-};
+use crate::{interrupts, sys::write_addr};
 
-const TIMER2: u32 = 0x4804_0000;
-
-const CM_PER_L4LS_CLKCTRL: u32 = 0x60;
-const CM_PER_TIMER2_CLKCTRL: u32 = 0x80;
-
-const CLKSEL_TIMER2_CLK: u32 = 0x8;
-
-const TIMER_CONTROL: u32 = 0x38;
-const TIMER_COUNTER: u32 = 0x3C;
-const TIMER_LOAD: u32 = 0x40;
+use super::clocks::{self, FuncClock};
 
 const TIMER_IRQ_EOI: u32 = 0x20;
 const TIMER_IRQSTATUS: u32 = 0x28;
 const TIMER_IRQENABLE_SET: u32 = 0x2C;
 const TIMER_IRQENABLE_CLR: u32 = 0x30;
+const TIMER_CONTROL: u32 = 0x38;
+const TIMER_COUNTER: u32 = 0x3C;
+const TIMER_LOAD: u32 = 0x40;
 
-const TIMER_RELOAD_VALUE: u32 = 0xFFFF_FFE0;
+pub const DMTIMER2: u32 = 0x4804_0000;
 
-const TINT2: u32 = 68;
+const CLOCK_RELOAD_VALUE: u32 = 0xFFFF_FFE0;
+
+pub fn initialize() {
+    let timer = get_timer();
+
+    timer.stop();
+    timer.init();
+    timer.init_clock();
+    timer.init_interrupts();
+    timer.start();
+}
 
 static mut TIMER: Timer = Timer::new();
 
 #[allow(static_mut_refs)]
-pub fn get_timer() -> &'static Timer {
-    unsafe { &TIMER }
-}
-
-pub fn initialize() {
-    let timer = get_timer();
-    timer.init_clocks();
-
-    timer.stop();
-    timer.init_timer();
-    timer.init_interrupt();
-    timer.start();
+pub fn get_timer() -> &'static mut Timer {
+    unsafe { &mut TIMER }
 }
 
 pub struct Timer {
-    counter: AtomicU32,
+    ticks: u32,
 }
 
 impl Timer {
     const fn new() -> Self {
-        Timer {
-            counter: AtomicU32::new(0),
-        }
+        Timer { ticks: 0 }
     }
 
-    fn init_clocks(&self) {
-        write_addr(CM_PER + CM_PER_L4LS_CLKCTRL, 0x2);
-        write_addr(CM_PER + CM_PER_TIMER2_CLKCTRL, 0x2);
-
-        write_addr(CM_DPLL + CLKSEL_TIMER2_CLK, 0x2);
-
-        while read_addr(CM_PER + CM_PER_L4LS_CLKCTRL) & (0x3 << 16) != 0 {}
-        while read_addr(CM_PER + CM_PER_TIMER2_CLKCTRL) & (0x3 << 16) != 0 {}
+    fn init_clock(&self) {
+        clocks::enable(FuncClock::Timer2);
     }
 
-    fn init_timer(&self) {
-        write_addr(TIMER2 + TIMER_COUNTER, TIMER_RELOAD_VALUE);
-        write_addr(TIMER2 + TIMER_LOAD, TIMER_RELOAD_VALUE);
+    fn init(&self) {
+        write_addr(DMTIMER2 + TIMER_LOAD, CLOCK_RELOAD_VALUE);
+        write_addr(DMTIMER2 + TIMER_COUNTER, CLOCK_RELOAD_VALUE);
     }
 
-    fn init_interrupt(&self) {
+    fn init_interrupts(&self) {
         self.irq_enable();
 
-        register_handler(handle_timer_interrupt, TINT2 as usize);
-        enable_interrupt(TINT2, Mode::IRQ, 0);
+        interrupts::register_handler(handle_timer_irq, 68);
+        interrupts::enable_interrupt(68, interrupts::Mode::IRQ, 0);
     }
 
     fn start(&self) {
-        write_addr(TIMER2 + TIMER_CONTROL, 0x3);
+        write_addr(DMTIMER2 + TIMER_CONTROL, 0x3);
     }
 
     fn stop(&self) {
-        write_addr(TIMER2 + TIMER_CONTROL, 0x0);
+        write_addr(DMTIMER2 + TIMER_CONTROL, 0x0);
+    }
+
+    fn reset(&self) {
+        write_addr(DMTIMER2 + TIMER_COUNTER, CLOCK_RELOAD_VALUE);
     }
 
     fn irq_enable(&self) {
-        write_addr(TIMER2 + TIMER_IRQENABLE_SET, 0x2);
+        write_addr(DMTIMER2 + TIMER_IRQENABLE_SET, 0x2);
     }
 
     fn irq_disable(&self) {
-        write_addr(TIMER2 + TIMER_IRQENABLE_CLR, 0x2);
+        write_addr(DMTIMER2 + TIMER_IRQENABLE_CLR, 0x2);
     }
 
     fn irq_acknowledge(&self) {
-        write_addr(TIMER2 + TIMER_IRQ_EOI, 0x0);
-        write_addr(TIMER2 + TIMER_IRQSTATUS, 0x2);
+        write_addr(DMTIMER2 + TIMER_IRQ_EOI, 0x0);
+        write_addr(DMTIMER2 + TIMER_IRQSTATUS, 0x7);
     }
 
-    fn increment(&self) {
-        self.counter.fetch_add(1, Ordering::Relaxed);
+    fn increment(&mut self) {
+        self.ticks += 1;
+    }
+
+    fn elapsed(&self) -> u32 {
+        self.ticks
     }
 }
 
-pub fn millis() -> u32 {
-    let timer = get_timer();
-    timer.counter.load(Ordering::Relaxed)
-}
 
-pub fn wait(ms: u32) {
-    let target = millis() + ms;
-    while millis() < target {}
-}
-
-fn handle_timer_interrupt() {
+fn handle_timer_irq() {
     let timer = get_timer();
 
     timer.irq_disable();
+    timer.stop();
     timer.irq_acknowledge();
+    timer.reset();
     timer.increment();
     timer.irq_enable();
+    timer.start();
+}
+
+
+pub fn millis() -> u32 {
+    let timer = get_timer();
+    timer.elapsed()
+}
+
+pub fn wait_ms(ms: u32) {
+    let target = millis() + ms;
+    loop {
+        if millis() > target {
+            break;
+        } else {
+            unsafe {
+                asm!("nop");
+            }
+        }
+    }
 }

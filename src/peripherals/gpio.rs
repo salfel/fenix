@@ -1,9 +1,6 @@
 #![allow(dead_code)]
 
-use crate::{
-    interrupts::{self, register_handler, Mode},
-    sys::{clear_bit, noop, read_addr, read_bit, set_bit, write_addr, CM_PER, GPIO1},
-};
+use crate::{interrupts::{self, Mode}, sys::{clear_bit, noop, read_addr, read_bit, set_bit, write_addr, CM_PER, GPIO1}};
 
 const CM_PER_GPIO1_CLKCTRL: u32 = 0xAC;
 
@@ -23,6 +20,8 @@ type GpioPin = (u32, GpioBank);
 
 pub fn initialize() {
     write_addr(CM_PER + CM_PER_GPIO1_CLKCTRL, 2);
+    interrupts::enable_interrupt(GPIOINT1A, Mode::IRQ, 1);
+    interrupts::register_handler(handle_interrupts, GPIOINT1A as usize);
 }
 
 pub fn pin_mode((pin, bank): GpioPin, mode: GpioMode) {

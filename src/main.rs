@@ -1,11 +1,11 @@
 #![no_std]
 #![no_main]
 
-use internals::timer::{self, millis, wait};
-use interrupts::Interrupt;
+use crate::interrupts::Interrupt;
+use internals::timer::{self, wait_ms};
 use peripherals::gpio::{
     self,
-    pins::{GPIO1_22, GPIO1_23, GPIO1_24, GPIO1_28},
+    pins::{GPIO1_23, GPIO1_24},
     GpioBank, GpioMode,
 };
 
@@ -25,17 +25,14 @@ pub fn main() {
         gpio::pin_mode((i, GpioBank::Gpio1), GpioMode::Output);
     }
 
-    gpio::pin_mode(GPIO1_28, GpioMode::Input);
-
+    // Set the on gpio pin
     gpio::write(GPIO1_24, true);
 
-    let start = millis();
+    let mut status = true;
     loop {
-        if millis() - start >= 1{
-            gpio::write(GPIO1_23, true);
-        }
-
-        gpio::write(GPIO1_22, gpio::read(GPIO1_28));
+        wait_ms(1000);
+        gpio::write(GPIO1_23, status);
+        status = !status;
     }
 }
 
@@ -50,3 +47,6 @@ fn handle_interrupt() {
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}
 }
+
+#[no_mangle]
+extern "C" fn __aeabi_unwind_cpp_pr0() {}
