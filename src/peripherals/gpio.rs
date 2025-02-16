@@ -23,8 +23,6 @@ type GpioPin = (u32, GpioBank);
 
 pub fn initialize() {
     write_addr(CM_PER + CM_PER_GPIO1_CLKCTRL, 2);
-    interrupts::enable_interrupt(GPIOINT1A, Mode::IRQ, 0);
-    register_handler(handle_interrupts, GPIOINT1A as usize);
 }
 
 pub fn pin_mode((pin, bank): GpioPin, mode: GpioMode) {
