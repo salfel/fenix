@@ -62,6 +62,7 @@ pub enum GpioMode {
 
 static mut GPIO_INTERRUPT_HANDLERS: [fn(); 32] = [noop; 32];
 
+// TODO, don't use just GPIO1 but make it dynamic
 fn handle_interrupts() {
     let irq_raw = read_addr(GPIO1 + GPIO_IRQSTATUS_RAW_0);
     let number = irq_raw.trailing_zeros();
