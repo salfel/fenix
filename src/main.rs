@@ -46,6 +46,3 @@ fn handle_interrupt() {
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}
 }
-
-#[no_mangle]
-extern "C" fn __aeabi_unwind_cpp_pr0() {}
