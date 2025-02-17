@@ -1,9 +1,10 @@
 #![no_std]
 #![no_main]
 
+use internals::sysclock::{self, wait};
 use peripherals::gpio::{
     self,
-    pins::GPIO1_24,
+    pins::{GPIO1_22, GPIO1_23, GPIO1_24},
     GpioBank, GpioMode,
 };
 
@@ -17,6 +18,7 @@ pub mod sys;
 pub fn main() {
     pinmux::configure();
     gpio::initialize();
+    sysclock::initialize();
 
     for i in 21..=24 {
         gpio::pin_mode((i, GpioBank::Gpio1), GpioMode::Output);
@@ -25,7 +27,12 @@ pub fn main() {
     // Set the on gpio pin
     gpio::write(GPIO1_24, true);
 
-    loop {}
+    let mut status = true;
+    loop {
+        wait(1000);
+        gpio::write(GPIO1_22, status);
+        status = !status;
+    }
 }
 
 #[no_mangle]

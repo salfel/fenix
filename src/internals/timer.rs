@@ -50,7 +50,7 @@ impl Timer {
     }
 
     fn init_counter(&self) {
-        write_addr(self.timer.address()  + TIMER_LOAD, self.reload);
+        write_addr(self.timer.address() + TIMER_LOAD, self.reload);
         write_addr(self.timer.address() + TIMER_COUNTER, self.reload);
     }
 
@@ -82,7 +82,7 @@ impl Timer {
     }
 
     fn irq_acknowledge(&self) {
-        write_addr(self.timer.address()+ TIMER_IRQ_EOI, 0x0);
+        write_addr(self.timer.address() + TIMER_IRQ_EOI, 0x0);
         write_addr(self.timer.address() + TIMER_IRQSTATUS, 0x7);
     }
 
@@ -151,7 +151,6 @@ impl DmTimer {
         }
     }
 
-
     fn interrupt(&self) -> Interrupt {
         match self {
             DmTimer::Timer2 => Interrupt::TINT2,
@@ -162,23 +161,4 @@ impl DmTimer {
             DmTimer::Timer7 => Interrupt::TINT7,
         }
     }
-
 }
-
-//pub fn millis() -> u32 {
-//    let timer = get_timer();
-//    timer.elapsed()
-//}
-//
-//pub fn wait_ms(ms: u32) {
-//    let target = millis() + ms;
-//    loop {
-//        if millis() > target {
-//            break;
-//        } else {
-//            unsafe {
-//                asm!("nop");
-//            }
-//        }
-//    }
-//}
