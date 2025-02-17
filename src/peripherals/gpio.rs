@@ -2,8 +2,6 @@
 
 use crate::{internals::clock, interrupts::{self, Mode}, sys::{clear_bit, noop, read_addr, read_bit, set_bit, write_addr, GPIO1}};
 
-const CM_PER_GPIO1_CLKCTRL: u32 = 0xAC;
-
 const GPIO_OE: u32 = 0x134;
 const GPIO_DATAIN: u32 = 0x138;
 const GPIO_DATAOUT: u32 = 0x13C;
