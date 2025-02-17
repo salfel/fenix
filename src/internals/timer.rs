@@ -91,11 +91,8 @@ impl Timer {
     fn handle_timer_irq() {
         let interrupt = interrupts::current();
 
-        if let Some(interrupt) = interrupt {
-            let dm_timer = DmTimer::new(interrupt);
-            let timer = get_timer(dm_timer);
-
-            if let Some(timer) = timer {
+        if let Some(dm_timer) = DmTimer::new(interrupt) {
+            if let Some(timer) = get_timer(dm_timer) {
                 timer.irq_disable();
                 timer.stop();
                 timer.irq_acknowledge();
@@ -120,14 +117,15 @@ pub enum DmTimer {
 }
 
 impl DmTimer {
-    fn new(interrupt: Interrupt) -> Self {
+    fn new(interrupt: Interrupt) -> Option<Self> {
         match interrupt {
-            Interrupt::TINT2 => DmTimer::Timer2,
-            Interrupt::TINT3 => DmTimer::Timer3,
-            Interrupt::TINT4 => DmTimer::Timer4,
-            Interrupt::TINT5 => DmTimer::Timer5,
-            Interrupt::TINT6 => DmTimer::Timer6,
-            Interrupt::TINT7 => DmTimer::Timer7,
+            Interrupt::TINT2 => Some(DmTimer::Timer2),
+            Interrupt::TINT3 => Some(DmTimer::Timer3),
+            Interrupt::TINT4 => Some(DmTimer::Timer4),
+            Interrupt::TINT5 => Some(DmTimer::Timer5),
+            Interrupt::TINT6 => Some(DmTimer::Timer6),
+            Interrupt::TINT7 => Some(DmTimer::Timer7),
+            _ => None
         }
     }
 

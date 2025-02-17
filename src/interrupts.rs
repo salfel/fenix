@@ -11,18 +11,20 @@ pub enum Interrupt {
     TINT5 = 93,
     TINT6 = 94,
     TINT7 = 95,
+
+    None = 128
 }
 
 impl Interrupt {
-    pub fn new(num: u32) -> Option<Self> {
+    pub fn new(num: u32) -> Self {
         match num {
-            68 => Some(Interrupt::TINT2),
-            69 => Some(Interrupt::TINT3),
-            92 => Some(Interrupt::TINT4),
-            93 => Some(Interrupt::TINT5),
-            94 => Some(Interrupt::TINT6),
-            95 => Some(Interrupt::TINT7),
-            _ => None,
+            68 => Interrupt::TINT2,
+            69 => Interrupt::TINT3,
+            92 => Interrupt::TINT4,
+            93 => Interrupt::TINT5,
+            94 => Interrupt::TINT6,
+            95 => Interrupt::TINT7,
+            _ => Interrupt::None,
         }
     }
 }
@@ -50,14 +52,14 @@ pub fn register_handler(handler: fn(), number: usize) {
     }
 }
 
-pub fn current() -> Option<Interrupt> {
+pub fn current() -> Interrupt {
     let num = read_addr(INTC + INTC_SIR_IRQ) & 0x7F;
 
     Interrupt::new(num)
 }
 
-pub fn execute(interrupt: Option<Interrupt>) {
-    if let Some(interrupt) = interrupt {
+pub fn execute(interrupt: Interrupt) {
+    if !matches!(interrupt, Interrupt::None) {
         unsafe { INTERRUPT_HANDLERS[interrupt as usize]() }
     }
 }
