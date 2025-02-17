@@ -1,11 +1,9 @@
 #![no_std]
 #![no_main]
 
-use crate::interrupts::Interrupt;
-use internals::timer::{self, wait_ms};
 use peripherals::gpio::{
     self,
-    pins::{GPIO1_23, GPIO1_24},
+    pins::GPIO1_24,
     GpioBank, GpioMode,
 };
 
@@ -19,7 +17,6 @@ pub mod sys;
 pub fn main() {
     pinmux::configure();
     gpio::initialize();
-    timer::initialize();
 
     for i in 21..=24 {
         gpio::pin_mode((i, GpioBank::Gpio1), GpioMode::Output);
@@ -28,19 +25,14 @@ pub fn main() {
     // Set the on gpio pin
     gpio::write(GPIO1_24, true);
 
-    let mut status = true;
-    loop {
-        wait_ms(1000);
-        gpio::write(GPIO1_23, status);
-        status = !status;
-    }
+    loop {}
 }
 
 #[no_mangle]
 fn handle_interrupt() {
-    let interrupt = Interrupt::get_current();
-    interrupt.execute();
-    interrupt.clear();
+    let interrupt = interrupts::current();
+    interrupts::execute(interrupt);
+    interrupts::clear();
 }
 
 #[panic_handler]

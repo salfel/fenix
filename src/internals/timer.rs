@@ -1,8 +1,9 @@
-use core::arch::asm;
+use crate::{
+    interrupts::{self, Interrupt},
+    sys::write_addr,
+};
 
-use crate::{interrupts, sys::write_addr};
-
-use super::clock::{self, FuncClock};
+use super::clock::FuncClock;
 
 const TIMER_IRQ_EOI: u32 = 0x20;
 const TIMER_IRQSTATUS: u32 = 0x28;
@@ -12,114 +13,172 @@ const TIMER_CONTROL: u32 = 0x38;
 const TIMER_COUNTER: u32 = 0x3C;
 const TIMER_LOAD: u32 = 0x40;
 
-pub const DMTIMER2: u32 = 0x4804_0000;
+static mut TIMERS: &mut [Option<Timer>; 7] = &mut [const { None }; 7];
 
-const CLOCK_RELOAD_VALUE: u32 = 0xFFFF_FFE0;
-
-pub fn initialize() {
-    let timer = get_timer();
-
-    timer.stop();
-    timer.init();
-    timer.init_clock();
-    timer.init_interrupts();
-    timer.start();
+pub fn register_timer(dm_timer: DmTimer, reload: u32, handler: fn()) {
+    let timer = Timer::new(dm_timer, reload, handler);
+    unsafe { TIMERS[dm_timer as usize] = Some(timer) }
 }
 
-static mut TIMER: Timer = Timer::new();
-
-#[allow(static_mut_refs)]
-pub fn get_timer() -> &'static mut Timer {
-    unsafe { &mut TIMER }
+pub fn get_timer(dm_timer: DmTimer) -> &'static Option<Timer> {
+    unsafe { &TIMERS[dm_timer as usize] }
 }
 
 pub struct Timer {
-    ticks: u32,
+    timer: DmTimer,
+    reload: u32,
+    handler: fn(),
 }
 
 impl Timer {
-    const fn new() -> Self {
-        Timer { ticks: 0 }
+    fn new(timer: DmTimer, reload: u32, handler: fn()) -> Self {
+        let timer = Timer {
+            timer,
+            reload,
+            handler,
+        };
+
+        timer.init_clock();
+        timer.init_counter();
+        timer.init_interrupt();
+
+        timer
     }
 
     fn init_clock(&self) {
-        clock::enable(FuncClock::Timer2);
+        self.timer.clock().enable();
     }
 
-    fn init(&self) {
-        write_addr(DMTIMER2 + TIMER_LOAD, CLOCK_RELOAD_VALUE);
-        write_addr(DMTIMER2 + TIMER_COUNTER, CLOCK_RELOAD_VALUE);
+    fn init_counter(&self) {
+        write_addr(self.timer.address()  + TIMER_LOAD, self.reload);
+        write_addr(self.timer.address() + TIMER_COUNTER, self.reload);
     }
 
-    fn init_interrupts(&self) {
+    fn init_interrupt(&self) {
         self.irq_enable();
 
-        interrupts::register_handler(handle_timer_irq, 68);
-        interrupts::enable_interrupt(68, interrupts::Mode::IRQ, 0);
+        interrupts::register_handler(Self::handle_timer_irq, self.timer.interrupt() as usize);
+        interrupts::enable_interrupt(self.timer.interrupt() as u32, interrupts::Mode::IRQ, 0);
     }
 
     fn start(&self) {
-        write_addr(DMTIMER2 + TIMER_CONTROL, 0x3);
+        write_addr(self.timer.address() + TIMER_CONTROL, 0x3);
     }
 
     fn stop(&self) {
-        write_addr(DMTIMER2 + TIMER_CONTROL, 0x0);
+        write_addr(self.timer.address() + TIMER_CONTROL, 0x0);
     }
 
     fn reset(&self) {
-        write_addr(DMTIMER2 + TIMER_COUNTER, CLOCK_RELOAD_VALUE);
+        write_addr(self.timer.address() + TIMER_COUNTER, self.reload);
     }
 
     fn irq_enable(&self) {
-        write_addr(DMTIMER2 + TIMER_IRQENABLE_SET, 0x2);
+        write_addr(self.timer.address() + TIMER_IRQENABLE_SET, 0x2);
     }
 
     fn irq_disable(&self) {
-        write_addr(DMTIMER2 + TIMER_IRQENABLE_CLR, 0x2);
+        write_addr(self.timer.address() + TIMER_IRQENABLE_CLR, 0x2);
     }
 
     fn irq_acknowledge(&self) {
-        write_addr(DMTIMER2 + TIMER_IRQ_EOI, 0x0);
-        write_addr(DMTIMER2 + TIMER_IRQSTATUS, 0x7);
+        write_addr(self.timer.address()+ TIMER_IRQ_EOI, 0x0);
+        write_addr(self.timer.address() + TIMER_IRQSTATUS, 0x7);
     }
 
-    fn increment(&mut self) {
-        self.ticks += 1;
-    }
+    fn handle_timer_irq() {
+        let interrupt = interrupts::current();
 
-    fn elapsed(&self) -> u32 {
-        self.ticks
-    }
-}
+        if let Some(interrupt) = interrupt {
+            let dm_timer = DmTimer::new(interrupt);
+            let timer = get_timer(dm_timer);
 
-
-fn handle_timer_irq() {
-    let timer = get_timer();
-
-    timer.irq_disable();
-    timer.stop();
-    timer.irq_acknowledge();
-    timer.reset();
-    timer.increment();
-    timer.irq_enable();
-    timer.start();
-}
-
-
-pub fn millis() -> u32 {
-    let timer = get_timer();
-    timer.elapsed()
-}
-
-pub fn wait_ms(ms: u32) {
-    let target = millis() + ms;
-    loop {
-        if millis() > target {
-            break;
-        } else {
-            unsafe {
-                asm!("nop");
+            if let Some(timer) = timer {
+                timer.irq_disable();
+                timer.stop();
+                timer.irq_acknowledge();
+                timer.reset();
+                (timer.handler)();
+                timer.irq_enable();
+                timer.start();
             }
         }
     }
 }
+
+#[repr(u32)]
+#[derive(Copy, Clone)]
+pub enum DmTimer {
+    Timer2 = 2,
+    Timer3 = 3,
+    Timer4 = 4,
+    Timer5 = 5,
+    Timer6 = 6,
+    Timer7 = 7,
+}
+
+impl DmTimer {
+    fn new(interrupt: Interrupt) -> Self {
+        match interrupt {
+            Interrupt::TINT2 => DmTimer::Timer2,
+            Interrupt::TINT3 => DmTimer::Timer3,
+            Interrupt::TINT4 => DmTimer::Timer4,
+            Interrupt::TINT5 => DmTimer::Timer5,
+            Interrupt::TINT6 => DmTimer::Timer6,
+            Interrupt::TINT7 => DmTimer::Timer7,
+        }
+    }
+
+    fn clock(&self) -> FuncClock {
+        match self {
+            DmTimer::Timer2 => FuncClock::Timer2,
+            DmTimer::Timer3 => FuncClock::Timer3,
+            DmTimer::Timer4 => FuncClock::Timer4,
+            DmTimer::Timer5 => FuncClock::Timer5,
+            DmTimer::Timer6 => FuncClock::Timer6,
+            DmTimer::Timer7 => FuncClock::Timer7,
+        }
+    }
+
+    fn address(&self) -> u32 {
+        match self {
+            DmTimer::Timer2 => 0x4804_0000,
+            DmTimer::Timer3 => 0x4804_2000,
+            DmTimer::Timer4 => 0x4804_4000,
+            DmTimer::Timer5 => 0x4804_6000,
+            DmTimer::Timer6 => 0x4804_8000,
+            DmTimer::Timer7 => 0x4804_A000,
+        }
+    }
+
+
+    fn interrupt(&self) -> Interrupt {
+        match self {
+            DmTimer::Timer2 => Interrupt::TINT2,
+            DmTimer::Timer3 => Interrupt::TINT3,
+            DmTimer::Timer4 => Interrupt::TINT4,
+            DmTimer::Timer5 => Interrupt::TINT5,
+            DmTimer::Timer6 => Interrupt::TINT6,
+            DmTimer::Timer7 => Interrupt::TINT7,
+        }
+    }
+
+}
+
+//pub fn millis() -> u32 {
+//    let timer = get_timer();
+//    timer.elapsed()
+//}
+//
+//pub fn wait_ms(ms: u32) {
+//    let target = millis() + ms;
+//    loop {
+//        if millis() > target {
+//            break;
+//        } else {
+//            unsafe {
+//                asm!("nop");
+//            }
+//        }
+//    }
+//}

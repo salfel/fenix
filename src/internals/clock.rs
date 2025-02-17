@@ -12,6 +12,8 @@ pub enum FuncClock {
     Gpio1 = 0xAC,
     Gpio2 = 0xB0,
     Gpio3 = 0xB4,
+    Timer5 = 0xEC,
+    Timer6 = 0xF0
 }
 
 impl FuncClock {
@@ -24,10 +26,16 @@ impl FuncClock {
             FuncClock::Gpio1 => ClockModule::CmPer,
             FuncClock::Gpio2 => ClockModule::CmPer,
             FuncClock::Gpio3 => ClockModule::CmPer,
+            FuncClock::Timer5 => ClockModule::CmPer,
+            FuncClock::Timer6 => ClockModule::CmPer
         }
+    }
+
+    pub fn enable(self) {
+        write_addr(self.clock_module() as u32 + self as u32, 0x2);
     }
 }
 
 pub fn enable(clock: FuncClock) {
-    write_addr(clock.clock_module() as u32 + clock as u32, 0x2);
+    clock.enable();
 }

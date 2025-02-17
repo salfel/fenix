@@ -4,6 +4,29 @@ const INTC_ILR: u32 = 0x100;
 const INTC_SIR_IRQ: u32 = 0x40;
 const INTC_CONTROL: u32 = 0x48;
 
+pub enum Interrupt {
+    TINT2 = 68,
+    TINT3 = 69,
+    TINT4 = 92,
+    TINT5 = 93,
+    TINT6 = 94,
+    TINT7 = 95,
+}
+
+impl Interrupt {
+    pub fn new(num: u32) -> Option<Self> {
+        match num {
+            68 => Some(Interrupt::TINT2),
+            69 => Some(Interrupt::TINT3),
+            92 => Some(Interrupt::TINT4),
+            93 => Some(Interrupt::TINT5),
+            94 => Some(Interrupt::TINT6),
+            95 => Some(Interrupt::TINT7),
+            _ => None,
+        }
+    }
+}
+
 pub fn enable_interrupt(n: u32, mode: Mode, priority: u8) {
     let addr = INTC + INTC_ILR + (4 * n);
     let enable_fiq = match mode {
@@ -27,27 +50,20 @@ pub fn register_handler(handler: fn(), number: usize) {
     }
 }
 
-pub struct Interrupt {
-    number: u8,
+pub fn current() -> Option<Interrupt> {
+    let num = read_addr(INTC + INTC_SIR_IRQ) & 0x7F;
+
+    Interrupt::new(num)
 }
 
-impl Interrupt {
-    pub fn get_current() -> Self {
-        let value = read_addr(INTC + INTC_SIR_IRQ);
-        Interrupt {
-            number: (value & 0b111_1111) as u8,
-        }
+pub fn execute(interrupt: Option<Interrupt>) {
+    if let Some(interrupt) = interrupt {
+        unsafe { INTERRUPT_HANDLERS[interrupt as usize]() }
     }
+}
 
-    pub fn execute(&self) {
-        unsafe {
-            INTERRUPT_HANDLERS[self.number as usize]();
-        }
-    }
-
-    pub fn clear(self) {
-        write_addr(INTC + INTC_CONTROL, 0x1);
-    }
+pub fn clear() {
+    write_addr(INTC + INTC_CONTROL, 0x1);
 }
 
 pub enum Mode {
