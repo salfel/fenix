@@ -42,6 +42,8 @@ impl Timer {
         timer.init_counter();
         timer.init_interrupt();
 
+        timer.start();
+
         timer
     }
 
