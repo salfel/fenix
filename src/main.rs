@@ -4,8 +4,7 @@
 use internals::sysclock::{self, wait};
 use peripherals::gpio::{
     self,
-    pins::{GPIO1_22, GPIO1_23, GPIO1_24},
-    GpioBank, GpioMode,
+    pins::{GPIO1_22, GPIO1_24},
 };
 
 pub mod internals;
@@ -20,11 +19,6 @@ pub fn main() {
     gpio::initialize();
     sysclock::initialize();
 
-    for i in 21..=24 {
-        gpio::pin_mode((i, GpioBank::Gpio1), GpioMode::Output);
-    }
-
-    // Set the on gpio pin
     gpio::write(GPIO1_24, true);
 
     let mut status = true;

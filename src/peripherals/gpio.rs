@@ -21,6 +21,10 @@ pub fn initialize() {
 
     interrupts::enable_interrupt(GPIOINT1A, Mode::IRQ, 1);
     interrupts::register_handler(handle_interrupts, GPIOINT1A as usize);
+
+    for i in 21..=24 {
+        pin_mode((i, GpioBank::Gpio1), GpioMode::Output);
+    }
 }
 
 pub fn pin_mode((pin, bank): GpioPin, mode: GpioMode) {
