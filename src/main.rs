@@ -7,6 +7,7 @@ use peripherals::gpio::{
     pins::{GPIO1_22, GPIO1_24},
 };
 
+pub mod exceptions;
 pub mod internals;
 pub mod interrupts;
 pub mod peripherals;
