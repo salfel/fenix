@@ -2,9 +2,13 @@ use crate::sys::write_addr;
 
 enum ClockModule {
     CmPer = 0x44E0_0000,
+    CmWkup = 0x44E0_0400
 }
 
 pub enum FuncClock {
+    // Per
+    I2C2 = 0x44,
+    I2C1 = 0x48,
     Timer7 = 0x7C,
     Timer2 = 0x80,
     Timer3 = 0x84,
@@ -13,12 +17,17 @@ pub enum FuncClock {
     Gpio2 = 0xB0,
     Gpio3 = 0xB4,
     Timer5 = 0xEC,
-    Timer6 = 0xF0
+    Timer6 = 0xF0,
+
+    // Wkup
+    I2C0 = 0xB8,
 }
 
 impl FuncClock {
     fn clock_module(&self) -> ClockModule {
         match self {
+            FuncClock::I2C2 => ClockModule::CmPer,
+            FuncClock::I2C1 => ClockModule::CmPer,
             FuncClock::Timer7 => ClockModule::CmPer,
             FuncClock::Timer2 => ClockModule::CmPer,
             FuncClock::Timer3 => ClockModule::CmPer,
@@ -27,7 +36,9 @@ impl FuncClock {
             FuncClock::Gpio2 => ClockModule::CmPer,
             FuncClock::Gpio3 => ClockModule::CmPer,
             FuncClock::Timer5 => ClockModule::CmPer,
-            FuncClock::Timer6 => ClockModule::CmPer
+            FuncClock::Timer6 => ClockModule::CmPer,
+
+            FuncClock::I2C0 => ClockModule::CmWkup
         }
     }
 

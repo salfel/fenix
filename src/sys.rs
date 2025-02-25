@@ -10,6 +10,11 @@ pub fn write_addr(address: u32, value: u32) {
     }
 }
 
+pub fn write_or(address: u32, value: u32) {
+    let prev_value = read_addr(address);
+    write_addr(address, value | prev_value);
+}
+
 #[inline]
 pub fn read_addr(address: u32) -> u32 {
     unsafe { core::ptr::read_volatile(address as *const u32) }
@@ -35,5 +40,3 @@ pub fn read_bit(address: u32, bit: u32) -> bool {
 }
 
 pub fn noop() {}
-
-

@@ -1,11 +1,14 @@
 #![no_std]
 #![no_main]
 
-use internals::sysclock::{self, wait};
-use peripherals::gpio::{
-    self,
-    pins::{GPIO1_22, GPIO1_23, GPIO1_24},
-    GpioBank, GpioMode,
+use internals::sysclock;
+use peripherals::{
+    gpio::{
+        self,
+        pins::{GPIO1_22, GPIO1_23, GPIO1_24, GPIO1_28},
+        GpioBank, GpioMode,
+    },
+    i2c::{self, I2CModule},
 };
 
 pub mod internals;
@@ -24,14 +27,17 @@ pub fn main() {
         gpio::pin_mode((i, GpioBank::Gpio1), GpioMode::Output);
     }
 
-    // Set the on gpio pin
+    i2c::register_i2c_module(I2CModule::I2C1, i2c::Mode::MasterTransmit);
+    let i2c1 = i2c::get_i2c_module(I2CModule::I2C1).unwrap();
+
     gpio::write(GPIO1_24, true);
 
-    let mut status = true;
+    i2c1.begin();
+
+    gpio::write(GPIO1_23, true);
+
     loop {
-        wait(1000);
-        gpio::write(GPIO1_22, status);
-        status = !status;
+        gpio::write(GPIO1_22, gpio::read(GPIO1_28));
     }
 }
 

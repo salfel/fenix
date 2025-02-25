@@ -5,6 +5,9 @@ const INTC_SIR_IRQ: u32 = 0x40;
 const INTC_CONTROL: u32 = 0x48;
 
 pub enum Interrupt {
+    I2C2INT = 30,
+    I2C0INT = 70,
+    I2C1INT = 71,
     TINT2 = 68,
     TINT3 = 69,
     TINT4 = 92,
