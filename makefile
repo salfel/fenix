@@ -3,7 +3,8 @@ build:
 	mkdir out
 	rustc -C lto --target armv7a-none-eabi -C panic=abort -o out/kernel.o -O --emit=obj src/main.rs
 	arm-none-eabi-gcc -c boot/start.S -o out/start.o
-	arm-none-eabi-ld  -T boot/linker.ld out/start.o out/kernel.o -o out/kernel.elf
+	arm-none-eabi-gcc -c src/asm/interrupt.S -o out/interrupt.o
+	arm-none-eabi-ld  -T boot/linker.ld out/start.o out/interrupt.o out/kernel.o -o out/kernel.elf
 	arm-none-eabi-objcopy out/kernel.elf -O binary out/boot.bin
 	cat boot/toc.bin boot/header.bin out/boot.bin > out/rom.img
 

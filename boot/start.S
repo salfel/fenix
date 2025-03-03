@@ -1,11 +1,8 @@
 .global start
 
-start:
-    @ Assign the IRQ interrupt method
-    LDR r0, base_irq_addr
-    LDR r1, irq_handler
-    STR r1,[r0]
+.extern setup_irq
 
+start:
     ldr r0, base_data_abort_addr
     ldr r1, data_abort
     str r1, [r0]
@@ -33,28 +30,13 @@ start:
     mov r0, #0x53
     msr cpsr_c, r0
 
+    PUSH {lr}
+    bl setup_irq
+    POP {lr}
+
     bl main
     b hang
 
-
-handle_irq:
-    SUB lr, lr, #4
-    STMFD sp!, {R0-R12, lr}
-
-    @ Save SPSR in R11
-    MRS R11, SPSR
-    PUSH {r11}
-
-    @ Invoke handler
-    bl handle_interrupt
-
-    @ Restore pending program state
-    POP {r11}
-    MSR SPSR, R11 
-
-    @ Return
-    LDMFD sp!, {R0-R12, pc}^
-    b hang
     
 handle_data_abort:
     bl data_abort_handler
@@ -70,9 +52,7 @@ hang:
     b hang
 
 stack_base: .word 0x4030BE30
-base_irq_addr: .word 0x4030CE38
 base_data_abort_addr: .word 0x4030CE30
 base_fetch_abort_addr: .word 0x4030CE2C
-irq_handler: .word handle_irq
 data_abort: .word handle_data_abort
 fetch_abort: .word handle_fetch_abort
