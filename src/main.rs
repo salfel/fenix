@@ -4,12 +4,13 @@
 use internals::sysclock::{self, wait};
 use peripherals::gpio::{
     self,
-    pins::{GPIO1_21, GPIO1_22, GPIO1_23, GPIO1_24},
+    pins::{GPIO1_22, GPIO1_24},
 };
 
 pub mod exceptions;
 pub mod internals;
 pub mod interrupts;
+pub mod kernel;
 pub mod peripherals;
 pub mod pinmux;
 pub mod sys;
@@ -22,33 +23,15 @@ pub fn main() {
 
     gpio::write(GPIO1_24, true);
 
-    unsafe {
-        user_mode();
-    }
+    unsafe { kernel_loop() };
+}
 
+#[no_mangle]
+fn user_loop() {
+    wait(1000);
     gpio::write(GPIO1_22, true);
-
-    main_loop();
-}
-
-#[no_mangle]
-fn gpio() {
-    gpio::write(GPIO1_22, true);
-}
-
-#[no_mangle]
-fn main_loop() {
-    let mut status = true;
-    loop {
-        wait(1000);
-        gpio::write(GPIO1_23, status);
-        status = !status;
-    }
-}
-
-#[no_mangle]
-fn swi_handler(number: u32) {
-    gpio::write(GPIO1_21, true);
+    wait(1000);
+    gpio::write(GPIO1_22, false);
 }
 
 #[no_mangle]
@@ -64,6 +47,5 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 }
 
 extern "C" {
-    fn user_mode();
-    fn swi();
+    fn kernel_loop();
 }
