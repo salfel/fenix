@@ -9,6 +9,7 @@ build:
 	arm-none-eabi-gcc -mcpu=cortex-a8 -c src/asm/kernel.S -o out/kernel.o
 	arm-none-eabi-ld  -T boot/linker.ld out/start.o out/interrupt.o out/setup.o out/software_interrupt.o  out/kernel.o out/main.o -o out/kernel.elf
 	arm-none-eabi-objdump -d out/kernel.elf > out/kernel.dump
+	arm-none-eabi-objdump -t out/kernel.elf > out/kernel.map
 	arm-none-eabi-objcopy out/kernel.elf -O binary out/boot.bin
 	cat boot/toc.bin boot/header.bin out/boot.bin > out/rom.img
 

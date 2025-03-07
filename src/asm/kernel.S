@@ -1,15 +1,26 @@
 .global kernel_loop
 .global user_mode
+.global switch_context
 
 .extern kernel
 
 kernel_loop:
     bl kernel
 
-    ldr r0, =user_loop
-    bl user_mode
-
     b kernel_loop
+
+switch_context:
+    push {lr}
+    mov r2, #0x50
+    msr cpsr_c, r2
+
+    mov sp, r0
+    blx r1
+
+    mov r0, #0x0
+    svc #0x0
+    
+    pop {pc}
 
 user_mode:
     push {lr}
