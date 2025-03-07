@@ -98,13 +98,17 @@ impl Scheduler {
         None
     }
 
-    pub fn create_task(&mut self, entry_point: fn()) {
+    pub fn create_task(&mut self, entry_point: fn()) -> Option<usize> {
         let task = self.task_with_state(TaskState::Terminated);
 
-        if let Some(task) = task {
-            task.state = TaskState::Ready;
-            task.setup_stack();
-            task.context.pc = entry_point as usize as u32;
+        match task {
+            Some(task) => {
+                task.state = TaskState::Ready;
+                task.setup_stack();
+                task.context.pc = entry_point as usize as u32;
+                Some(task.id)
+            }
+            None => None,
         }
     }
 
@@ -113,6 +117,7 @@ impl Scheduler {
             unsafe {
                 switch_context(task.context.sp, task.context.pc);
             }
+            task.state = TaskState::Terminated;
         }
     }
 }
@@ -128,6 +133,11 @@ pub fn scheduler() -> &'static mut Scheduler {
 pub fn init() {
     let scheduler = scheduler();
     scheduler.init();
+}
+
+pub fn create_task(entry_point: fn()) -> Option<usize> {
+    let scheduler = scheduler();
+    scheduler.create_task(entry_point)
 }
 
 extern "C" {

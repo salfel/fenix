@@ -1,10 +1,13 @@
 #![no_std]
 #![no_main]
 
-use internals::sysclock::{self, wait};
+use internals::{
+    sysclock::{self, wait},
+    tasks::{self, create_task},
+};
 use peripherals::gpio::{
     self,
-    pins::{GPIO1_22, GPIO1_24},
+    pins::{GPIO1_22, GPIO1_23, GPIO1_24},
 };
 
 pub mod exceptions;
@@ -20,18 +23,28 @@ pub fn main() {
     pinmux::configure();
     gpio::initialize();
     sysclock::initialize();
+    tasks::init();
 
     gpio::write(GPIO1_24, true);
+
+    create_task(user_loop);
+    create_task(user_loop2);
 
     unsafe { kernel_loop() };
 }
 
-#[no_mangle]
 fn user_loop() {
     wait(1000);
     gpio::write(GPIO1_22, true);
     wait(1000);
     gpio::write(GPIO1_22, false);
+}
+
+fn user_loop2() {
+    wait(1000);
+    gpio::write(GPIO1_23, true);
+    wait(1000);
+    gpio::write(GPIO1_23, false);
 }
 
 #[no_mangle]

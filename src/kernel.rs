@@ -1,12 +1,6 @@
 use core::convert::{TryFrom, TryInto};
 
-use crate::{
-    internals::{
-        sysclock::wait,
-        tasks::{scheduler, TaskState},
-    },
-    peripherals::gpio::{self, pins::GPIO1_22},
-};
+use crate::internals::tasks::{scheduler, TaskState};
 
 enum Syscall {
     Exit,
@@ -47,13 +41,5 @@ fn swi_handler(syscall: u32) -> bool {
 #[no_mangle]
 fn kernel() {
     let scheduler = scheduler();
-    scheduler.create_task(user_loop);
     scheduler.switch();
-}
-
-fn user_loop() {
-    wait(1000);
-    gpio::write(GPIO1_22, true);
-    wait(1000);
-    gpio::write(GPIO1_22, false);
 }
