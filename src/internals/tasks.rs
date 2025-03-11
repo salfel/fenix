@@ -1,6 +1,6 @@
 use core::cell::UnsafeCell;
 
-const STACK_SIZE: usize = 256;
+const STACK_SIZE: usize = 1024;
 const MAX_TASKS: usize = 4;
 
 #[derive(PartialEq)]
@@ -9,17 +9,18 @@ pub enum TaskState {
     Running,
     Terminated,
     Waiting,
+    Stored,
 }
 
-struct TaskContext {
-    sp: u32,
-    pc: u32,
+pub struct TaskContext {
+    pub sp: u32,
+    pub pc: u32,
 }
 
 pub struct Task {
     id: usize,
     pub state: TaskState,
-    context: TaskContext,
+    pub context: TaskContext,
     stack: [u32; STACK_SIZE],
 }
 
@@ -33,14 +34,19 @@ impl Task {
         }
     }
 
+    #[no_mangle]
     fn setup_stack(&mut self) {
-        self.context.sp = self.stack[STACK_SIZE - 1] as *const u32 as u32;
+        self.context.sp = (&self.stack[STACK_SIZE - 1] as *const u32) as u32;
+    }
+
+    fn executable(&self) -> bool {
+        matches!(self.state, TaskState::Ready | TaskState::Stored)
     }
 }
 
 pub struct Scheduler {
     tasks: [UnsafeCell<Task>; MAX_TASKS],
-    current_index: Option<usize>,
+    pub current_index: Option<usize>,
 }
 
 impl Scheduler {
@@ -79,7 +85,7 @@ impl Scheduler {
         task.state = TaskState::Terminated;
     }
 
-    fn task_with_state(&mut self, state: TaskState) -> Option<&mut Task> {
+    fn task_with_state(&self, state: TaskState) -> Option<&mut Task> {
         let initial_index = self.current_index.unwrap_or(0);
         let mut index = initial_index;
 
@@ -98,31 +104,68 @@ impl Scheduler {
         None
     }
 
-    pub fn create_task(&mut self, entry_point: fn()) -> Option<usize> {
-        let task = self.task_with_state(TaskState::Terminated);
+    fn next_task(&mut self) -> Option<&mut Task> {
+        let initial_index = self.current_index.unwrap_or(0);
+        let mut index = initial_index;
 
-        match task {
-            Some(task) => {
-                task.state = TaskState::Ready;
-                task.setup_stack();
-                task.context.pc = entry_point as usize as u32;
-                Some(task.id)
+        loop {
+            let current_task = self.task_mut(index);
+            if current_task.executable() {
+                return Some(current_task);
             }
-            None => None,
+
+            index = (index + 1) % MAX_TASKS;
+            if index == initial_index {
+                break;
+            }
         }
+
+        None
+    }
+
+    pub fn create_task(&mut self, entry_point: fn()) -> Option<usize> {
+        let task_id = match self.task_with_state(TaskState::Terminated) {
+            Some(task) => task.id,
+            None => return None,
+        };
+
+        let task = self.task_mut(task_id);
+        task.state = TaskState::Ready;
+        task.setup_stack();
+        task.context.pc = entry_point as usize as u32;
+        Some(task.id)
     }
 
     pub fn switch(&mut self) {
-        if let Some(task) = self.task_with_state(TaskState::Ready) {
-            unsafe {
-                switch_context(task.context.sp, task.context.pc);
+        let next_task_id = match self.next_task() {
+            Some(task) => task.id,
+            None => return,
+        };
+
+        self.current_index = Some(next_task_id);
+
+        let task = self.task_mut(next_task_id);
+
+        match task.state {
+            TaskState::Ready => {
+                task.state = TaskState::Running;
+                unsafe {
+                    switch_context(task.context.sp, task.context.pc);
+                }
+                task.state = TaskState::Terminated;
             }
-            task.state = TaskState::Terminated;
+            TaskState::Stored => {
+                task.state = TaskState::Running;
+                unsafe {
+                    restore_context(task.context.sp, task.context.pc);
+                }
+                task.state = TaskState::Terminated;
+            }
+            _ => {}
         }
     }
 }
 
-#[link_section = "user_stack_start"]
 static mut SCHEDULER: Scheduler = Scheduler::new();
 
 #[allow(static_mut_refs)]
@@ -142,4 +185,5 @@ pub fn create_task(entry_point: fn()) -> Option<usize> {
 
 extern "C" {
     fn switch_context(sp: u32, pc: u32);
+    fn restore_context(sp: u32, px: u32);
 }

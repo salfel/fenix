@@ -84,8 +84,7 @@ impl Timer {
     }
 
     fn irq_acknowledge(&self) {
-        write_addr(self.timer.address() + TIMER_IRQ_EOI, 0x0);
-        write_addr(self.timer.address() + TIMER_IRQSTATUS, 0x7);
+        write_addr(self.timer.address() + TIMER_IRQSTATUS, 0x2);
     }
 
     fn handle_timer_irq() {
@@ -97,12 +96,9 @@ impl Timer {
 
             if let Some(timer) = timer {
                 timer.irq_disable();
-                timer.stop();
                 timer.irq_acknowledge();
-                timer.reset();
                 (timer.handler)();
                 timer.irq_enable();
-                timer.start();
             }
         }
     }

@@ -24,6 +24,10 @@ impl SysClock {
 
     fn increment(&mut self) {
         self.ticks += 1;
+
+        if self.ticks % 10 == 0 {
+            unsafe { yield_task() };
+        }
     }
 }
 
@@ -49,4 +53,8 @@ pub fn wait(ms: u32) {
             }
         }
     }
+}
+
+extern "C" {
+    fn yield_task();
 }

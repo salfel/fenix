@@ -21,7 +21,7 @@ SECTIONS {
 
   . = ALIGN(8);
   irq_stack_start = .;
-  . += 4K;
+  . += 16K;
   irq_stack_end = .;
 
   _end = . ;

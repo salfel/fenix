@@ -1,27 +1,42 @@
-use core::convert::{TryFrom, TryInto};
+use core::convert::TryInto;
 
-use crate::internals::tasks::{scheduler, TaskState};
+use crate::{
+    internals::tasks::{scheduler, TaskState}, peripherals::gpio::{self, pins::GPIO1_21}
+};
 
 enum Syscall {
     Exit,
+    Yield { sp: u32, pc: u32 },
 }
 
 struct SyscallError {}
 
-impl TryFrom<u32> for Syscall {
+impl TryInto<Syscall> for TrapFrame {
     type Error = SyscallError;
 
-    fn try_from(value: u32) -> Result<Self, Self::Error> {
-        match value {
+    fn try_into(self) -> Result<Syscall, Self::Error> {
+        match self.r0 {
             0 => Ok(Syscall::Exit),
+            1 => Ok(Syscall::Yield {
+                sp: self.r1,
+                pc: self.r2,
+            }),
             _ => Err(SyscallError {}),
         }
     }
 }
 
+#[repr(C)]
+struct TrapFrame {
+    r0: u32,
+    r1: u32,
+    r2: u32,
+    r3: u32,
+}
+
 #[no_mangle]
-fn swi_handler(syscall: u32) -> bool {
-    let syscall: Syscall = match syscall.try_into() {
+extern "C" fn swi_handler(frame: TrapFrame) -> bool {
+    let syscall: Syscall = match frame.try_into() {
         Ok(syscall) => syscall,
         Err(_) => return false,
     };
@@ -32,10 +47,24 @@ fn swi_handler(syscall: u32) -> bool {
             if let Some(task) = scheduler.current() {
                 task.state = TaskState::Terminated;
             }
+            true
+        }
+        Syscall::Yield { sp, pc } => {
+            let scheduler = scheduler();
+            if let Some(task) = scheduler.current() {
+                task.context.pc = pc;
+                task.context.sp = sp;
+                task.state = TaskState::Stored;
+            }
 
             true
         }
     }
+}
+
+#[no_mangle]
+fn gpio() {
+    gpio::write(GPIO1_21, true);
 }
 
 #[no_mangle]
