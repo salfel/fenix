@@ -28,7 +28,7 @@ return_interrupt:
     ldmfd sp!, {r0-r12, pc}^
 
 store_context:
-    ldmfd sp!, {r0, r12, lr}
+    ldmfd sp!, {r0-r12, lr}
 
     str lr, next_pc
 
