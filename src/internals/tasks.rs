@@ -185,5 +185,5 @@ pub fn create_task(entry_point: fn()) -> Option<usize> {
 
 extern "C" {
     fn switch_context(sp: u32, pc: u32);
-    fn restore_context(sp: u32, px: u32);
+    fn restore_context(sp: u32, pc: u32);
 }
