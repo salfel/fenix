@@ -21,7 +21,9 @@ handle_swi:
     ldmfd sp!, {r0-r12, pc}^
 
 keep_supervisor_mode:
-    ldmfd sp!, {r0-r12, pc}
+    msr spsr_c, #0x53
+
+    ldmfd sp!, {r0-r12, pc}^
 
 _swi_handler: .word handle_swi
 _swi_handler_addr: .word 0x4030CE28
