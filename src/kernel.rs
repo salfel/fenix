@@ -47,6 +47,9 @@ extern "C" fn swi_handler(frame: TrapFrame) -> bool {
             if let Some(task) = scheduler.current() {
                 task.state = TaskState::Terminated;
             }
+
+            scheduler.cycle();
+
             true
         }
         Syscall::Yield { sp, pc } => {
@@ -56,6 +59,8 @@ extern "C" fn swi_handler(frame: TrapFrame) -> bool {
                 task.context.sp = sp;
                 task.state = TaskState::Stored;
             }
+
+            scheduler.cycle();
 
             true
         }

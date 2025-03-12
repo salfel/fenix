@@ -80,9 +80,10 @@ impl Scheduler {
             .filter(|task| task.state == TaskState::Running)
     }
 
-    pub fn terminate(&mut self, index: usize) {
-        let task = self.task_mut(index);
-        task.state = TaskState::Terminated;
+    pub fn cycle(&mut self) {
+        if let Some(ref mut index) = self.current_index {
+            *index += 1;
+        }
     }
 
     fn task_with_state(&self, state: TaskState) -> Option<&mut Task> {
