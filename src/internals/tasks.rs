@@ -153,14 +153,12 @@ impl Scheduler {
                 unsafe {
                     switch_context(task.context.sp, task.context.pc);
                 }
-                task.state = TaskState::Terminated;
             }
             TaskState::Stored => {
                 task.state = TaskState::Running;
                 unsafe {
                     restore_context(task.context.sp, task.context.pc);
                 }
-                task.state = TaskState::Terminated;
             }
             _ => {}
         }

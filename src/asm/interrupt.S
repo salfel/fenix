@@ -63,7 +63,14 @@ restore_context:
 
     ldmfd sp!, {r0-r12, lr}
 
-    ldr pc, next_pc
+    ldr lr, next_pc
+    blx lr
+
+    mov r0, #0x0
+    svc #0x0
+
+    b kernel_loop
+    
 
 yield_task:
     mov r0, #0x1

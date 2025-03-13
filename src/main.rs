@@ -7,7 +7,7 @@ use internals::{
 };
 use peripherals::gpio::{
     self,
-    pins::{GPIO1_21, GPIO1_22, GPIO1_23, GPIO1_24},
+    pins::{GPIO1_21, GPIO1_22, GPIO1_23, GPIO1_24, GPIO1_28},
 };
 
 pub mod exceptions;
@@ -28,22 +28,29 @@ pub fn main() {
     gpio::write(GPIO1_24, true);
 
     create_task(user_loop);
-    //create_task(user_loop2);
+    create_task(user_loop2);
 
     unsafe { kernel_loop() };
 }
 
 #[no_mangle]
 fn user_loop() {
-    gpio::write(GPIO1_22, true);
-    wait(1000);
-    gpio::write(GPIO1_22, false);
+    loop {
+        gpio::write(GPIO1_23, true);
+        wait(1000);
+        gpio::write(GPIO1_23, false);
+        wait(1000);
+    }
 }
 
+#[no_mangle]
 fn user_loop2() {
-    gpio::write(GPIO1_23, true);
-    wait(1000);
-    gpio::write(GPIO1_23, false);
+    loop {
+        gpio::write(GPIO1_22, false);
+        wait(1000);
+        gpio::write(GPIO1_22, true);
+        wait(1000);
+    }
 }
 
 #[no_mangle]

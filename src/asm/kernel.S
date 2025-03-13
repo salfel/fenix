@@ -10,7 +10,6 @@ kernel_loop:
     b kernel_loop
 
 switch_context:
-    push {lr}
     mov r2, #0x50
     msr cpsr_c, r2
 
@@ -20,7 +19,7 @@ switch_context:
     mov r0, #0x0
     svc #0x0
     
-    pop {pc}
+    b kernel_loop
 
 user_mode:
     push {lr}

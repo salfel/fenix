@@ -1,7 +1,8 @@
 use core::convert::TryInto;
 
 use crate::{
-    internals::tasks::{scheduler, TaskState}, peripherals::gpio::{self, pins::GPIO1_21}
+    internals::tasks::{scheduler, TaskState},
+    peripherals::gpio::{self, pins::GPIO1_21},
 };
 
 enum Syscall {
