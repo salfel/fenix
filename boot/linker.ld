@@ -3,7 +3,7 @@ MEMORY {
 }
 
 /* Section variables */
-ENTRY(start)
+ENTRY(setup)
 SECTIONS {
   .text : { *(.text*) } > sram
   .bss : { *(.bss*) } > sram

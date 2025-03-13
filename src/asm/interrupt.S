@@ -1,8 +1,8 @@
-.global setup_irq
 .global yield_task
 .global restore_context
+.global irq_handler
 
-handle_irq:
+irq_handler:
     sub lr, lr, #4
     stmfd sp!, {r0-r12, lr}
 
@@ -72,15 +72,6 @@ yield_task:
 
     bx lr
 
-setup_irq:
-    ldr r0, base_irq_addr
-    ldr r1, irq_handler
-    str r1,[r0]
-
-    bx lr
-
-irq_handler: .word handle_irq
-base_irq_addr: .word 0x4030CE38
 yielded: .word 0
 next_pc: .word 0
 temp_spsr: .word 0
