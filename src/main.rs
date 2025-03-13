@@ -53,13 +53,6 @@ fn user_loop2() {
     }
 }
 
-#[no_mangle]
-fn handle_interrupt() {
-    let interrupt = interrupts::current();
-    interrupts::execute(interrupt);
-    interrupts::clear();
-}
-
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}

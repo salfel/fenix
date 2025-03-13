@@ -27,6 +27,14 @@ impl Interrupt {
     }
 }
 
+
+#[no_mangle]
+fn handle_interrupt() {
+    let interrupt = current();
+    execute(interrupt);
+    clear();
+}
+
 pub fn enable_interrupt(n: u32, mode: Mode, priority: u8) {
     let addr = INTC + INTC_ILR + (4 * n);
     let enable_fiq = match mode {
