@@ -49,6 +49,7 @@ store_context:
     mov r0, #0x1
     mov r1, sp
     ldr r2, next_pc
+    mov r3, #0x0
     svc #0x0
 
     b kernel_loop

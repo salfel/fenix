@@ -1,14 +1,16 @@
 use core::cell::UnsafeCell;
 
+use super::sysclock::millis;
+
 const STACK_SIZE: usize = 1024;
-const MAX_TASKS: usize = 4;
+pub const MAX_TASKS: usize = 4;
 
 #[derive(PartialEq)]
 pub enum TaskState {
     Ready,
     Running,
     Terminated,
-    Waiting,
+    Waiting { until: u32 },
     Stored,
 }
 
@@ -40,7 +42,7 @@ impl Task {
     }
 
     fn executable(&self) -> bool {
-        matches!(self.state, TaskState::Ready | TaskState::Stored)
+        matches!(self.state, TaskState::Ready | TaskState::Stored | TaskState::Waiting { .. })
     }
 }
 
@@ -70,7 +72,7 @@ impl Scheduler {
     }
 
     #[allow(clippy::mut_from_ref)]
-    fn task_mut(&self, index: usize) -> &mut Task {
+    pub fn task_mut(&self, index: usize) -> &mut Task {
         unsafe { &mut *self.tasks[index].get() }
     }
 
@@ -112,6 +114,12 @@ impl Scheduler {
         loop {
             let current_task = self.task_mut(index);
             if current_task.executable() {
+                if let TaskState::Waiting { until } = current_task.state {
+                    if millis() >= until {
+                        current_task.state = TaskState::Stored;
+                    }
+                }
+
                 return Some(current_task);
             }
 

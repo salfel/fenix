@@ -7,7 +7,7 @@ use internals::{
 };
 use peripherals::gpio::{
     self,
-    pins::{GPIO1_21, GPIO1_22, GPIO1_23, GPIO1_24, GPIO1_28},
+    pins::{GPIO1_22, GPIO1_23, GPIO1_24},
 };
 
 pub mod exceptions;

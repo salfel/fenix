@@ -7,7 +7,11 @@ use crate::{
 
 enum Syscall {
     Exit,
-    Yield { sp: u32, pc: u32 },
+    Yield {
+        sp: u32,
+        pc: u32,
+        until: Option<u32>,
+    },
 }
 
 struct SyscallError {}
@@ -21,6 +25,10 @@ impl TryInto<Syscall> for TrapFrame {
             1 => Ok(Syscall::Yield {
                 sp: self.r1,
                 pc: self.r2,
+                until: match self.r3 {
+                    0 => None,
+                    until => Some(until),
+                },
             }),
             _ => Err(SyscallError {}),
         }
@@ -53,12 +61,32 @@ extern "C" fn swi_handler(frame: TrapFrame) -> bool {
 
             true
         }
-        Syscall::Yield { sp, pc } => {
+        Syscall::Yield {
+            sp,
+            pc,
+            until: None,
+        } => {
             let scheduler = scheduler();
             if let Some(task) = scheduler.current() {
                 task.context.pc = pc;
                 task.context.sp = sp;
                 task.state = TaskState::Stored;
+            }
+
+            scheduler.cycle();
+
+            true
+        }
+        Syscall::Yield {
+            sp,
+            pc,
+            until: Some(until),
+        } => {
+            let scheduler = scheduler();
+            if let Some(task) = scheduler.current() {
+                task.context.pc = pc;
+                task.context.sp = sp;
+                task.state = TaskState::Waiting { until };
             }
 
             scheduler.cycle();

@@ -1,5 +1,3 @@
-use core::arch::asm;
-
 use super::timer::{self, DmTimer};
 
 pub fn initialize() {
@@ -42,19 +40,14 @@ pub fn millis() -> u32 {
     sys_clock.ticks
 }
 
+#[no_mangle]
 pub fn wait(ms: u32) {
-    let target = millis() + ms;
-    loop {
-        if millis() > target {
-            break;
-        } else {
-            unsafe {
-                asm!("nop");
-            }
-        }
+    unsafe {
+        wait_store(millis() + ms);
     }
 }
 
 extern "C" {
     fn yield_task();
+    fn wait_store(ms: u32);
 }
