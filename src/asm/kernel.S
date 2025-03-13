@@ -1,13 +1,7 @@
-.global kernel_loop
 .global switch_context
 .global wait_store
 
-.extern kernel
-
-kernel_loop:
-    bl kernel
-
-    b kernel_loop
+.extern kernel_loop
 
 switch_context:
     mov r2, #0x50

@@ -1,9 +1,6 @@
 use core::convert::TryInto;
 
-use crate::{
-    internals::tasks::{scheduler, TaskState},
-    peripherals::gpio::{self, pins::GPIO1_21},
-};
+use crate::internals::tasks::{scheduler, TaskState};
 
 enum Syscall {
     Exit,
@@ -97,12 +94,9 @@ extern "C" fn swi_handler(frame: TrapFrame) -> bool {
 }
 
 #[no_mangle]
-fn gpio() {
-    gpio::write(GPIO1_21, true);
-}
-
-#[no_mangle]
-fn kernel() {
-    let scheduler = scheduler();
-    scheduler.switch();
+fn kernel_loop() {
+    loop {
+        let scheduler = scheduler();
+        scheduler.switch();
+    }
 }
