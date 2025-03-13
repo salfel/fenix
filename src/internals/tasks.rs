@@ -82,7 +82,7 @@ impl Scheduler {
 
     pub fn cycle(&mut self) {
         if let Some(ref mut index) = self.current_index {
-            *index += 1;
+            *index = (*index + 1) % MAX_TASKS;
         }
     }
 
