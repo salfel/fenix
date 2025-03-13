@@ -42,7 +42,10 @@ impl Task {
     }
 
     fn executable(&self) -> bool {
-        matches!(self.state, TaskState::Ready | TaskState::Stored | TaskState::Waiting { .. })
+        matches!(
+            self.state,
+            TaskState::Ready | TaskState::Stored | TaskState::Waiting { .. }
+        )
     }
 }
 

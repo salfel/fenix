@@ -13,7 +13,7 @@ pub enum FuncClock {
     Gpio2 = 0xB0,
     Gpio3 = 0xB4,
     Timer5 = 0xEC,
-    Timer6 = 0xF0
+    Timer6 = 0xF0,
 }
 
 impl FuncClock {
@@ -27,7 +27,7 @@ impl FuncClock {
             FuncClock::Gpio2 => ClockModule::CmPer,
             FuncClock::Gpio3 => ClockModule::CmPer,
             FuncClock::Timer5 => ClockModule::CmPer,
-            FuncClock::Timer6 => ClockModule::CmPer
+            FuncClock::Timer6 => ClockModule::CmPer,
         }
     }
 

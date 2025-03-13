@@ -5,7 +5,6 @@ use crate::{
 
 use super::clock::FuncClock;
 
-const TIMER_IRQ_EOI: u32 = 0x20;
 const TIMER_IRQSTATUS: u32 = 0x28;
 const TIMER_IRQENABLE_SET: u32 = 0x2C;
 const TIMER_IRQENABLE_CLR: u32 = 0x30;
@@ -65,14 +64,6 @@ impl Timer {
 
     fn start(&self) {
         write_addr(self.timer.address() + TIMER_CONTROL, 0x3);
-    }
-
-    fn stop(&self) {
-        write_addr(self.timer.address() + TIMER_CONTROL, 0x0);
-    }
-
-    fn reset(&self) {
-        write_addr(self.timer.address() + TIMER_COUNTER, self.reload);
     }
 
     fn irq_enable(&self) {

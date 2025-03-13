@@ -35,5 +35,3 @@ pub fn read_bit(address: u32, bit: u32) -> bool {
 }
 
 pub fn noop() {}
-
-
