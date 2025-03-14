@@ -1,5 +1,3 @@
-.global setup
-
 .extern setup_irq
 .extern stack_end
 .extern irq_stack_end
@@ -25,8 +23,7 @@ setup:
     @ Invalidate TLB
     mcr p15, 0, r1, c8, c7, 0
 
-    bl setup_irq
-    bl setup_swi
+    bl setup_exceptions
     
     b main
 
