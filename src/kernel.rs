@@ -94,7 +94,7 @@ extern "C" fn swi_handler(frame: TrapFrame) -> bool {
 }
 
 #[no_mangle]
-fn kernel_loop() {
+pub fn kernel_loop() {
     loop {
         let scheduler = scheduler();
         scheduler.switch();

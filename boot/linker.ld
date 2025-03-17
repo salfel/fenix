@@ -3,7 +3,10 @@ MEMORY {
 }
 
 SECTIONS {
-  .text : { *(.text*) } > sram
+  .text : { 
+      KEEP(*(.init))
+      *(.text*)
+  } > sram
   .bss : { *(.bss*) } > sram
   .data : { *(.data*) } > sram
 

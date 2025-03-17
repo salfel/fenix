@@ -5,6 +5,7 @@ use internals::{
     sysclock::{self, wait},
     tasks::{self, create_task},
 };
+use kernel::kernel_loop;
 use peripherals::gpio::{
     self,
     pins::{GPIO1_22, GPIO1_23, GPIO1_24},
@@ -30,7 +31,7 @@ pub fn main() {
     create_task(user_loop);
     create_task(user_loop2);
 
-    unsafe { kernel_loop() };
+    kernel_loop();
 }
 
 #[no_mangle]
@@ -56,8 +57,4 @@ fn user_loop2() {
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}
-}
-
-extern "C" {
-    fn kernel_loop();
 }

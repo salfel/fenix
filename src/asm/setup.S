@@ -1,9 +1,11 @@
-.extern setup_irq
+.section .init, "ax"
+
 .extern stack_end
 .extern irq_stack_end
 
 setup:
     bl setup_modes
+    bl setup_exceptions
 
     @ disable mmu
     mrc p15, 0, r1, c1, c0, 0
@@ -22,8 +24,6 @@ setup:
 
     @ Invalidate TLB
     mcr p15, 0, r1, c8, c7, 0
-
-    bl setup_exceptions
     
     b main
 
