@@ -3,27 +3,41 @@ MEMORY {
 }
 
 SECTIONS {
-  .text : { 
+    .text : { 
       KEEP(*(.init))
       *(.text*)
-  } > sram
-  .bss : { *(.bss*) } > sram
-  .data : { *(.data*) } > sram
+    } > sram
 
-  . = ALIGN(8);
-  stack_start = .;
-  . += 16K;
-  stack_end = .;
+    .bss : { 
+        *(.bss*)
+    } > sram
 
-  . = ALIGN(8);
-  user_stack_start = .;
-  . += 16K;
-  user_stack_end = .;
+    .data : { 
+        *(.data*)
+    } > sram
 
-  . = ALIGN(8);
-  irq_stack_start = .;
-  . += 4K;
-  irq_stack_end = .;
+    . = ALIGN(16K);
+    level_1_page_table = .;
+    . += 16K;
 
-  _end = . ;
+    . = ALIGN(1K);
+    level_2_page_table = .;
+    . += 1K;
+
+    . = ALIGN(8);
+    user_stack_start = .;
+    . += 16K;
+    user_stack_end = .;
+
+    . = ALIGN(8);
+    stack_start = .;
+    . += 4K;
+    stack_end = .;
+
+    . = ALIGN(8);
+    irq_stack_start = .;
+    . += 4K;
+    irq_stack_end = .;
+
+    _end = .;
 }

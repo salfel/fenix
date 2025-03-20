@@ -36,7 +36,6 @@ impl Task {
         }
     }
 
-    #[no_mangle]
     fn setup_stack(&mut self) {
         self.context.sp = (&self.stack[STACK_SIZE - 1] as *const u32) as u32;
     }
@@ -176,6 +175,7 @@ impl Scheduler {
     }
 }
 
+#[link_section = "user_stack_start"]
 static mut SCHEDULER: Scheduler = Scheduler::new();
 
 #[allow(static_mut_refs)]
