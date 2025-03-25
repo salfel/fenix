@@ -24,13 +24,11 @@ pub fn _start() {
     unsafe {
         setup_modes();
         setup_exceptions();
+        setup_mmu();
     }
 
     pinmux::configure();
     gpio::initialize();
-    unsafe {
-        setup_mmu();
-    }
     sysclock::initialize();
     tasks::init();
 
