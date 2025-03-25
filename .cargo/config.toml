@@ -10,4 +10,5 @@ rustflags = [
     "-C", "link-arg=out/interrupts.o",
     "-C", "link-arg=out/software_interrupts.o",
     "-C", "link-arg=out/kernel.o",
+    "-C", "link-arg=out/mmu.o",
 ]

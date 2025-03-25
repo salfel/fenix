@@ -28,6 +28,9 @@ pub fn _start() {
 
     pinmux::configure();
     gpio::initialize();
+    unsafe {
+        setup_mmu();
+    }
     sysclock::initialize();
     tasks::init();
 
@@ -67,4 +70,5 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 extern "C" {
     fn setup_modes();
     fn setup_exceptions();
+    fn setup_mmu();
 }
