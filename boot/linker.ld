@@ -2,10 +2,11 @@ MEMORY {
     sram (rwx) : ORIGIN = 0x402F0400, LENGTH = 0xFFFF
 }
 
+ENTRY(_start)
 SECTIONS {
     .text : { 
-      KEEP(*(.init))
-      *(.text*)
+        *(.text._start)
+        *(.text*)
     } > sram
 
     .bss : { 
@@ -17,12 +18,8 @@ SECTIONS {
     } > sram
 
     . = ALIGN(16K);
-    level_1_page_table = .;
+    level1_page_table = .;
     . += 16K;
-
-    . = ALIGN(1K);
-    level_2_page_table = .;
-    . += 1K;
 
     . = ALIGN(8);
     user_stack_start = .;

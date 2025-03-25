@@ -20,7 +20,12 @@ pub mod pinmux;
 pub mod sys;
 
 #[no_mangle]
-pub fn main() {
+pub fn _start() {
+    unsafe {
+        setup_modes();
+        setup_exceptions();
+    }
+
     pinmux::configure();
     gpio::initialize();
     sysclock::initialize();
@@ -57,4 +62,9 @@ fn user_loop2() {
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}
+}
+
+extern "C" {
+    fn setup_modes();
+    fn setup_exceptions();
 }
