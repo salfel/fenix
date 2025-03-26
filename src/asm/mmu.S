@@ -83,7 +83,7 @@ write_pte:
     orr r2, r0, r3, lsl #20
     str r2,  [r1, r3, lsl #2]
     subs r3, r3, #1
-    bne write_pte
+    bge write_pte
 
     bx lr
 
