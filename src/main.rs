@@ -2,8 +2,7 @@
 #![no_main]
 
 use internals::{
-    sysclock::{self, wait},
-    tasks::{self, create_task},
+    mmu, sysclock::{self, wait}, tasks::{self, create_task}
 };
 use kernel::kernel_loop;
 use peripherals::gpio::{
@@ -24,9 +23,8 @@ pub fn _start() {
     unsafe {
         setup_modes();
         setup_exceptions();
-        setup_mmu();
     }
-
+    mmu::initialize();
     pinmux::configure();
     gpio::initialize();
     sysclock::initialize();
@@ -68,5 +66,4 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 extern "C" {
     fn setup_modes();
     fn setup_exceptions();
-    fn setup_mmu();
 }

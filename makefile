@@ -6,7 +6,6 @@ build:
 	arm-none-eabi-gcc -mcpu=cortex-a8 -c src/asm/exceptions.S -o out/exceptions.o
 	arm-none-eabi-gcc -mcpu=cortex-a8 -c src/asm/software_interrupts.S -o out/software_interrupts.o
 	arm-none-eabi-gcc -mcpu=cortex-a8 -c src/asm/kernel.S -o out/kernel.o
-	arm-none-eabi-gcc -mcpu=cortex-a8 -c src/asm/mmu.S -o out/mmu.o
 	cargo build --release
 	cp target/armv7a-none-eabi/release/fenix out/kernel.elf
 	arm-none-eabi-objdump -d out/kernel.elf > out/kernel.dump
