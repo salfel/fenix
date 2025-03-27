@@ -1,5 +1,5 @@
-pub mod l1;
-pub mod l2;
-pub mod setup;
+mod l1;
+mod l2;
+mod setup;
 
 pub use setup::initialize;
