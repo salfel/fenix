@@ -1,5 +1,8 @@
+use core::ops::Range;
+
 use crate::internals::mmu::l1::{level1_page_table, L1PointerTableEntry};
 
+const BASE_ADDRESS: u32 = 0x4030_0000;
 const L2_FAULT_PAGE_TABLE_ENTRY: u32 = 0x0;
 
 pub fn initialize() {
@@ -13,6 +16,25 @@ pub fn initialize() {
     unsafe {
         level1_page_table[0] = l1_pointer.into();
     }
+}
+
+pub fn register_page() -> Option<Range<u32>> {
+    let current_index = match first_unused_page() {
+        Some(index) => index,
+        None => return None,
+    };
+    let offset = current_index * 0x1000;
+    let page = L2SmallPageTableEntry::new(BASE_ADDRESS + offset);
+
+    unsafe {
+        LEVEL2_PAGE_TABLE.0[current_index as usize] = page.into();
+    }
+
+    Some(offset..offset + 0x1000)
+}
+
+fn first_unused_page() -> Option<u32> {
+    (0..1024).find(|&i| unsafe { LEVEL2_PAGE_TABLE.0[i as usize] == 0 })
 }
 
 #[no_mangle]
@@ -33,7 +55,7 @@ struct L2SmallPageTableEntry {
 }
 
 impl L2SmallPageTableEntry {
-    pub fn new(address: u32) -> Self {
+    fn new(address: u32) -> Self {
         L2SmallPageTableEntry {
             address,
             permissions: AccessPermissions::Full,
@@ -59,7 +81,7 @@ enum AccessPermissions {
 impl From<AccessPermissions> for u32 {
     fn from(value: AccessPermissions) -> Self {
         match value {
-            AccessPermissions::Full => 0b11 << 10,
+            AccessPermissions::Full => 0b11 << 4,
         }
     }
 }

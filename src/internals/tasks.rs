@@ -1,8 +1,7 @@
 use core::cell::UnsafeCell;
 
-use super::sysclock::millis;
+use super::{mmu::register_page, sysclock::millis};
 
-const STACK_SIZE: usize = 1024;
 pub const MAX_TASKS: usize = 4;
 
 #[derive(PartialEq)]
@@ -23,7 +22,6 @@ pub struct Task {
     id: usize,
     pub state: TaskState,
     pub context: TaskContext,
-    stack: [u32; STACK_SIZE],
 }
 
 impl Task {
@@ -32,12 +30,7 @@ impl Task {
             id: 0,
             state: TaskState::Terminated,
             context: TaskContext { sp: 0, pc: 0 },
-            stack: [0; STACK_SIZE],
         }
-    }
-
-    fn setup_stack(&mut self) {
-        self.context.sp = (&self.stack[STACK_SIZE - 1] as *const u32) as u32;
     }
 
     fn executable(&self) -> bool {
@@ -140,9 +133,14 @@ impl Scheduler {
             None => return None,
         };
 
+        let page = match register_page() {
+            Some(page) => page,
+            None => return None,
+        };
+
         let task = self.task_mut(task_id);
         task.state = TaskState::Ready;
-        task.setup_stack();
+        task.context.sp = page.end;
         task.context.pc = entry_point as usize as u32;
         Some(task.id)
     }

@@ -40,7 +40,6 @@ pub fn _start() {
     kernel_loop();
 }
 
-#[no_mangle]
 fn user_loop() {
     loop {
         gpio::write(GPIO1_23, true);
@@ -50,7 +49,6 @@ fn user_loop() {
     }
 }
 
-#[no_mangle]
 fn user_loop2() {
     loop {
         gpio::write(GPIO1_22, false);
