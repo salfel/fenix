@@ -1,6 +1,9 @@
 use core::ops::Range;
 
-use super::l1::{L1PointerTableEntry, LEVEL1_PAGE_TABLE};
+use super::{
+    l1::{L1PointerTableEntry, LEVEL1_PAGE_TABLE},
+    setup::invalidate_tlb,
+};
 
 const BASE_ADDRESS: u32 = 0x4030_0000;
 const L2_FAULT_PAGE_TABLE_ENTRY: u32 = 0x0;
@@ -30,6 +33,8 @@ pub fn register_page() -> Option<Range<u32>> {
         LEVEL2_PAGE_TABLE.0[current_index as usize] = page.into();
     }
 
+    invalidate_tlb();
+
     Some(offset..offset + 0x1000)
 }
 
@@ -37,6 +42,8 @@ pub fn unregister_page(page: Range<u32>) {
     unsafe {
         LEVEL2_PAGE_TABLE.0[page.start as usize >> 12] = L2_FAULT_PAGE_TABLE_ENTRY;
     }
+
+    invalidate_tlb();
 }
 
 fn first_unused_page() -> Option<u32> {

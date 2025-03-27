@@ -1,6 +1,9 @@
 use core::{cell::UnsafeCell, ops::Range};
 
-use super::{mmu::{register_page, unregister_page}, sysclock::millis};
+use super::{
+    mmu::{register_page, unregister_page},
+    sysclock::millis,
+};
 
 pub const MAX_TASKS: usize = 4;
 

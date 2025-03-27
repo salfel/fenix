@@ -16,8 +16,10 @@ pub fn initialize() {
     }
 }
 
-unsafe fn invalidate_tlb() {
-    asm!("mcr p15, 0, r1, c8, c7, 0")
+pub(super) fn invalidate_tlb() {
+    unsafe {
+        asm!("mcr p15, 0, r1, c8, c7, 0", "dsb", "isb")
+    }
 }
 
 unsafe fn initialize_ttbcr() {
@@ -37,5 +39,5 @@ unsafe fn setup_domains() {
 unsafe fn enable_mmu() {
     let value: u32;
     asm!("mrc p15, 0, {0}, c1, c0, 0", out(reg) value);
-    asm!("mcr p15, 0, {0}, c1, c0, 0", in(reg) value | 0x1);
+    asm!("mcr p15, 0, {0}, c1, c0, 0", "isb", "dsb", in(reg) value | 0x1);
 }
