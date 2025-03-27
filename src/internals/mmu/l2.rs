@@ -1,7 +1,5 @@
 use core::ops::Range;
 
-use crate::peripherals::gpio::{self, pins::GPIO1_22};
-
 use super::l1::{L1PointerTableEntry, LEVEL1_PAGE_TABLE};
 
 const BASE_ADDRESS: u32 = 0x4030_0000;
@@ -27,10 +25,6 @@ pub fn register_page() -> Option<Range<u32>> {
     };
     let offset = current_index * 0x1000;
     let page = L2SmallPageTableEntry::new(BASE_ADDRESS + offset);
-
-    if current_index > 10 {
-        gpio::write(GPIO1_22, true);
-    }
 
     unsafe {
         LEVEL2_PAGE_TABLE.0[current_index as usize] = page.into();
