@@ -47,7 +47,7 @@ impl Task {
 
     pub fn terminate(&mut self) {
         self.state = TaskState::Terminated;
-        unregister_page(self.page.clone());
+        unregister_page(&self.page);
     }
 }
 

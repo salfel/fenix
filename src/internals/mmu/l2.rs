@@ -38,7 +38,7 @@ pub fn register_page() -> Option<Range<u32>> {
     Some(offset..offset + 0x1000)
 }
 
-pub fn unregister_page(page: Range<u32>) {
+pub fn unregister_page(page: &Range<u32>) {
     unsafe {
         LEVEL2_PAGE_TABLE.0[page.start as usize >> 12] = L2_FAULT_PAGE_TABLE_ENTRY;
     }
