@@ -1,6 +1,6 @@
-use core::cell::UnsafeCell;
+use core::{cell::UnsafeCell, ops::Range};
 
-use super::{mmu::register_page, sysclock::millis};
+use super::{mmu::{register_page, unregister_page}, sysclock::millis};
 
 pub const MAX_TASKS: usize = 4;
 
@@ -22,6 +22,7 @@ pub struct Task {
     id: usize,
     pub state: TaskState,
     pub context: TaskContext,
+    page: Range<u32>,
 }
 
 impl Task {
@@ -30,6 +31,7 @@ impl Task {
             id: 0,
             state: TaskState::Terminated,
             context: TaskContext { sp: 0, pc: 0 },
+            page: 0..0,
         }
     }
 
@@ -38,6 +40,11 @@ impl Task {
             self.state,
             TaskState::Ready | TaskState::Stored | TaskState::Waiting { .. }
         )
+    }
+
+    pub fn terminate(&mut self) {
+        self.state = TaskState::Terminated;
+        unregister_page(self.page.clone());
     }
 }
 
@@ -142,6 +149,7 @@ impl Scheduler {
         task.state = TaskState::Ready;
         task.context.sp = page.end;
         task.context.pc = entry_point as usize as u32;
+        task.page = page;
         Some(task.id)
     }
 
