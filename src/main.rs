@@ -2,7 +2,9 @@
 #![no_main]
 
 use internals::{
-    mmu, sysclock::{self, wait}, tasks::{self, create_task}
+    mmu,
+    sysclock::{self, wait},
+    tasks::{self, create_task},
 };
 use kernel::kernel_loop;
 use peripherals::gpio::{
