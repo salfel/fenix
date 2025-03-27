@@ -2,34 +2,9 @@ use super::l2::L2PageTable;
 
 pub fn initialize() {
     for i in 0..4096 {
-        let section = L1PageTableEntry::new_section(i);
+        let section = L1SectionPageTableEntry::new(i);
         unsafe {
             level1_page_table[i as usize] = section.into();
-        }
-    }
-}
-
-pub enum L1PageTableEntry {
-    Fault,
-    Section(L1SectionPageTableEntry),
-    Pointer(L1PointerTableEntry),
-}
-
-impl L1PageTableEntry {
-    fn new_section(index: u32) -> Self {
-        L1PageTableEntry::Section(L1SectionPageTableEntry {
-            index,
-            access_permissions: AccessPermissions::Full,
-        })
-    }
-}
-
-impl From<L1PageTableEntry> for u32 {
-    fn from(value: L1PageTableEntry) -> Self {
-        match value {
-            L1PageTableEntry::Fault => 0x0,
-            L1PageTableEntry::Section(section) => section.into(),
-            L1PageTableEntry::Pointer(pointer) => pointer.into(),
         }
     }
 }
@@ -37,6 +12,15 @@ impl From<L1PageTableEntry> for u32 {
 pub struct L1SectionPageTableEntry {
     index: u32,
     access_permissions: AccessPermissions,
+}
+
+impl L1SectionPageTableEntry {
+    fn new(index: u32) -> Self {
+        L1SectionPageTableEntry {
+            index,
+            access_permissions: AccessPermissions::Full,
+        }
+    }
 }
 
 impl From<L1SectionPageTableEntry> for u32 {
