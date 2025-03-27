@@ -1,6 +1,6 @@
 use core::arch::asm;
 
-use crate::internals::mmu::l1::level1_page_table;
+use super::l1::LEVEL1_PAGE_TABLE;
 
 use super::{l1, l2};
 
@@ -25,7 +25,7 @@ unsafe fn initialize_ttbcr() {
 }
 
 unsafe fn initialize_ttbr0() {
-    let page_table_addr: u32 = &raw const level1_page_table as u32;
+    let page_table_addr: u32 = &raw const LEVEL1_PAGE_TABLE.0 as u32;
 
     asm!("mcr p15, 0, {0}, c2, c0, 0", in(reg) page_table_addr);
 }

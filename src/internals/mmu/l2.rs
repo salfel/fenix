@@ -1,6 +1,6 @@
 use core::ops::Range;
 
-use crate::internals::mmu::l1::{level1_page_table, L1PointerTableEntry};
+use super::l1::{L1PointerTableEntry, LEVEL1_PAGE_TABLE};
 
 const BASE_ADDRESS: u32 = 0x4030_0000;
 const L2_FAULT_PAGE_TABLE_ENTRY: u32 = 0x0;
@@ -14,7 +14,7 @@ pub fn initialize() {
     }
 
     unsafe {
-        level1_page_table[0] = l1_pointer.into();
+        LEVEL1_PAGE_TABLE.0[0] = l1_pointer.into();
     }
 }
 

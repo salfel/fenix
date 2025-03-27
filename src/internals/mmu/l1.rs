@@ -4,8 +4,19 @@ pub fn initialize() {
     for i in 0..4096 {
         let section = L1SectionPageTableEntry::new(i);
         unsafe {
-            level1_page_table[i as usize] = section.into();
+            LEVEL1_PAGE_TABLE.0[i as usize] = section.into();
         }
+    }
+}
+
+pub static mut LEVEL1_PAGE_TABLE: L1PageTable = L1PageTable::new();
+
+#[repr(align(16384))]
+pub struct L1PageTable(pub [u32; 4096]);
+
+impl L1PageTable {
+    const fn new() -> Self {
+        L1PageTable([0; 4096])
     }
 }
 
@@ -62,8 +73,4 @@ impl From<AccessPermissions> for u32 {
             AccessPermissions::Full => 0b11 << 10,
         }
     }
-}
-
-extern "C" {
-    pub static mut level1_page_table: [u32; 4096];
 }

@@ -17,15 +17,6 @@ SECTIONS {
         *(.data*)
     } > sram
 
-    . = ALIGN(16K);
-    level1_page_table = .;
-    . += 16K;
-
-    . = ALIGN(8);
-    user_stack_start = .;
-    . += 16K;
-    user_stack_end = .;
-
     . = ALIGN(8);
     stack_start = .;
     . += 4K;
