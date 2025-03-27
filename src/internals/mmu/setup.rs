@@ -33,6 +33,7 @@ unsafe fn initialize_ttbr0() {
 }
 
 unsafe fn setup_domains() {
+    // sets all domains to client
     asm!("mcr p15, 0, {0}, c3, c0, 0", in(reg) 0x55555555);
 }
 

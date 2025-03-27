@@ -6,6 +6,7 @@ use super::{
 };
 
 const BASE_ADDRESS: u32 = 0x4030_0000;
+const PAGE_SIZE_BITS: u32 = 12;
 const L2_FAULT_PAGE_TABLE_ENTRY: u32 = 0x0;
 
 pub fn initialize() {
@@ -26,7 +27,7 @@ pub fn register_page() -> Option<Range<u32>> {
         Some(index) => index,
         None => return None,
     };
-    let offset = current_index * 0x1000;
+    let offset = current_index << PAGE_SIZE_BITS;
     let page = L2SmallPageTableEntry::new(BASE_ADDRESS + offset);
 
     unsafe {
@@ -35,12 +36,12 @@ pub fn register_page() -> Option<Range<u32>> {
 
     invalidate_tlb();
 
-    Some(offset..offset + 0x1000)
+    Some(offset..offset + (1 << PAGE_SIZE_BITS))
 }
 
 pub fn unregister_page(page: &Range<u32>) {
     unsafe {
-        LEVEL2_PAGE_TABLE.0[page.start as usize >> 12] = L2_FAULT_PAGE_TABLE_ENTRY;
+        LEVEL2_PAGE_TABLE.0[page.start as usize >> PAGE_SIZE_BITS] = L2_FAULT_PAGE_TABLE_ENTRY;
     }
 
     invalidate_tlb();
