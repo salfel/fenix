@@ -1,43 +1,24 @@
+use crate::sync::mutex::Mutex;
+
 use super::timer::{self, DmTimer};
 
 pub fn initialize() {
     timer::register_timer(DmTimer::Timer2, 0xFFFF_FFE0, interrupt_handler);
 }
 
-static mut SYS_CLOCK: SysClock = SysClock::new();
-
-#[allow(static_mut_refs)]
-fn sys_clock() -> &'static mut SysClock {
-    unsafe { &mut SYS_CLOCK }
-}
-
-pub struct SysClock {
-    ticks: u32,
-}
-
-impl SysClock {
-    const fn new() -> Self {
-        SysClock { ticks: 0 }
-    }
-
-    fn increment(&mut self) {
-        self.ticks += 1;
-
-        if self.ticks % 10 == 0 {
-            unsafe { yield_task() };
-        }
-    }
-}
+static SYS_CLOCK: Mutex<u32> = Mutex::new(0);
 
 fn interrupt_handler() {
-    let sys_clock = sys_clock();
+    let mut ticks = SYS_CLOCK.lock();
+    *ticks += 1;
 
-    sys_clock.increment();
+    if *ticks % 10 == 0 {
+        unsafe { yield_task() };
+    }
 }
 
 pub fn millis() -> u32 {
-    let sys_clock = sys_clock();
-    sys_clock.ticks
+    *SYS_CLOCK.lock()
 }
 
 #[no_mangle]

@@ -18,6 +18,7 @@ pub mod interrupts;
 pub mod kernel;
 pub mod peripherals;
 pub mod pinmux;
+pub mod sync;
 pub mod sys;
 
 #[no_mangle]

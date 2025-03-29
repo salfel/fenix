@@ -17,9 +17,7 @@ pub fn initialize() {
 }
 
 pub(super) fn invalidate_tlb() {
-    unsafe {
-        asm!("mcr p15, 0, r1, c8, c7, 0", "dsb", "isb")
-    }
+    unsafe { asm!("mcr p15, 0, r1, c8, c7, 0", "dsb", "isb") }
 }
 
 unsafe fn initialize_ttbcr() {
