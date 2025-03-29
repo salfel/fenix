@@ -1,22 +1,22 @@
 use core::{
     alloc::Layout,
     marker::PhantomData,
-    ptr::{self, NonNull},
+    ptr::{self},
 };
 
 use super::heap::{alloc, dealloc};
 
 pub struct Vec<T> {
-    pub ptr: NonNull<T>,
+    ptr: *mut T,
     len: usize,
     cap: usize,
     _marker: PhantomData<T>,
 }
 
 impl<T> Vec<T> {
-    pub fn new() -> Vec<T> {
+    pub const fn new() -> Vec<T> {
         Vec {
-            ptr: NonNull::dangling(),
+            ptr: core::ptr::null_mut(),
             len: 0,
             cap: 0,
             _marker: PhantomData,
@@ -29,7 +29,7 @@ impl<T> Vec<T> {
         }
 
         unsafe {
-            ptr::write(self.ptr.as_ptr().add(self.len), val);
+            ptr::write(self.ptr.add(self.len), val);
         }
 
         self.len += 1;
@@ -46,14 +46,52 @@ impl<T> Vec<T> {
 
         if self.len > 0 {
             unsafe {
-                ptr::copy_nonoverlapping(self.ptr.as_ptr(), new_ptr, self.len);
+                ptr::copy_nonoverlapping(self.ptr, new_ptr, self.len);
                 let old_layout = Layout::array::<T>(self.cap).unwrap();
-                dealloc(self.ptr.as_ptr() as *mut u8, old_layout);
+                dealloc(self.ptr as *mut u8, old_layout);
             }
         }
 
-        self.ptr = unsafe { NonNull::new_unchecked(new_ptr) };
+        self.ptr = new_ptr;
         self.cap = new_capacity;
+    }
+
+    pub fn remove(&mut self, index: usize) -> Option<T> {
+        if index >= self.len {
+            return None;
+        }
+
+        let old_value;
+        unsafe {
+            old_value = ptr::read(self.ptr.add(index));
+            ptr::copy_nonoverlapping(
+                self.ptr.add(index + 1),
+                self.ptr.add(index),
+                self.len - index - 1,
+            );
+        }
+
+        Some(old_value)
+    }
+
+    pub fn pop(&mut self) -> Option<T> {
+        self.remove(self.len - 1)
+    }
+
+    pub fn get(&self, index: usize) -> Option<&T> {
+        if index < self.len {
+            unsafe { Some(&*self.ptr.add(index)) }
+        } else {
+            None
+        }
+    }
+
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+        if index < self.len {
+            unsafe { Some(&mut *self.ptr.add(index)) }
+        } else {
+            None
+        }
     }
 
     pub fn len(&self) -> usize {
@@ -62,14 +100,6 @@ impl<T> Vec<T> {
 
     pub fn is_empty(&self) -> bool {
         self.len == 0
-    }
-
-    pub fn get(&self, index: usize) -> Option<&T> {
-        if index < self.len {
-            unsafe { Some(&*self.ptr.as_ptr().add(index)) }
-        } else {
-            None
-        }
     }
 }
 
@@ -83,15 +113,17 @@ impl<T> Drop for Vec<T> {
     fn drop(&mut self) {
         for i in 0..self.len {
             unsafe {
-                ptr::drop_in_place(self.ptr.as_ptr().add(i));
+                ptr::drop_in_place(self.ptr.add(i));
             }
         }
 
         if self.cap > 0 {
             let layout = Layout::array::<T>(self.cap).unwrap();
             unsafe {
-                dealloc(self.ptr.as_ptr() as *mut u8, layout);
+                dealloc(self.ptr as *mut u8, layout);
             }
         }
     }
 }
+
+unsafe impl<T: Sized + Sync> Sync for Vec<T> {}
