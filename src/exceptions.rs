@@ -6,14 +6,25 @@ use crate::peripherals::gpio::{
 #[no_mangle]
 fn data_abort_handler() {
     gpio::write(GPIO1_21, true);
+
+    panic!();
 }
 
 #[no_mangle]
 fn fetch_abort_handler() {
     gpio::write(GPIO1_23, true);
+
+    panic!();
 }
 
 #[no_mangle]
 fn undefined_handler() {
     gpio::write(GPIO1_22, true);
+    
+    panic!();
+}
+
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    loop {}
 }

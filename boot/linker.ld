@@ -17,6 +17,11 @@ SECTIONS {
         *(.data*)
     } > sram
 
+    . = ALIGN(4);
+    heap_start = .;
+    . += 4K;
+    heap_end = .;
+
     . = ALIGN(8);
     stack_start = .;
     . += 4K;
