@@ -27,7 +27,6 @@ impl Interrupt {
     }
 }
 
-
 #[no_mangle]
 fn handle_interrupt() {
     let interrupt = current();

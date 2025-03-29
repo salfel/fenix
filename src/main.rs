@@ -2,6 +2,7 @@
 #![no_main]
 
 use internals::{
+    mmu,
     sysclock::{self, wait},
     tasks::{self, create_task},
 };
@@ -17,10 +18,16 @@ pub mod interrupts;
 pub mod kernel;
 pub mod peripherals;
 pub mod pinmux;
+pub mod sync;
 pub mod sys;
 
 #[no_mangle]
-pub fn main() {
+pub fn _start() {
+    unsafe {
+        setup_modes();
+        setup_exceptions();
+    }
+    mmu::initialize();
     pinmux::configure();
     gpio::initialize();
     sysclock::initialize();
@@ -34,7 +41,6 @@ pub fn main() {
     kernel_loop();
 }
 
-#[no_mangle]
 fn user_loop() {
     loop {
         gpio::write(GPIO1_23, true);
@@ -44,7 +50,6 @@ fn user_loop() {
     }
 }
 
-#[no_mangle]
 fn user_loop2() {
     loop {
         gpio::write(GPIO1_22, false);
@@ -57,4 +62,9 @@ fn user_loop2() {
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}
+}
+
+extern "C" {
+    fn setup_modes();
+    fn setup_exceptions();
 }

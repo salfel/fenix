@@ -1,8 +1,10 @@
-use core::cell::UnsafeCell;
+use core::{cell::UnsafeCell, ops::Range};
 
-use super::sysclock::millis;
+use super::{
+    mmu::{register_page, unregister_page},
+    sysclock::millis,
+};
 
-const STACK_SIZE: usize = 1024;
 pub const MAX_TASKS: usize = 4;
 
 #[derive(PartialEq)]
@@ -23,7 +25,7 @@ pub struct Task {
     id: usize,
     pub state: TaskState,
     pub context: TaskContext,
-    stack: [u32; STACK_SIZE],
+    page: Range<u32>,
 }
 
 impl Task {
@@ -32,13 +34,8 @@ impl Task {
             id: 0,
             state: TaskState::Terminated,
             context: TaskContext { sp: 0, pc: 0 },
-            stack: [0; STACK_SIZE],
+            page: 0..0,
         }
-    }
-
-    #[no_mangle]
-    fn setup_stack(&mut self) {
-        self.context.sp = (&self.stack[STACK_SIZE - 1] as *const u32) as u32;
     }
 
     fn executable(&self) -> bool {
@@ -46,6 +43,11 @@ impl Task {
             self.state,
             TaskState::Ready | TaskState::Stored | TaskState::Waiting { .. }
         )
+    }
+
+    pub fn terminate(&mut self) {
+        self.state = TaskState::Terminated;
+        unregister_page(&self.page);
     }
 }
 
@@ -141,10 +143,16 @@ impl Scheduler {
             None => return None,
         };
 
+        let page = match register_page() {
+            Some(page) => page,
+            None => return None,
+        };
+
         let task = self.task_mut(task_id);
         task.state = TaskState::Ready;
-        task.setup_stack();
+        task.context.sp = page.end;
         task.context.pc = entry_point as usize as u32;
+        task.page = page;
         Some(task.id)
     }
 

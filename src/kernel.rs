@@ -51,7 +51,7 @@ extern "C" fn swi_handler(frame: TrapFrame) -> bool {
         Syscall::Exit => {
             let scheduler = scheduler();
             if let Some(task) = scheduler.current() {
-                task.state = TaskState::Terminated;
+                task.terminate();
             }
 
             scheduler.cycle();
