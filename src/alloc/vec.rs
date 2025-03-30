@@ -105,6 +105,23 @@ impl<T> Vec<T> {
     pub fn iter(&self) -> Iter<T> {
         self.into_iter()
     }
+
+     pub fn clear(&mut self) {
+         self.len = 0;
+    }
+
+    pub fn iter_mut(&mut self) -> IterMut<T> {
+        let end = if self.len == 0 {
+            self.ptr
+        } else {
+            unsafe { self.ptr.add(self.len) }
+        };
+        IterMut {
+            ptr: self.ptr,
+            end,
+            marker: PhantomData,
+        }
+    }
 }
 
 impl<T> Default for Vec<T> {
@@ -147,6 +164,28 @@ impl<'a, T> Iterator for Iter<'a, T> {
             let result = self.vec.get(self.index);
             self.index += 1;
             result
+        }
+    }
+}
+
+pub struct IterMut<'a, T> {
+    ptr: *mut T,
+    end: *mut T,
+    marker: PhantomData<&'a mut T>,
+}
+
+impl<'a, T> Iterator for IterMut<'a, T> {
+    type Item = &'a mut T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.ptr == self.end {
+            None
+        } else {
+            unsafe {
+                let item = &mut *self.ptr;
+                self.ptr = self.ptr.add(1);
+                Some(item)
+            }
         }
     }
 }
