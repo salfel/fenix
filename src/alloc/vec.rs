@@ -101,6 +101,10 @@ impl<T> Vec<T> {
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
+
+    pub fn iter(&self) -> Iter<T> {
+        self.into_iter()
+    }
 }
 
 impl<T> Default for Vec<T> {
@@ -127,3 +131,34 @@ impl<T> Drop for Vec<T> {
 }
 
 unsafe impl<T: Sized + Sync> Sync for Vec<T> {}
+
+pub struct Iter<'a, T> {
+    vec: &'a Vec<T>,
+    index: usize,
+}
+
+impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.vec.len {
+            None
+        } else {
+            let result = self.vec.get(self.index);
+            self.index += 1;
+            result
+        }
+    }
+}
+
+impl<'a, T> IntoIterator for &'a Vec<T> {
+    type Item = &'a T;
+    type IntoIter = Iter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Iter {
+            vec: self,
+            index: 0,
+        }
+    }
+}
