@@ -7,6 +7,7 @@ use super::{
 
 const BASE_ADDRESS: u32 = 0x4030_0000;
 const PAGE_SIZE_BITS: u32 = 12;
+const PAGE_SIZE: u32 = 0x1000;
 const L2_FAULT_PAGE_TABLE_ENTRY: u32 = 0x0;
 
 pub fn initialize() {
@@ -23,20 +24,15 @@ pub fn initialize() {
 }
 
 pub fn register_page() -> Option<Range<u32>> {
-    let current_index = match first_unused_page() {
-        Some(index) => index,
-        None => return None,
-    };
-    let offset = current_index << PAGE_SIZE_BITS;
-    let page = L2SmallPageTableEntry::new(BASE_ADDRESS + offset);
+    let page = L2SmallPageTableEntry::try_new()?;
 
     unsafe {
-        LEVEL2_PAGE_TABLE.0[current_index as usize] = page.into();
+        LEVEL2_PAGE_TABLE.0[page.virtual_address as usize >> PAGE_SIZE_BITS] = (&page).into();
     }
 
     invalidate_tlb();
 
-    Some(offset..offset + (1 << PAGE_SIZE_BITS))
+    Some(page.virtual_address..page.virtual_address + PAGE_SIZE - 4)
 }
 
 pub fn unregister_page(page: &Range<u32>) {
@@ -64,23 +60,29 @@ impl L2PageTable {
 }
 
 struct L2SmallPageTableEntry {
-    address: u32,
+    virtual_address: u32,
+    physical_address: u32,
     permissions: AccessPermissions,
 }
 
 impl L2SmallPageTableEntry {
-    fn new(address: u32) -> Self {
-        L2SmallPageTableEntry {
-            address,
+    fn try_new() -> Option<Self> {
+        let current_index = first_unused_page()?;
+        let offset = current_index << PAGE_SIZE_BITS;
+
+        Some(L2SmallPageTableEntry {
+            virtual_address: offset,
+            physical_address: BASE_ADDRESS + offset,
             permissions: AccessPermissions::Full,
-        }
+        })
     }
 }
 
-impl From<L2SmallPageTableEntry> for u32 {
-    fn from(val: L2SmallPageTableEntry) -> Self {
+impl From<&L2SmallPageTableEntry> for u32 {
+    fn from(val: &L2SmallPageTableEntry) -> Self {
         let L2SmallPageTableEntry {
-            address,
+            virtual_address: _,
+            physical_address: address,
             permissions,
         } = val;
         let permissions: u32 = permissions.into();
@@ -92,8 +94,8 @@ enum AccessPermissions {
     Full,
 }
 
-impl From<AccessPermissions> for u32 {
-    fn from(value: AccessPermissions) -> Self {
+impl From<&AccessPermissions> for u32 {
+    fn from(value: &AccessPermissions) -> Self {
         match value {
             AccessPermissions::Full => 0b11 << 4,
         }
