@@ -42,10 +42,10 @@ struct TrapFrame {
 }
 
 #[no_mangle]
-extern "C" fn swi_handler(frame: &TrapFrame) -> bool {
+extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
     let syscall: Syscall = match frame.try_into() {
         Ok(syscall) => syscall,
-        Err(_) => return false,
+        Err(_) => panic!("invalid syscall"),
     };
 
     match syscall {
@@ -57,7 +57,7 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> bool {
 
             scheduler.cycle();
 
-            true
+            SyscallReturn::exit()
         }
         Syscall::Yield {
             sp,
@@ -73,7 +73,7 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> bool {
 
             scheduler.cycle();
 
-            true
+            SyscallReturn::exit()
         }
         Syscall::Yield {
             sp,
@@ -89,9 +89,30 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> bool {
 
             scheduler.cycle();
 
-            true
+            SyscallReturn::exit()
         }
     }
+}
+
+#[repr(C)]
+struct SyscallReturn {
+    exit: bool,
+    value: u32,
+}
+
+impl SyscallReturn {
+    fn exit() -> Self {
+        SyscallReturn {
+            exit: true,
+            value: 4321,
+        }
+    }
+}
+
+#[no_mangle]
+#[inline(never)]
+extern "C" fn test_something() -> SyscallReturn {
+    SyscallReturn::exit()
 }
 
 #[no_mangle]
