@@ -1,7 +1,6 @@
-use super::{
-    l1::{L1PointerTableEntry, LEVEL1_PAGE_TABLE},
-    setup::invalidate_tlb,
-};
+use core::arch::asm;
+
+use super::l1::{L1PointerTableEntry, LEVEL1_PAGE_TABLE};
 
 const BASE_ADDRESS: u32 = 0x4030_0000;
 const PAGE_SIZE_BITS: u32 = 12;
@@ -38,13 +37,14 @@ impl L2PageTable {
 static mut USED_PAGES: [bool; PAGE_TABLE_SIZE] = [false; PAGE_TABLE_SIZE];
 
 pub struct L2SmallPageTableEntry {
+    asid: Option<u32>,
     virtual_address: u32,
     physical_address: u32,
     permissions: AccessPermissions,
 }
 
 impl L2SmallPageTableEntry {
-    pub fn try_new() -> Option<Self> {
+    pub fn try_new(asid: Option<u32>) -> Option<Self> {
         let current_index =
             (0..PAGE_TABLE_SIZE as u32).find(|&i| unsafe { !USED_PAGES[i as usize] })?;
         unsafe {
@@ -53,6 +53,7 @@ impl L2SmallPageTableEntry {
         let offset = current_index << PAGE_SIZE_BITS;
 
         Some(L2SmallPageTableEntry {
+            asid,
             virtual_address: 0,
             physical_address: BASE_ADDRESS + offset,
             permissions: AccessPermissions::Full,
@@ -61,18 +62,33 @@ impl L2SmallPageTableEntry {
 
     pub const fn empty() -> Self {
         L2SmallPageTableEntry {
+            asid: None,
             virtual_address: 0,
             physical_address: 0,
             permissions: AccessPermissions::Full,
         }
     }
 
+    pub fn set_asid(&self) {
+        if let Some(asid) = self.asid {
+            unsafe {
+                asm!("mcr p15, 0, {asid}, c13, c0, 1", asid = in(reg) asid);
+            }
+        }
+    }
+
+    fn invalidate_tlb(&self) {
+        unsafe {
+            asm!("mcr p15, 0, {mva}, c8, c7, 1", mva = in(reg) (self.virtual_address & !0xFFF) | self.asid.unwrap_or(0));
+        };
+    }
+
     pub fn register(&self) {
+        self.set_asid();
+
         unsafe {
             LEVEL2_PAGE_TABLE.0[self.virtual_address as usize >> PAGE_SIZE_BITS] = self.into();
         }
-
-        invalidate_tlb();
     }
 
     pub fn unregister(&self) {
@@ -82,7 +98,7 @@ impl L2SmallPageTableEntry {
             USED_PAGES[(self.physical_address - BASE_ADDRESS) as usize >> PAGE_SIZE_BITS] = false;
         }
 
-        invalidate_tlb();
+        self.invalidate_tlb();
     }
 
     pub fn start(&self) -> u32 {
@@ -97,12 +113,15 @@ impl L2SmallPageTableEntry {
 impl From<&L2SmallPageTableEntry> for u32 {
     fn from(val: &L2SmallPageTableEntry) -> Self {
         let L2SmallPageTableEntry {
+            asid,
             virtual_address: _,
             physical_address: address,
             permissions,
         } = val;
         let permissions: u32 = permissions.into();
-        address | permissions | 0b10
+        let non_global = asid.is_some() as u32;
+
+        address | non_global << 11 | permissions | 0b10
     }
 }
 

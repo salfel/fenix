@@ -1,7 +1,5 @@
 use core::cell::UnsafeCell;
 
-use crate::sys::write_addr;
-
 use super::{mmu::L2SmallPageTableEntry, sysclock::millis};
 
 pub const MAX_TASKS: usize = 4;
@@ -139,7 +137,7 @@ impl Scheduler {
     pub fn create_task(&mut self, entry_point: fn()) -> Option<usize> {
         let task_id = self.task_with_state(TaskState::Terminated)?.id;
 
-        let page = L2SmallPageTableEntry::try_new()?;
+        let page = L2SmallPageTableEntry::try_new(Some(task_id as u32))?;
 
         let task = self.task_mut(task_id);
         task.page = page;
