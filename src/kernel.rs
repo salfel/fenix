@@ -17,12 +17,12 @@ impl TryInto<Syscall> for &TrapFrame {
     type Error = SyscallError;
 
     fn try_into(self) -> Result<Syscall, Self::Error> {
-        match self.r0 {
+        match self.r12 {
             0 => Ok(Syscall::Exit),
             1 => Ok(Syscall::Yield {
-                sp: self.r1,
-                pc: self.r2,
-                until: match self.r3 {
+                sp: self.r0,
+                pc: self.r1,
+                until: match self.r2 {
                     0 => None,
                     until => Some(until),
                 },

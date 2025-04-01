@@ -46,11 +46,10 @@ store_context:
     ldr r0, temp_spsr
     push {r0}
 
-    mov r0, #0x1
-    mov r1, sp
-    ldr r2, next_pc
-    mov r3, #0x0
-    svc #0x0
+    mov r0, sp
+    ldr r1, next_pc
+    mov r2, #0x0
+    svc #0x1
 
     b kernel_loop
 
