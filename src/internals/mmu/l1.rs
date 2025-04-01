@@ -10,13 +10,13 @@ pub fn initialize() {
     let peripheral_memory: Range<u32> = 0x4400_0000..0x8000_0000;
     let kernel_memory: Range<u32> = 0x4020_0000..0x4040_0000;
 
-    enable_memory_range(kernel_memory);
-    enable_memory_range(peripheral_memory);
+    enable_memory_range(kernel_memory, AccessPermissions::Full);
+    enable_memory_range(peripheral_memory, AccessPermissions::Full);
 }
 
-fn enable_memory_range(range: Range<u32>) {
+fn enable_memory_range(range: Range<u32>, permissions: AccessPermissions) {
     for page in range.step_by(PAGE_SIZE as usize) {
-        let section = L1SectionPageTableEntry::new(page);
+        let section = L1SectionPageTableEntry::new(page, permissions);
         unsafe {
             LEVEL1_PAGE_TABLE.0[page as usize >> PAGE_SIZE_BITS] = section.into();
         }
@@ -40,10 +40,10 @@ pub struct L1SectionPageTableEntry {
 }
 
 impl L1SectionPageTableEntry {
-    fn new(address: u32) -> Self {
+    fn new(address: u32, access_permissions: AccessPermissions) -> Self {
         L1SectionPageTableEntry {
             address,
-            access_permissions: AccessPermissions::Full,
+            access_permissions,
         }
     }
 }
@@ -77,13 +77,19 @@ impl From<L1PointerTableEntry> for u32 {
     }
 }
 
+#[allow(dead_code)]
+#[derive(Copy, Clone)]
 enum AccessPermissions {
+    Privileged,
+    UserReadOnly,
     Full,
 }
 
 impl From<AccessPermissions> for u32 {
     fn from(value: AccessPermissions) -> Self {
         match value {
+            AccessPermissions::UserReadOnly => 0b10 << 10,
+            AccessPermissions::Privileged => 0b01 << 10,
             AccessPermissions::Full => 0b11 << 10,
         }
     }
