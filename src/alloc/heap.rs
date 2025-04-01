@@ -79,7 +79,7 @@ unsafe impl GlobalAlloc for BumpAllocator {
 }
 
 fn align_up(addr: usize, align: usize) -> usize {
-    addr & !(align - 1)
+    (addr + align - 1) & !(align - 1)
 }
 
 extern "C" {
