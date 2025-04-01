@@ -1,9 +1,8 @@
-use core::{cell::UnsafeCell, ops::Range};
+use core::cell::UnsafeCell;
 
-use super::{
-    mmu::{register_page, unregister_page, L2SmallPageTableEntry},
-    sysclock::millis,
-};
+use crate::sys::write_addr;
+
+use super::{mmu::L2SmallPageTableEntry, sysclock::millis};
 
 pub const MAX_TASKS: usize = 4;
 
@@ -34,7 +33,7 @@ impl Task {
             id: 0,
             state: TaskState::Terminated,
             context: TaskContext { sp: 0, pc: 0 },
-            page: L2SmallPageTableEntry::emptry(),
+            page: L2SmallPageTableEntry::empty(),
         }
     }
 
@@ -141,7 +140,6 @@ impl Scheduler {
         let task_id = self.task_with_state(TaskState::Terminated)?.id;
 
         let page = L2SmallPageTableEntry::try_new()?;
-        page.register();
 
         let task = self.task_mut(task_id);
         task.page = page;
@@ -164,12 +162,14 @@ impl Scheduler {
         match task.state {
             TaskState::Ready => {
                 task.state = TaskState::Running;
+                task.page.register();
                 unsafe {
                     switch_context(task.context.sp, task.context.pc);
                 }
             }
             TaskState::Stored => {
                 task.state = TaskState::Running;
+                task.page.register();
                 unsafe {
                     restore_context(task.context.sp, task.context.pc);
                 }
