@@ -25,5 +25,8 @@ handle_swi:
 keep_supervisor_mode:
     msr spsr_c, #0x53
 
+    ldr r1, =kernel_loop
+    str r1, [sp, #52]
+
     ldmfd sp!, {r0-r12, pc}^
 

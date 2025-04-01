@@ -11,8 +11,6 @@ switch_context:
     blx r1
 
     svc #0x0
-    
-    b kernel_loop
 
 wait_store:
     stmfd sp!, {r0-r12, lr}
@@ -26,5 +24,3 @@ wait_store:
     mov r1, lr
     mov r2, r2
     svc #0x1
-
-    b kernel_loop
