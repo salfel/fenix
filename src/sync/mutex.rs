@@ -2,6 +2,18 @@ use core::arch::asm;
 use core::cell::UnsafeCell;
 use core::ops::{Deref, DerefMut};
 
+/// Disables interrupts by setting the interrupt disable (I) bit in the CPSR and returns the original CPSR value.
+///
+/// This function reads the current CPSR, disables interrupts by setting the I-bit, and returns the original CPSR.
+/// The saved CPSR value can later be used to restore the interrupts to their previous state.
+///
+/// # Examples
+///
+/// ```
+/// let original_cpsr = disable_interrupts();
+/// // Critical section: interrupts are disabled here.
+/// // Optionally, restore interrupts using the saved CPSR value.
+/// ```
 fn disable_interrupts() -> u32 {
     let cpsr: u32;
     unsafe {
@@ -12,6 +24,18 @@ fn disable_interrupts() -> u32 {
     cpsr
 }
 
+/// Restores the Current Program Status Register (CPSR) to a saved state.
+///
+/// Writes the provided `cpsr` value back to the CPSR, typically restoring interrupt settings
+/// that were previously disabled.
+///
+/// # Examples
+///
+/// ```
+/// // Assume `saved_cpsr` was obtained by disabling interrupts earlier.
+/// let saved_cpsr: u32 = 0xC0; // Example value representing a saved CPSR state.
+/// restore_cpsr(saved_cpsr);
+/// ```
 fn restore_cpsr(cpsr: u32) {
     unsafe { asm!("msr cpsr_c, {0}", in(reg) cpsr) };
 }
