@@ -23,7 +23,7 @@ pub fn initialize() {
     }
 }
 
-pub fn register_page() -> Option<Range<u32>> {
+pub fn register_page() -> Option<L2SmallPageTableEntry> {
     let page = L2SmallPageTableEntry::try_new()?;
 
     unsafe {
@@ -32,7 +32,7 @@ pub fn register_page() -> Option<Range<u32>> {
 
     invalidate_tlb();
 
-    Some(page.virtual_address..page.virtual_address + PAGE_SIZE - 4)
+    Some(page)
 }
 
 pub fn unregister_page(page: &Range<u32>) {
@@ -59,14 +59,14 @@ impl L2PageTable {
     }
 }
 
-struct L2SmallPageTableEntry {
+pub struct L2SmallPageTableEntry {
     virtual_address: u32,
     physical_address: u32,
     permissions: AccessPermissions,
 }
 
 impl L2SmallPageTableEntry {
-    fn try_new() -> Option<Self> {
+    pub fn try_new() -> Option<Self> {
         let current_index = first_unused_page()?;
         let offset = current_index << PAGE_SIZE_BITS;
 
@@ -75,6 +75,38 @@ impl L2SmallPageTableEntry {
             physical_address: BASE_ADDRESS + offset,
             permissions: AccessPermissions::Full,
         })
+    }
+
+    pub const fn emptry() -> Self {
+        L2SmallPageTableEntry {
+            virtual_address: 0,
+            physical_address: 0,
+            permissions: AccessPermissions::Full
+        }
+    }
+
+    pub fn register(&self) {
+        unsafe {
+            LEVEL2_PAGE_TABLE.0[self.virtual_address as usize >> PAGE_SIZE_BITS] = self.into();
+        }
+
+        invalidate_tlb();
+    }
+
+    pub fn unregister(&self) {
+        unsafe {
+            LEVEL2_PAGE_TABLE.0[self.virtual_address as usize >> PAGE_SIZE_BITS] = L2_FAULT_PAGE_TABLE_ENTRY;
+        }
+
+        invalidate_tlb();
+    }
+
+    pub fn start(&self) -> u32 {
+        self.virtual_address
+    }
+
+    pub fn end(&self) -> u32 {
+        self.virtual_address + PAGE_SIZE - 4
     }
 }
 
