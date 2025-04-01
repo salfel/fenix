@@ -6,7 +6,16 @@
 handle_swi:
     stmfd sp!, {r0-r12, lr}
 
+    sub lr, lr, #4
+    ldr r12, [lr]
+    bic r12, r12, #0xFF000000
+
+    push {r0-r3, r12}
+    mov r0, sp
+
     bl swi_handler
+    
+    add sp, sp, #20
 
     cmp r0, #0x1
     beq keep_supervisor_mode

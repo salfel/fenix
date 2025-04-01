@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 
+use alloc::heap;
 use internals::{
     mmu,
     sysclock::{self, wait},
@@ -12,6 +13,7 @@ use peripherals::gpio::{
     pins::{GPIO1_22, GPIO1_23, GPIO1_24},
 };
 
+pub mod alloc;
 pub mod exceptions;
 pub mod internals;
 pub mod interrupts;
@@ -28,6 +30,7 @@ pub fn _start() {
         setup_exceptions();
     }
     mmu::initialize();
+    heap::initialize();
     pinmux::configure();
     gpio::initialize();
     sysclock::initialize();
@@ -57,11 +60,6 @@ fn user_loop2() {
         gpio::write(GPIO1_22, true);
         wait(1000);
     }
-}
-
-#[panic_handler]
-fn panic(_info: &core::panic::PanicInfo) -> ! {
-    loop {}
 }
 
 extern "C" {

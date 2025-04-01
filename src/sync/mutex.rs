@@ -13,9 +13,7 @@ fn disable_interrupts() -> u32 {
 }
 
 fn restore_cpsr(cpsr: u32) {
-    unsafe {
-        asm!("msr cpsr_c, {0}", in(reg) cpsr)
-    };
+    unsafe { asm!("msr cpsr_c, {0}", in(reg) cpsr) };
 }
 
 pub struct Mutex<T: Sized> {
@@ -39,7 +37,7 @@ impl<T> Mutex<T> {
 
 pub struct MutexGuard<'a, T: Sized> {
     mutex: &'a Mutex<T>,
-    cpsr: u32
+    cpsr: u32,
 }
 
 impl<T> Deref for MutexGuard<'_, T> {

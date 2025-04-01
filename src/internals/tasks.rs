@@ -1,9 +1,6 @@
-use core::{cell::UnsafeCell, ops::Range};
+use core::cell::UnsafeCell;
 
-use super::{
-    mmu::{register_page, unregister_page},
-    sysclock::millis,
-};
+use super::{mmu::L2SmallPageTableEntry, sysclock::millis};
 
 pub const MAX_TASKS: usize = 4;
 
@@ -25,7 +22,7 @@ pub struct Task {
     id: usize,
     pub state: TaskState,
     pub context: TaskContext,
-    page: Range<u32>,
+    page: L2SmallPageTableEntry,
 }
 
 impl Task {
@@ -34,7 +31,7 @@ impl Task {
             id: 0,
             state: TaskState::Terminated,
             context: TaskContext { sp: 0, pc: 0 },
-            page: 0..0,
+            page: L2SmallPageTableEntry::empty(),
         }
     }
 
@@ -47,7 +44,7 @@ impl Task {
 
     pub fn terminate(&mut self) {
         self.state = TaskState::Terminated;
-        unregister_page(&self.page);
+        self.page.unregister();
     }
 }
 
@@ -138,21 +135,15 @@ impl Scheduler {
     }
 
     pub fn create_task(&mut self, entry_point: fn()) -> Option<usize> {
-        let task_id = match self.task_with_state(TaskState::Terminated) {
-            Some(task) => task.id,
-            None => return None,
-        };
+        let task_id = self.task_with_state(TaskState::Terminated)?.id;
 
-        let page = match register_page() {
-            Some(page) => page,
-            None => return None,
-        };
+        let page = L2SmallPageTableEntry::try_new(Some(task_id as u32))?;
 
         let task = self.task_mut(task_id);
-        task.state = TaskState::Ready;
-        task.context.sp = page.end;
-        task.context.pc = entry_point as usize as u32;
         task.page = page;
+        task.state = TaskState::Ready;
+        task.context.sp = task.page.end();
+        task.context.pc = entry_point as usize as u32;
         Some(task.id)
     }
 
@@ -169,12 +160,14 @@ impl Scheduler {
         match task.state {
             TaskState::Ready => {
                 task.state = TaskState::Running;
+                task.page.register();
                 unsafe {
                     switch_context(task.context.sp, task.context.pc);
                 }
             }
             TaskState::Stored => {
                 task.state = TaskState::Running;
+                task.page.register();
                 unsafe {
                     restore_context(task.context.sp, task.context.pc);
                 }

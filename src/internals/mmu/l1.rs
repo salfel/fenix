@@ -1,10 +1,24 @@
+use core::ops::Range;
+
 use super::l2::L2PageTable;
 
+const PAGE_SIZE: u32 = 1 << 20;
+const PAGE_SIZE_BITS: u32 = 20;
+const PAGE_TABLE_SIZE: usize = 4096;
+
 pub fn initialize() {
-    for i in 0..4096 {
-        let section = L1SectionPageTableEntry::new(i);
+    let peripheral_memory: Range<u32> = 0x4400_0000..0x8000_0000;
+    let kernel_memory: Range<u32> = 0x4020_0000..0x4040_0000;
+
+    enable_memory_range(kernel_memory, AccessPermissions::Full);
+    enable_memory_range(peripheral_memory, AccessPermissions::Full);
+}
+
+fn enable_memory_range(range: Range<u32>, permissions: AccessPermissions) {
+    for page in range.step_by(PAGE_SIZE as usize) {
+        let section = L1SectionPageTableEntry::new(page, permissions);
         unsafe {
-            LEVEL1_PAGE_TABLE.0[i as usize] = section.into();
+            LEVEL1_PAGE_TABLE.0[page as usize >> PAGE_SIZE_BITS] = section.into();
         }
     }
 }
@@ -12,24 +26,24 @@ pub fn initialize() {
 pub static mut LEVEL1_PAGE_TABLE: L1PageTable = L1PageTable::new();
 
 #[repr(align(16384))]
-pub struct L1PageTable(pub [u32; 4096]);
+pub struct L1PageTable(pub [u32; PAGE_TABLE_SIZE]);
 
 impl L1PageTable {
     const fn new() -> Self {
-        L1PageTable([0; 4096])
+        L1PageTable([0; PAGE_TABLE_SIZE])
     }
 }
 
 pub struct L1SectionPageTableEntry {
-    index: u32,
+    address: u32,
     access_permissions: AccessPermissions,
 }
 
 impl L1SectionPageTableEntry {
-    fn new(index: u32) -> Self {
+    fn new(address: u32, access_permissions: AccessPermissions) -> Self {
         L1SectionPageTableEntry {
-            index,
-            access_permissions: AccessPermissions::Full,
+            address,
+            access_permissions,
         }
     }
 }
@@ -37,12 +51,12 @@ impl L1SectionPageTableEntry {
 impl From<L1SectionPageTableEntry> for u32 {
     fn from(val: L1SectionPageTableEntry) -> Self {
         let L1SectionPageTableEntry {
-            index,
+            address,
             access_permissions,
         } = val;
 
         let permissions: u32 = access_permissions.into();
-        (index << 20) | permissions | 0b10
+        address | permissions | 0b10
     }
 }
 
@@ -63,13 +77,19 @@ impl From<L1PointerTableEntry> for u32 {
     }
 }
 
+#[allow(dead_code)]
+#[derive(Copy, Clone)]
 enum AccessPermissions {
+    Privileged,
+    UserReadOnly,
     Full,
 }
 
 impl From<AccessPermissions> for u32 {
     fn from(value: AccessPermissions) -> Self {
         match value {
+            AccessPermissions::UserReadOnly => 0b10 << 10,
+            AccessPermissions::Privileged => 0b01 << 10,
             AccessPermissions::Full => 0b11 << 10,
         }
     }

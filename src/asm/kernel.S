@@ -10,7 +10,6 @@ switch_context:
     mov sp, r0
     blx r1
 
-    mov r0, #0x0
     svc #0x0
     
     b kernel_loop
@@ -18,15 +17,14 @@ switch_context:
 wait_store:
     stmfd sp!, {r0-r12, lr}
 
-    mov r3, r0
+    mov r2, r0
 
     mrs r0, cpsr
     push {r0}
 
-    mov r0, #0x1
-    mov r1, sp
-    mov r2, lr
-    mov r3, r3
-    svc #0x0
+    mov r0, sp
+    mov r1, lr
+    mov r2, r2
+    svc #0x1
 
     b kernel_loop
