@@ -71,11 +71,19 @@ impl<T> Vec<T> {
             );
         }
 
+        self.len -= 1;
+
         Some(old_value)
     }
 
     pub fn pop(&mut self) -> Option<T> {
-        self.remove(self.len - 1)
+        if self.len == 0 {
+            return None;
+        }
+        
+        self.len -= 1;
+
+        Some(unsafe { ptr::read(self.ptr.add(self.len)) })
     }
 
     pub fn get(&self, index: usize) -> Option<&T> {
