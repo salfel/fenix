@@ -6,7 +6,7 @@ pub fn initialize() {
     timer::register_timer(DmTimer::Timer2, 0xFFFF_FFE0, interrupt_handler);
 }
 
-pub static SYS_CLOCK: Mutex<u32> = Mutex::new(0);
+pub(crate) static SYS_CLOCK: Mutex<u32> = Mutex::new(0);
 
 fn interrupt_handler() {
     let mut ticks = SYS_CLOCK.lock();
