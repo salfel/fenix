@@ -3,6 +3,7 @@
 use crate::{
     internals::clock,
     interrupts::{self, Mode},
+    kernel::Syscall,
     sys::{clear_bit, noop, read_addr, read_bit, set_bit, write_addr, GPIO1},
 };
 
@@ -18,7 +19,7 @@ const GPIO_FALLINGDETECT: u32 = 0x14C;
 
 const GPIOINT1A: u32 = 98;
 
-type GpioPin = (u32, GpioBank);
+pub type GpioPin = (u32, GpioBank);
 
 pub fn initialize() {
     clock::enable(clock::FuncClock::Gpio1);
@@ -42,7 +43,12 @@ pub fn pin_mode((pin, bank): GpioPin, mode: GpioMode) {
     }
 }
 
-pub fn write((pin, bank): GpioPin, value: bool) {
+pub fn write(pin: GpioPin, value: bool) {
+    let syscall = Syscall::GpioWrite { pin, value };
+    syscall.call();
+}
+
+pub fn unsafe_write((pin, bank): GpioPin, value: bool) {
     if value {
         set_bit(bank as u32 + GPIO_DATAOUT, pin);
     } else {
@@ -50,15 +56,33 @@ pub fn write((pin, bank): GpioPin, value: bool) {
     }
 }
 
-pub fn read((pin, bank): GpioPin) -> bool {
+pub fn read(pin: GpioPin) -> bool {
+    let syscall = Syscall::GpioRead { pin };
+    syscall.call().unwrap() != 0
+}
+
+pub fn unsafe_read((pin, bank): GpioPin) -> bool {
     read_bit(bank as u32 + GPIO_DATAIN, pin)
 }
 
+#[repr(u32)]
 pub enum GpioBank {
     Gpio0 = 0x44E0_7000,
     Gpio1 = 0x4804_C000,
     Gpio2 = 0x481A_C000,
     Gpio3 = 0x481A_E000,
+}
+
+impl From<u32> for GpioBank {
+    fn from(value: u32) -> Self {
+        match value {
+            0x44E0_7000 => GpioBank::Gpio0,
+            0x4804_C000 => GpioBank::Gpio1,
+            0x481A_C000 => GpioBank::Gpio2,
+            0x481A_E000 => GpioBank::Gpio3,
+            _ => panic!("invalid gpio bank"),
+        }
+    }
 }
 
 pub enum GpioMode {
