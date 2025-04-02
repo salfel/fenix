@@ -37,10 +37,3 @@ exit:
     add sp, sp, #56
 
     b kernel_loop
-
-unsafe_millis:
-    push {lr}
-    svc #0x2
-    pop {lr}
-
-    bx lr

@@ -1,4 +1,4 @@
-use crate::sync::mutex::Mutex;
+use crate::{kernel::Syscall, sync::mutex::Mutex};
 
 use super::timer::{self, DmTimer};
 
@@ -18,7 +18,8 @@ fn interrupt_handler() {
 }
 
 pub fn millis() -> u32 {
-    unsafe { unsafe_millis() }
+    let syscall = Syscall::Millis;
+    syscall.call().unwrap()
 }
 
 #[no_mangle]
@@ -29,7 +30,6 @@ pub fn wait(ms: u32) {
 }
 
 extern "C" {
-    fn unsafe_millis() -> u32;
     fn yield_task();
     fn wait_store(ms: u32);
 }

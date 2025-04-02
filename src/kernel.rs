@@ -1,11 +1,11 @@
-use core::convert::TryInto;
+use core::{arch::asm, convert::TryInto};
 
 use crate::internals::{
     sysclock::SYS_CLOCK,
     tasks::{scheduler, TaskState},
 };
 
-enum Syscall {
+pub enum Syscall {
     Exit,
     Yield {
         sp: u32,
@@ -15,7 +15,37 @@ enum Syscall {
     Millis,
 }
 
+impl Syscall {
+    pub fn call(&self) -> Option<u32> {
+        match self {
+            Syscall::Exit => unsafe {
+                asm!("svc 0x0");
+                None
+            },
+            Syscall::Yield { sp, pc, until } => unsafe {
+                asm!("svc 0x1", in("r0") sp, in("r1") pc, in("r2") until.unwrap_or(0));
+                None
+            },
+            Syscall::Millis => unsafe {
+                let millis: u32;
+
+                asm!("push {{lr}}", "svc 0x2", "pop {{lr}}", out("r0") millis);
+                Some(millis)
+            },
+        }
+    }
+}
+
 struct SyscallError {}
+
+#[repr(C)]
+struct TrapFrame {
+    r0: u32,
+    r1: u32,
+    r2: u32,
+    r3: u32,
+    r12: u32,
+}
 
 impl TryInto<Syscall> for &TrapFrame {
     type Error = SyscallError;
@@ -38,12 +68,22 @@ impl TryInto<Syscall> for &TrapFrame {
 }
 
 #[repr(C)]
-struct TrapFrame {
-    r0: u32,
-    r1: u32,
-    r2: u32,
-    r3: u32,
-    r12: u32,
+struct SyscallReturn {
+    exit: bool,
+    value: u32,
+}
+
+impl SyscallReturn {
+    fn exit() -> Self {
+        SyscallReturn {
+            exit: true,
+            value: 0,
+        }
+    }
+
+    fn value(value: u32) -> Self {
+        SyscallReturn { exit: false, value }
+    }
 }
 
 #[no_mangle]
@@ -101,31 +141,6 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
             SyscallReturn::value(*millis)
         }
     }
-}
-
-#[repr(C)]
-struct SyscallReturn {
-    exit: bool,
-    value: u32,
-}
-
-impl SyscallReturn {
-    fn exit() -> Self {
-        SyscallReturn {
-            exit: true,
-            value: 0,
-        }
-    }
-
-    fn value(value: u32) -> Self {
-        SyscallReturn { exit: false, value }
-    }
-}
-
-#[no_mangle]
-#[inline(never)]
-extern "C" fn test_something() -> SyscallReturn {
-    SyscallReturn::exit()
 }
 
 #[no_mangle]
