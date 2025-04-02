@@ -35,11 +35,19 @@ impl Task {
         }
     }
 
-    fn executable(&self) -> bool {
-        matches!(
-            self.state,
-            TaskState::Ready | TaskState::Stored | TaskState::Waiting { .. }
-        )
+    fn executable(&mut self) -> bool {
+        match self.state {
+            TaskState::Ready | TaskState::Stored => true,
+            TaskState::Waiting { until } => {
+                if millis() >= until {
+                    self.state = TaskState::Stored;
+                    true
+                } else {
+                    false
+                }
+            }
+            _ => false,
+        }
     }
 
     pub fn terminate(&mut self) {
@@ -116,12 +124,6 @@ impl Scheduler {
         loop {
             let current_task = self.task_mut(index);
             if current_task.executable() {
-                if let TaskState::Waiting { until } = current_task.state {
-                    if millis() >= until {
-                        current_task.state = TaskState::Stored;
-                    }
-                }
-
                 return Some(current_task);
             }
 
