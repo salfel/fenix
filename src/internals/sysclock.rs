@@ -1,4 +1,4 @@
-use crate::sync::mutex::Mutex;
+use crate::{kernel::Syscall, sync::mutex::Mutex};
 
 use super::timer::{self, DmTimer};
 
@@ -6,7 +6,7 @@ pub fn initialize() {
     timer::register_timer(DmTimer::Timer2, 0xFFFF_FFE0, interrupt_handler);
 }
 
-static SYS_CLOCK: Mutex<u32> = Mutex::new(0);
+pub(crate) static SYS_CLOCK: Mutex<u32> = Mutex::new(0);
 
 fn interrupt_handler() {
     let mut ticks = SYS_CLOCK.lock();
@@ -18,7 +18,8 @@ fn interrupt_handler() {
 }
 
 pub fn millis() -> u32 {
-    *SYS_CLOCK.lock()
+    let syscall = Syscall::Millis;
+    syscall.call().unwrap()
 }
 
 #[no_mangle]

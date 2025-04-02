@@ -51,8 +51,6 @@ store_context:
     mov r2, #0x0
     svc #0x1
 
-    b kernel_loop
-
 restore_context:
     msr cpsr_c, #0xDF
     str r1, next_pc

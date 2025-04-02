@@ -7,21 +7,21 @@ use crate::peripherals::gpio::{
 fn data_abort_handler() {
     gpio::write(GPIO1_21, true);
 
-    panic!();
+    loop {}
 }
 
 #[no_mangle]
 fn fetch_abort_handler() {
     gpio::write(GPIO1_23, true);
 
-    panic!();
+    loop {}
 }
 
 #[no_mangle]
 fn undefined_handler() {
     gpio::write(GPIO1_22, true);
-    
-    panic!();
+
+    loop {}
 }
 
 #[panic_handler]
