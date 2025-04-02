@@ -30,10 +30,7 @@ handle_swi:
     ldmfd sp!, {r0-r12, pc}^
 
 exit:
-    msr spsr_c, #0x53
+    msr cpsr_c, #0x53
+    add sp, sp, #56
 
-    ldr r1, =kernel_loop
-    str r1, [sp, #52]
-
-    ldmfd sp!, {r0-r12, pc}^
-
+    b kernel_loop
