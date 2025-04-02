@@ -1,6 +1,9 @@
 use core::convert::TryInto;
 
-use crate::internals::tasks::{scheduler, TaskState};
+use crate::internals::{
+    sysclock::SYS_CLOCK,
+    tasks::{scheduler, TaskState},
+};
 
 enum Syscall {
     Exit,
@@ -9,6 +12,7 @@ enum Syscall {
         pc: u32,
         until: Option<u32>,
     },
+    Millis,
 }
 
 struct SyscallError {}
@@ -27,6 +31,7 @@ impl TryInto<Syscall> for &TrapFrame {
                     until => Some(until),
                 },
             }),
+            2 => Ok(Syscall::Millis),
             _ => Err(SyscallError {}),
         }
     }
@@ -91,6 +96,10 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
 
             SyscallReturn::exit()
         }
+        Syscall::Millis => {
+            let millis = SYS_CLOCK.lock();
+            SyscallReturn::value(*millis)
+        }
     }
 }
 
@@ -104,8 +113,12 @@ impl SyscallReturn {
     fn exit() -> Self {
         SyscallReturn {
             exit: true,
-            value: 4321,
+            value: 0,
         }
+    }
+
+    fn value(value: u32) -> Self {
+        SyscallReturn { exit: false, value }
     }
 }
 

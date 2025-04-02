@@ -1,5 +1,6 @@
 .global handle_swi
 .global handle_swi
+.global unsafe_millis
 
 .extern swi_handler
 
@@ -13,7 +14,7 @@ handle_swi:
     push {r0-r3, r12}
     mov r1, sp
 
-    sub sp, sp, #8
+    sub sp, #8
     mov r0, sp
 
     bl swi_handler
@@ -27,6 +28,8 @@ handle_swi:
     cmp r1, #0x1
     beq exit
 
+    str r0, [sp]
+
     ldmfd sp!, {r0-r12, pc}^
 
 exit:
@@ -34,3 +37,10 @@ exit:
     add sp, sp, #56
 
     b kernel_loop
+
+unsafe_millis:
+    push {lr}
+    svc #0x2
+    pop {lr}
+
+    bx lr

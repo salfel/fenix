@@ -20,7 +20,7 @@ fn fetch_abort_handler() {
 #[no_mangle]
 fn undefined_handler() {
     gpio::write(GPIO1_22, true);
-    
+
     loop {}
 }
 
