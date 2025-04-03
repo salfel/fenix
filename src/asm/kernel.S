@@ -1,5 +1,4 @@
 .global switch_context
-.global wait_store
 
 .extern kernel_loop
 
