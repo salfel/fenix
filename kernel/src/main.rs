@@ -8,13 +8,7 @@ use internals::{
     tasks::{self, create_task},
 };
 use kernel::kernel_loop;
-use libfenix::{
-    gpio::{
-        self,
-        pins::{GPIO1_22, GPIO1_23, GPIO1_24},
-    },
-    sysclock::wait,
-};
+use libfenix::gpio::{self, pins::GPIO1_24};
 use peripherals::gpio::initialize_gpio;
 
 pub mod alloc;
@@ -26,6 +20,9 @@ pub mod peripherals;
 pub mod pinmux;
 pub mod sync;
 pub mod sys;
+
+static USER1_FILE: &[u8] = include_bytes!("../../user/out/kernel.bin");
+static USER2_FILE: &[u8] = include_bytes!("../../user2/out/kernel.bin");
 
 #[no_mangle]
 pub fn _start() {
@@ -42,28 +39,10 @@ pub fn _start() {
 
     gpio::write(GPIO1_24, true);
 
-    create_task(user_loop);
-    create_task(user_loop2);
+    create_task(USER1_FILE);
+    create_task(USER2_FILE);
 
     kernel_loop();
-}
-
-fn user_loop() {
-    loop {
-        gpio::write(GPIO1_23, true);
-        wait(1000);
-        gpio::write(GPIO1_23, false);
-        wait(1000);
-    }
-}
-
-fn user_loop2() {
-    loop {
-        gpio::write(GPIO1_22, false);
-        wait(1000);
-        gpio::write(GPIO1_22, true);
-        wait(1000);
-    }
 }
 
 extern "C" {

@@ -1,4 +1,4 @@
-use core::cell::UnsafeCell;
+use core::{cell::UnsafeCell, ptr};
 
 use super::mmu::L2SmallPageTableEntry;
 use libfenix::sysclock::millis;
@@ -137,16 +137,22 @@ impl Scheduler {
         None
     }
 
-    pub fn create_task(&mut self, entry_point: fn()) -> Option<usize> {
+    pub fn create_task(&mut self, code: &[u8]) -> Option<usize> {
         let task_id = self.task_with_state(TaskState::Terminated)?.id;
 
         let page = L2SmallPageTableEntry::try_new(Some(task_id as u32))?;
+        page.register();
+
+        let dest = ptr::null_mut::<u8>();
+        unsafe {
+            ptr::copy(code.as_ptr(), dest, code.len());
+        }
 
         let task = self.task_mut(task_id);
         task.page = page;
         task.state = TaskState::Ready;
         task.context.sp = task.page.end();
-        task.context.pc = entry_point as usize as u32;
+        task.context.pc = 0;
         Some(task.id)
     }
 
@@ -192,9 +198,9 @@ pub fn init() {
     scheduler.init();
 }
 
-pub fn create_task(entry_point: fn()) -> Option<usize> {
+pub fn create_task(code: &[u8]) -> Option<usize> {
     let scheduler = scheduler();
-    scheduler.create_task(entry_point)
+    scheduler.create_task(code)
 }
 
 extern "C" {
