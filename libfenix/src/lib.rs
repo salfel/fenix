@@ -45,7 +45,7 @@ impl Syscall {
                 let value: u32;
 
                 unsafe {
-                    asm!("push {{lr}}", "svc 0x3", "pop {{lr}}", in("r0") bank as u32, in("r1") pin, out("r0") value);
+                    asm!("push {{lr}}", "svc 0x3", "pop {{lr}}", in("r0") bank as u32, in("r1") pin, lateout("r0") value);
                 }
 
                 Some(value)
