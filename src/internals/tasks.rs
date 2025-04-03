@@ -143,7 +143,7 @@ impl Scheduler {
         let page = L2SmallPageTableEntry::try_new(Some(task_id as u32))?;
         page.register();
 
-        let dest = ptr::null_mut::<u8>();
+        let dest = page.start() as *mut u8;
         unsafe {
             ptr::copy(code.as_ptr(), dest, code.len());
         }
