@@ -6,15 +6,15 @@ ENTRY(_start)
 SECTIONS {
     .text : { 
         *(.text*)
-    } > sram
+    } > ram
 
     .bss : { 
         *(.bss*)
-    } > sram
+    } > ram
 
     .data : { 
         *(.data*)
-    } > sram
+    } > ram
 
     _end = .;
 }
