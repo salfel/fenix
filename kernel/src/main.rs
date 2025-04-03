@@ -2,6 +2,7 @@
 #![no_main]
 
 use alloc::heap;
+use include_dir::include_dir;
 use internals::{
     mmu,
     sysclock::{self},
@@ -21,8 +22,7 @@ pub mod pinmux;
 pub mod sync;
 pub mod sys;
 
-static USER1_FILE: &[u8] = include_bytes!("../../user/out/kernel.bin");
-static USER2_FILE: &[u8] = include_bytes!("../../user2/out/kernel.bin");
+static FILES: &[&[u8]] = include_dir!();
 
 #[no_mangle]
 pub fn _start() {
@@ -39,8 +39,9 @@ pub fn _start() {
 
     gpio::write(GPIO1_24, true);
 
-    create_task(USER1_FILE);
-    create_task(USER2_FILE);
+    for file in FILES {
+        create_task(file);
+    }
 
     kernel_loop();
 }

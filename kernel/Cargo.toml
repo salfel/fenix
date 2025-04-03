@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 libfenix = { path = "../libfenix" }
+include_dir = { path = "../include_dir" }
 
 [build-dependencies]
 
