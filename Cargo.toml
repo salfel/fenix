@@ -2,7 +2,7 @@
 members = [ 
     "kernel",
     "libfenix", 
-    "include_dir", 
+    "include_dir", "user", 
 ]
 resolver = "2"
 

@@ -22,7 +22,7 @@ pub mod pinmux;
 pub mod sync;
 pub mod sys;
 
-static FILES: &[&[u8]] = include_dir!();
+static PROGRAMS: &[&[u8]] = include_dir!();
 
 #[no_mangle]
 pub fn _start() {
@@ -39,8 +39,8 @@ pub fn _start() {
 
     gpio::write(GPIO1_24, true);
 
-    for file in FILES {
-        create_task(file);
+    for program in PROGRAMS {
+        create_task(program);
     }
 
     kernel_loop();
