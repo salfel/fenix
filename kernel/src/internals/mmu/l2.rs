@@ -88,6 +88,8 @@ impl L2SmallPageTableEntry {
 
         unsafe {
             LEVEL2_PAGE_TABLE.0[self.virtual_address as usize >> PAGE_SIZE_BITS] = self.into();
+
+            asm!("dsb", "isb");
         }
     }
 
