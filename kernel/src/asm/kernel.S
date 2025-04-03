@@ -11,16 +11,3 @@ switch_context:
     blx r1
 
     svc #0x0
-
-wait_store:
-    stmfd sp!, {r0-r12, lr}
-
-    mov r2, r0
-
-    mrs r0, cpsr
-    push {r0}
-
-    mov r0, sp
-    mov r1, lr
-    mov r2, r2
-    svc #0x1

@@ -1,7 +1,5 @@
 use crate::sync::mutex::Mutex;
 
-use libfenix::sysclock::millis;
-
 use super::timer::{self, DmTimer};
 
 pub fn initialize() {
@@ -19,13 +17,6 @@ fn interrupt_handler() {
     }
 }
 
-pub fn wait(ms: u32) {
-    unsafe {
-        wait_store(millis() + ms);
-    }
-}
-
 extern "C" {
     fn yield_task();
-    fn wait_store(ms: u32);
 }

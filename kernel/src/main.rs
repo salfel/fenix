@@ -4,14 +4,14 @@
 use alloc::heap;
 use internals::{
     mmu,
-    sysclock::{self, wait},
+    sysclock::{self},
     tasks::{self, create_task},
 };
 use kernel::kernel_loop;
-use libfenix::gpio::{
+use libfenix::{sysclock::wait, gpio::{
     self,
     pins::{GPIO1_22, GPIO1_23, GPIO1_24},
-};
+}};
 use peripherals::gpio::initialize_gpio;
 
 pub mod alloc;
