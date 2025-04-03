@@ -8,10 +8,13 @@ use internals::{
     tasks::{self, create_task},
 };
 use kernel::kernel_loop;
-use libfenix::{sysclock::wait, gpio::{
-    self,
-    pins::{GPIO1_22, GPIO1_23, GPIO1_24},
-}};
+use libfenix::{
+    gpio::{
+        self,
+        pins::{GPIO1_22, GPIO1_23, GPIO1_24},
+    },
+    sysclock::wait,
+};
 use peripherals::gpio::initialize_gpio;
 
 pub mod alloc;

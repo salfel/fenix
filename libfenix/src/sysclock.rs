@@ -1,5 +1,5 @@
-use core::arch::asm;
 use crate::Syscall;
+use core::arch::asm;
 
 pub fn millis() -> u32 {
     let syscall = Syscall::Millis;
@@ -21,4 +21,3 @@ pub fn wait(ms: u32) {
     };
     syscall.call();
 }
-

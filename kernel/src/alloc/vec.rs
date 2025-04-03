@@ -80,7 +80,7 @@ impl<T> Vec<T> {
         if self.len == 0 {
             return None;
         }
-        
+
         self.len -= 1;
 
         Some(unsafe { ptr::read(self.ptr.add(self.len)) })
@@ -114,8 +114,8 @@ impl<T> Vec<T> {
         self.into_iter()
     }
 
-     pub fn clear(&mut self) {
-         self.len = 0;
+    pub fn clear(&mut self) {
+        self.len = 0;
     }
 
     pub fn iter_mut(&mut self) -> IterMut<T> {

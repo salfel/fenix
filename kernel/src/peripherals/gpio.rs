@@ -5,7 +5,10 @@ use crate::{
     interrupts::{self, Mode},
     sys::{clear_bit, noop, read_addr, read_bit, set_bit, write_addr, GPIO1},
 };
-use libfenix::{gpio::{GpioBank, GpioPin}, Syscall};
+use libfenix::{
+    gpio::{GpioBank, GpioPin},
+    Syscall,
+};
 
 const GPIO_OE: u32 = 0x134;
 const GPIO_DATAIN: u32 = 0x138;

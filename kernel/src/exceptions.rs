@@ -1,4 +1,7 @@
-use libfenix::gpio::{self, pins::{GPIO1_21, GPIO1_22, GPIO1_23}};
+use libfenix::gpio::{
+    self,
+    pins::{GPIO1_21, GPIO1_22, GPIO1_23},
+};
 
 #[no_mangle]
 fn data_abort_handler() {
