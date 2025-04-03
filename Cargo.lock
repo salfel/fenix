@@ -3,5 +3,12 @@
 version = 4
 
 [[package]]
-name = "fenix"
+name = "kernel"
+version = "0.1.0"
+dependencies = [
+ "libfenix",
+]
+
+[[package]]
+name = "libfenix"
 version = "0.1.0"

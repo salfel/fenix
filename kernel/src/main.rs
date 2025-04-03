@@ -8,10 +8,11 @@ use internals::{
     tasks::{self, create_task},
 };
 use kernel::kernel_loop;
-use peripherals::gpio::{
+use libfenix::gpio::{
     self,
     pins::{GPIO1_22, GPIO1_23, GPIO1_24},
 };
+use peripherals::gpio::initialize_gpio;
 
 pub mod alloc;
 pub mod exceptions;
@@ -32,7 +33,7 @@ pub fn _start() {
     mmu::initialize();
     heap::initialize();
     pinmux::configure();
-    gpio::initialize();
+    initialize_gpio();
     sysclock::initialize();
     tasks::init();
 

@@ -1,4 +1,6 @@
-use crate::{kernel::Syscall, sync::mutex::Mutex};
+use crate::sync::mutex::Mutex;
+
+use libfenix::sysclock::millis;
 
 use super::timer::{self, DmTimer};
 
@@ -17,12 +19,6 @@ fn interrupt_handler() {
     }
 }
 
-pub fn millis() -> u32 {
-    let syscall = Syscall::Millis;
-    syscall.call().unwrap()
-}
-
-#[no_mangle]
 pub fn wait(ms: u32) {
     unsafe {
         wait_store(millis() + ms);
