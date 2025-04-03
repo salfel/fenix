@@ -1,7 +1,8 @@
 [workspace]
 members = [ 
     "kernel",
-    "libfenix"
+    "libfenix", 
+    "user"
 ]
 resolver = "2"
 
