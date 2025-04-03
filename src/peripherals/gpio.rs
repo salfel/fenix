@@ -5,10 +5,7 @@ use crate::{
     interrupts::{self, Mode},
     sys::{clear_bit, noop, read_addr, read_bit, set_bit, write_addr, GPIO1},
 };
-use libfenix::{
-    gpio::{GpioBank, GpioPin},
-    Syscall,
-};
+use libfenix::gpio::{GpioBank, GpioPin};
 
 const GPIO_OE: u32 = 0x134;
 const GPIO_DATAIN: u32 = 0x138;
@@ -44,12 +41,7 @@ pub fn pin_mode((pin, bank): GpioPin, mode: GpioMode) {
     }
 }
 
-pub fn write(pin: GpioPin, value: bool) {
-    let syscall = Syscall::GpioWrite { pin, value };
-    syscall.call();
-}
-
-pub fn unsafe_write((pin, bank): GpioPin, value: bool) {
+pub fn write((pin, bank): GpioPin, value: bool) {
     if value {
         set_bit(bank as u32 + GPIO_DATAOUT, pin);
     } else {
@@ -57,7 +49,7 @@ pub fn unsafe_write((pin, bank): GpioPin, value: bool) {
     }
 }
 
-pub fn unsafe_read((pin, bank): GpioPin) -> bool {
+pub fn read((pin, bank): GpioPin) -> bool {
     read_bit(bank as u32 + GPIO_DATAIN, pin)
 }
 

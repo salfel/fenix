@@ -121,12 +121,12 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
             SyscallReturn::value(*millis)
         }
         Syscall::GpioWrite { pin, value } => {
-            gpio::unsafe_write(pin, value);
+            gpio::write(pin, value);
 
             SyscallReturn::value(0)
         }
         Syscall::GpioRead { pin } => {
-            let value = gpio::unsafe_read(pin);
+            let value = gpio::read(pin);
 
             SyscallReturn::value(value as u32)
         }
