@@ -1,5 +1,5 @@
 [package]
-name = "include_dir"
+name = "include_programs"
 version = "0.1.0"
 edition = "2021"
 

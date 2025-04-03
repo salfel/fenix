@@ -2,7 +2,7 @@
 #![no_main]
 
 use alloc::heap;
-use include_dir::include_dir;
+use include_programs::include_programs;
 use internals::{
     mmu,
     sysclock::{self},
@@ -22,7 +22,7 @@ pub mod pinmux;
 pub mod sync;
 pub mod sys;
 
-static PROGRAMS: &[&[u8]] = include_dir!();
+static PROGRAMS: &[&[u8]] = include_programs!();
 
 #[no_mangle]
 pub fn _start() {

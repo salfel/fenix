@@ -6,12 +6,12 @@ version = 4
 name = "fenix"
 version = "0.1.0"
 dependencies = [
- "include_dir",
+ "include_programs",
  "libfenix",
 ]
 
 [[package]]
-name = "include_dir"
+name = "include_programs"
 version = "0.1.0"
 dependencies = [
  "quote",

@@ -4,7 +4,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 
 #[proc_macro]
-pub fn include_dir(_input: TokenStream) -> TokenStream {
+pub fn include_programs(_input: TokenStream) -> TokenStream {
     let current_dir = env::current_dir().unwrap();
     let program_dir = current_dir.join(PathBuf::from("programs"));
 

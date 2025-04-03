@@ -2,7 +2,8 @@
 members = [ 
     ".",
     "libfenix", 
-    "include_dir", "user", 
+    "include_programs",
+    "user", 
 ]
 resolver = "2"
 
@@ -13,7 +14,7 @@ edition = "2021"
 
 [dependencies]
 libfenix = { path = "./libfenix" }
-include_dir = { path = "./include_dir" }
+include_programs = { path = "./include_programs" }
 
 [build-dependencies]
 
