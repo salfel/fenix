@@ -19,7 +19,7 @@ const GPIO_FALLINGDETECT: u32 = 0x14C;
 
 const GPIOINT1A: u32 = 98;
 
-pub fn initialize_gpio() {
+pub fn initialize() {
     clock::enable(clock::FuncClock::Gpio1);
 
     interrupts::enable_interrupt(GPIOINT1A, Mode::IRQ, 1);
