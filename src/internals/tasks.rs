@@ -145,14 +145,14 @@ impl Scheduler {
 
         let dest = page.start() as *mut u8;
         unsafe {
-            ptr::copy(code.as_ptr(), dest, code.len());
+            ptr::copy_nonoverlapping(code.as_ptr(), dest, code.len());
         }
 
         let task = self.task_mut(task_id);
         task.page = page;
         task.state = TaskState::Ready;
         task.context.sp = task.page.end();
-        task.context.pc = 0;
+        task.context.pc = task.page.start();
         Some(task.id)
     }
 
