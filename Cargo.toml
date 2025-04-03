@@ -1,14 +1,29 @@
 [workspace]
 members = [ 
-    "kernel",
+    ".",
     "libfenix", 
     "include_dir", "user", 
 ]
 resolver = "2"
+
+[package]
+name = "fenix"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+libfenix = { path = "./libfenix" }
+include_dir = { path = "./include_dir" }
+
+[build-dependencies]
+
+[[bin]]
+name = "fenix"
+test = false
+bench = false
 
 [profile.release]
 panic = "abort"
 
 [profile.dev]
 panic = "abort"
-

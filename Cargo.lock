@@ -3,19 +3,19 @@
 version = 4
 
 [[package]]
+name = "fenix"
+version = "0.1.0"
+dependencies = [
+ "include_dir",
+ "libfenix",
+]
+
+[[package]]
 name = "include_dir"
 version = "0.1.0"
 dependencies = [
  "quote",
  "syn",
-]
-
-[[package]]
-name = "kernel"
-version = "0.1.0"
-dependencies = [
- "include_dir",
- "libfenix",
 ]
 
 [[package]]
