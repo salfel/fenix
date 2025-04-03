@@ -1,7 +1,6 @@
 build:
 	rm -rf out
 	mkdir out
-	ls
 	arm-none-eabi-gcc -mcpu=cortex-a8 -c src/asm/setup.S -o out/setup.o
 	arm-none-eabi-gcc -mcpu=cortex-a8 -c src/asm/interrupts.S -o out/interrupts.o
 	arm-none-eabi-gcc -mcpu=cortex-a8 -c src/asm/exceptions.S -o out/exceptions.o
