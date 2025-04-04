@@ -6,7 +6,8 @@ pub fn millis() -> u32 {
     syscall.call().unwrap()
 }
 
-global_asm!("
+global_asm!(
+    "
     wait_store:
         stmfd sp!, {{r0-r12, lr}}
 
@@ -19,7 +20,8 @@ global_asm!("
         mov r1, lr
         mov r2, r2
         svc #0x1
-");
+"
+);
 
 pub fn wait(ms: u32) {
     let until = millis() + ms;
