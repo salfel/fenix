@@ -1,19 +1,15 @@
-[package]
-name = "fenix"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-
-[build-dependencies]
+[workspace]
+members = [ 
+    ".",
+    "libfenix", 
+    "include_programs",
+    "user", 
+    "kernel", 
+]
+resolver = "2"
 
 [profile.release]
 panic = "abort"
 
 [profile.dev]
 panic = "abort"
-
-[[bin]]
-name = "fenix"
-test = false
-bench = false

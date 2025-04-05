@@ -1,0 +1,10 @@
+[build]
+target = "armv7a-none-eabi"
+
+[target.armv7a-none-eabi]
+linker = "arm-none-eabi-ld" 
+rustflags = [
+    "-C", "link-arg=-Tuser/boot/linker.ld",
+    "-C", "link-arg=--wrap=_start",
+    "-C", "link-arg=user/out/wrap.o",
+]
