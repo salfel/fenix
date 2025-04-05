@@ -204,6 +204,6 @@ pub fn create_task(code: &[u8]) -> Option<usize> {
 }
 
 extern "C" {
-    fn switch_context(sp: u32, pc: u32);
-    fn restore_context(sp: u32, pc: u32);
+    fn switch_context(sp: u32, pc: u32) -> !;
+    fn restore_context(sp: u32, pc: u32) -> !;
 }
