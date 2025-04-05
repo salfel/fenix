@@ -10,8 +10,8 @@ use libfenix::{
 fn _start() {
     loop {
         gpio::write(GPIO1_21, true);
-        wait(1000);
+        wait(100);
         gpio::write(GPIO1_21, false);
-        wait(1000);
+        wait(100);
     }
 }
