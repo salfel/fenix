@@ -17,6 +17,10 @@ fn interrupt_handler() {
     }
 }
 
+pub fn millis() -> u32 {
+    *SYS_CLOCK.lock()
+}
+
 extern "C" {
     fn yield_task();
 }

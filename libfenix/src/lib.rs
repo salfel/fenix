@@ -12,6 +12,5 @@ pub use kernel::*;
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
-    write_addr(0, 4);
     loop {}
 }

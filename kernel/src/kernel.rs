@@ -2,7 +2,7 @@ use core::convert::TryInto;
 
 use crate::{
     internals::{
-        sysclock::SYS_CLOCK,
+        sysclock::millis,
         tasks::{scheduler, TaskState},
     },
     peripherals::gpio::{self},
@@ -117,8 +117,7 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
             SyscallReturn::exit()
         }
         Syscall::Millis => {
-            let millis = SYS_CLOCK.lock();
-            SyscallReturn::value(*millis)
+            SyscallReturn::value(millis())
         }
         Syscall::GpioWrite { pin, value } => {
             gpio::write(pin, value);
