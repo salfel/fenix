@@ -2,16 +2,16 @@
 #![no_std]
 
 use libfenix::{
-    gpio::{self, pins::GPIO1_21},
+    gpio::{self, pins::GPIO1_22},
     sysclock::wait,
 };
 
 #[no_mangle]
 fn _start() {
     loop {
-        gpio::write(GPIO1_21, true);
-        wait(100);
-        gpio::write(GPIO1_21, false);
-        wait(100);
+        gpio::write(GPIO1_22, false);
+        wait(1000);
+        gpio::write(GPIO1_22, true);
+        wait(1000);
     }
 }
