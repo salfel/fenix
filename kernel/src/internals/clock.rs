@@ -1,4 +1,4 @@
-use crate::sys::write_addr;
+use libfenix::write_addr;
 
 enum ClockModule {
     CmPer = 0x44E0_0000,

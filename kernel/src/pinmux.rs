@@ -1,4 +1,4 @@
-use crate::sys::write_addr;
+use libfenix::write_addr;
 
 const CONTROL_MODULE_BASE: u32 = 0x44E10000;
 const CONF_GPMC_BEN1: u32 = 0x878; // GPIO1_28

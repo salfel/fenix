@@ -20,7 +20,6 @@ pub mod kernel;
 pub mod peripherals;
 pub mod pinmux;
 pub mod sync;
-pub mod sys;
 
 static PROGRAMS: &[&[u8]] = include_programs!();
 

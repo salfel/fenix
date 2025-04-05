@@ -3,9 +3,12 @@
 use crate::{
     internals::clock,
     interrupts::{self, Mode},
-    sys::{clear_bit, noop, read_addr, read_bit, set_bit, write_addr, GPIO1},
 };
-use libfenix::gpio::{GpioBank, GpioPin};
+use libfenix::{
+    clear_bit,
+    gpio::{GpioBank, GpioPin},
+    noop, read_addr, read_bit, set_bit, write_addr, GPIO1,
+};
 
 const GPIO_OE: u32 = 0x134;
 const GPIO_DATAIN: u32 = 0x138;

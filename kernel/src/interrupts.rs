@@ -1,4 +1,4 @@
-use crate::sys::{noop, read_addr, set_bit, write_addr, INTC};
+use libfenix::{noop, read_addr, set_bit, write_addr, INTC};
 
 const INTC_ILR: u32 = 0x100;
 const INTC_SIR_IRQ: u32 = 0x40;

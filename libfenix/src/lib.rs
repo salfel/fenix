@@ -2,6 +2,9 @@
 
 pub mod gpio;
 pub mod sysclock;
+mod sys;
+
+pub use sys::*;
 
 use core::arch::asm;
 
