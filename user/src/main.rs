@@ -3,7 +3,7 @@
 
 use libfenix::{
     gpio::{self, pins::GPIO1_22},
-    sysclock::wait,
+    wait
 };
 
 #[no_mangle]

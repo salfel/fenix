@@ -1,7 +1,7 @@
 use core::{cell::UnsafeCell, ptr};
 
 use super::mmu::L2SmallPageTableEntry;
-use libfenix::sysclock::millis;
+use libfenix::millis;
 
 pub const MAX_TASKS: usize = 4;
 
