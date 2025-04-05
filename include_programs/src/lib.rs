@@ -6,7 +6,7 @@ use quote::quote;
 #[proc_macro]
 pub fn include_programs(_input: TokenStream) -> TokenStream {
     let current_dir = env::current_dir().unwrap();
-    let program_dir = current_dir.join(PathBuf::from("programs"));
+    let program_dir = current_dir.join(PathBuf::from("kernel/programs"));
 
     let program_files = fs::read_dir(program_dir)
         .expect("No programs directory is present")

@@ -9,12 +9,12 @@ fn main() {
     println!("cargo:rerun-if-changed=kernel/src/asm/mmu.S");
     println!("cargo:rerun-if-changed=kernel/boot/linker.ld");
 
-    println!("cargo:rerun-if-changed=../programs");
+    println!("cargo:rerun-if-changed=programs");
 
-    for entry in fs::read_dir("../programs").unwrap() {
+    for entry in fs::read_dir("programs").unwrap() {
         let path = entry.unwrap().path();
         if path.is_file() {
-            println!("cargo:rerun-if-changed=../programs/{}", path.display());
+            println!("cargo:rerun-if-changed=programs/{}", path.display());
         }
     }
 }
