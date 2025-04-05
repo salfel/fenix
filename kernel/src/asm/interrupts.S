@@ -52,16 +52,19 @@ store_context:
     svc #0x1
 
 restore_context:
+    ldmfd r0!, {r2}
+    msr spsr, r2
+
+    push {r1}
+
     msr cpsr_c, #0xDF
-    str r1, next_pc
-
     mov sp, r0
-    pop {r0}
-    msr cpsr_xsfc, r0
+    pop {r0-r12, lr}
+    msr cpsr_c, #0xD3
 
-    ldmfd sp!, {r0-r12, lr}
+    push {r0-r12}
 
-    ldr pc, next_pc
+    ldmfd sp!, {r0-r12, pc}^
 
 yield_task:
     mov r0, #0x1

@@ -10,7 +10,7 @@ pub fn initialize() {
     let peripheral_memory: Range<u32> = 0x4400_0000..0x8000_0000;
     let kernel_memory: Range<u32> = 0x4020_0000..0x4040_0000;
 
-    enable_memory_range(kernel_memory, AccessPermissions::UserReadOnly);
+    enable_memory_range(kernel_memory, AccessPermissions::Privileged);
     enable_memory_range(peripheral_memory, AccessPermissions::Privileged);
 }
 
