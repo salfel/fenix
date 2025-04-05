@@ -12,5 +12,3 @@ switch_context:
 
     stmfd sp!, {r1}
     ldmfd sp!, {pc}^
-
-    svc #0x0
