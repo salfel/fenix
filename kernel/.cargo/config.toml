@@ -1,0 +1,13 @@
+[build]
+target = "armv7a-none-eabi"
+
+[target.armv7a-none-eabi]
+linker = "arm-none-eabi-ld"
+rustflags = [
+    "-C", "link-arg=-Tkernel/boot/linker.ld",
+    "-C", "link-arg=kernel/out/setup.o",
+    "-C", "link-arg=kernel/out/exceptions.o",
+    "-C", "link-arg=kernel/out/interrupts.o",
+    "-C", "link-arg=kernel/out/software_interrupts.o",
+    "-C", "link-arg=kernel/out/kernel.o",
+]

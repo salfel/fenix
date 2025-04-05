@@ -4,24 +4,9 @@ members = [
     "libfenix", 
     "include_programs",
     "user", 
+    "kernel", 
 ]
 resolver = "2"
-
-[package]
-name = "fenix"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-libfenix = { path = "./libfenix" }
-include_programs = { path = "./include_programs" }
-
-[build-dependencies]
-
-[[bin]]
-name = "fenix"
-test = false
-bench = false
 
 [profile.release]
 panic = "abort"
