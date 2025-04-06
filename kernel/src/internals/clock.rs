@@ -5,6 +5,8 @@ enum ClockModule {
 }
 
 pub enum FuncClock {
+    I2C2 = 0x44,
+    I2C1 = 0x48,
     Timer7 = 0x7C,
     Timer2 = 0x80,
     Timer3 = 0x84,
@@ -19,6 +21,8 @@ pub enum FuncClock {
 impl FuncClock {
     fn clock_module(&self) -> ClockModule {
         match self {
+            FuncClock::I2C2 => ClockModule::CmPer,
+            FuncClock::I2C1 => ClockModule::CmPer,
             FuncClock::Timer7 => ClockModule::CmPer,
             FuncClock::Timer2 => ClockModule::CmPer,
             FuncClock::Timer3 => ClockModule::CmPer,
