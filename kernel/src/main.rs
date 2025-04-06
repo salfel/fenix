@@ -10,7 +10,7 @@ use internals::{
 };
 use kernel::kernel_loop;
 use libfenix::gpio::pins::GPIO1_24;
-use peripherals::gpio;
+use peripherals::{gpio, i2c};
 
 pub mod alloc;
 pub mod exceptions;
@@ -33,6 +33,7 @@ pub fn _start() {
     heap::initialize();
     pinmux::configure();
     gpio::initialize();
+    i2c::initialize();
     sysclock::initialize();
     tasks::init();
 
