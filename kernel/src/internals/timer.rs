@@ -17,7 +17,12 @@ pub fn register_timer(dm_timer: DmTimer, reload: u32, handler: fn()) {
     unsafe { TIMERS[dm_timer as usize] = Some(timer) }
 }
 
-pub fn get_timer(dm_timer: DmTimer) -> &'static Option<Timer> {
+pub fn get_timer(interrupt: Interrupt) -> &'static Option<Timer> {
+    let dm_timer = match DmTimer::try_new(interrupt) {
+        Some(dm_timer) => dm_timer,
+        None => return &None
+    };
+
     unsafe { &TIMERS[dm_timer as usize] }
 }
 
@@ -80,8 +85,7 @@ impl Timer {
         let interrupt = interrupts::current();
 
         if let Some(interrupt) = interrupt {
-            let dm_timer = DmTimer::new(interrupt);
-            let timer = get_timer(dm_timer);
+            let timer = get_timer(interrupt);
 
             if let Some(timer) = timer {
                 timer.irq_disable();
@@ -105,14 +109,15 @@ pub enum DmTimer {
 }
 
 impl DmTimer {
-    fn new(interrupt: Interrupt) -> Self {
+    fn try_new(interrupt: Interrupt) -> Option<Self> {
         match interrupt {
-            Interrupt::TINT2 => DmTimer::Timer2,
-            Interrupt::TINT3 => DmTimer::Timer3,
-            Interrupt::TINT4 => DmTimer::Timer4,
-            Interrupt::TINT5 => DmTimer::Timer5,
-            Interrupt::TINT6 => DmTimer::Timer6,
-            Interrupt::TINT7 => DmTimer::Timer7,
+            Interrupt::TINT2 => Some(DmTimer::Timer2),
+            Interrupt::TINT3 => Some(DmTimer::Timer3),
+            Interrupt::TINT4 => Some(DmTimer::Timer4),
+            Interrupt::TINT5 => Some(DmTimer::Timer5),
+            Interrupt::TINT6 => Some(DmTimer::Timer6),
+            Interrupt::TINT7 => Some(DmTimer::Timer7),
+            _ => None,
         }
     }
 
