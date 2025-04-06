@@ -11,6 +11,7 @@ pub enum Interrupt {
     TINT5 = 93,
     TINT6 = 94,
     TINT7 = 95,
+    GPIOINT1A = 98,
 }
 
 impl Interrupt {
@@ -22,6 +23,7 @@ impl Interrupt {
             93 => Some(Interrupt::TINT5),
             94 => Some(Interrupt::TINT6),
             95 => Some(Interrupt::TINT7),
+            98 => Some(Interrupt::GPIOINT1A),
             _ => None,
         }
     }
@@ -34,26 +36,28 @@ fn handle_interrupt() {
     clear();
 }
 
-pub fn enable_interrupt(n: u32, mode: Mode, priority: u8) {
-    let addr = INTC + INTC_ILR + (4 * n);
+pub fn enable_interrupt(interrupt: Interrupt, mode: Mode, priority: u8) {
+    let interrupt_number = interrupt as u32;
+
+    let addr = INTC + INTC_ILR + (4 * interrupt_number);
     let enable_fiq = match mode {
         Mode::IRQ => 0,
         Mode::FIQ => 1,
     };
-    let bank = match InterruptBank::new(n) {
+    let bank = match InterruptBank::new(interrupt_number) {
         Some(bank) => bank,
         None => return,
     };
 
     write_addr(addr, enable_fiq | (priority << 2) as u32);
-    set_bit(INTC + bank.get_mir() + 4, n);
+    set_bit(INTC + bank.get_mir() + 4, interrupt_number);
 }
 
 static mut INTERRUPT_HANDLERS: &mut [fn(); 128] = &mut [noop; 128];
 
-pub fn register_handler(handler: fn(), number: usize) {
+pub fn register_handler(handler: fn(), interrupt: Interrupt) {
     unsafe {
-        INTERRUPT_HANDLERS[number] = handler;
+        INTERRUPT_HANDLERS[interrupt as usize] = handler;
     }
 }
 

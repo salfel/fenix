@@ -1,6 +1,6 @@
 use crate::{
     internals::clock,
-    interrupts::{self, Mode},
+    interrupts::{self, Interrupt, Mode},
 };
 use libfenix::{
     clear_bit,
@@ -18,13 +18,11 @@ const GPIO_IRQSTATUS_SET0: u32 = 0x34;
 const GPIO_RISINGDETECT: u32 = 0x148;
 const GPIO_FALLINGDETECT: u32 = 0x14C;
 
-const GPIOINT1A: u32 = 98;
-
 pub fn initialize() {
     clock::enable(clock::FuncClock::Gpio1);
 
-    interrupts::enable_interrupt(GPIOINT1A, Mode::IRQ, 1);
-    interrupts::register_handler(handle_interrupts, GPIOINT1A as usize);
+    interrupts::enable_interrupt(Interrupt::GPIOINT1A, Mode::IRQ, 1);
+    interrupts::register_handler(handle_interrupts, Interrupt::GPIOINT1A);
 
     for i in 21..=24 {
         pin_mode((i, GpioBank::Gpio1), GpioMode::Output);

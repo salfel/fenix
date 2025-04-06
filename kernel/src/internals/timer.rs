@@ -61,8 +61,8 @@ impl Timer {
     fn init_interrupt(&self) {
         self.irq_enable();
 
-        interrupts::register_handler(Self::handle_timer_irq, self.timer.interrupt() as usize);
-        interrupts::enable_interrupt(self.timer.interrupt() as u32, interrupts::Mode::IRQ, 0);
+        interrupts::register_handler(Self::handle_timer_irq, self.timer.interrupt());
+        interrupts::enable_interrupt(self.timer.interrupt(), interrupts::Mode::IRQ, 0);
     }
 
     fn start(&self) {
