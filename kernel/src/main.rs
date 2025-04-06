@@ -37,6 +37,9 @@ pub fn _start() {
     sysclock::initialize();
     tasks::init();
 
+    i2c::enable_test_mode();
+    i2c::transmit(0x5, 0x1);
+
     gpio::write(GPIO1_24, true);
 
     for program in PROGRAMS {

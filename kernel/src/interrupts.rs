@@ -5,6 +5,7 @@ const INTC_SIR_IRQ: u32 = 0x40;
 const INTC_CONTROL: u32 = 0x48;
 
 pub enum Interrupt {
+    I2C2INT = 30,
     TINT2 = 68,
     TINT3 = 69,
     TINT4 = 92,
@@ -17,6 +18,7 @@ pub enum Interrupt {
 impl Interrupt {
     pub fn new(num: u32) -> Option<Self> {
         match num {
+            30 => Some(Interrupt::I2C2INT),
             68 => Some(Interrupt::TINT2),
             69 => Some(Interrupt::TINT3),
             92 => Some(Interrupt::TINT4),
