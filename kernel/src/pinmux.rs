@@ -32,12 +32,10 @@ pub enum PullResistor {
 
 impl PullResistor {
     pub fn to_mask(self) -> u32 {
-        let value = match self {
+        match self {
             PullResistor::PullDown => 0b00,
             PullResistor::PullUp => 0b10,
             PullResistor::None => 0b01,
-        };
-
-        value << 3
+        }
     }
 }
