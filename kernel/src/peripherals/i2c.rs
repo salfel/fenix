@@ -1,4 +1,7 @@
+use core::cmp::min;
+
 use crate::{
+    alloc::vec::Vec,
     internals::clock::{self, FuncClock},
     interrupts::{self, Interrupt, Mode},
 };
@@ -44,11 +47,12 @@ pub fn initialize() {
     i2c.enable_test_mode();
 }
 
-pub fn transmit() {
+pub fn transmit(data: &[u8]) {
     let i2c = get_i2c();
-    i2c.transmit();
+    i2c.transmit(data);
 }
 
+#[allow(static_mut_refs)]
 fn get_i2c() -> &'static mut I2C {
     unsafe { &mut I2C }
 }
@@ -57,11 +61,19 @@ static mut I2C: I2C = I2C::new(I2cModule::I2C2);
 
 struct I2C {
     module: I2cModule,
+    receive_buffer: Vec<u8>,
+    transmit_buffer: Vec<u8>,
+    transmit_index: usize,
 }
 
 impl I2C {
     const fn new(module: I2cModule) -> Self {
-        Self { module }
+        Self {
+            module,
+            receive_buffer: Vec::new(),
+            transmit_buffer: Vec::new(),
+            transmit_index: 0,
+        }
     }
 
     fn base(&self) -> u32 {
@@ -145,11 +157,14 @@ impl I2C {
         );
     }
 
-    fn transmit(&self) {
-        const COUNT: u32 = 52;
+    fn transmit(&mut self, data: &[u8]) {
+        self.transmit_buffer.clear();
+        for byte in data {
+            self.transmit_buffer.push(*byte);
+        }
 
         self.set_slave(0x50);
-        self.set_count(COUNT);
+        self.set_count(data.len() as u32);
         while self.busy() {}
         self.set_start_stop();
     }
@@ -172,8 +187,15 @@ impl I2C {
         write_addr(self.base() + I2C_CON, value | 0x3);
     }
 
-    fn write_data(&self) {
-        write_addr(self.base() + I2C_DATA, 0xFF);
+    fn write_data(&mut self) {
+        let data = self.transmit_buffer.get(self.transmit_index).unwrap();
+        write_addr(self.base() + I2C_DATA, *data as u32);
+        self.transmit_index += 1;
+    }
+
+    fn read_data(&mut self) {
+        let data = read_addr(self.base() + I2C_DATA) as u8;
+        self.receive_buffer.push(data);
     }
 
     fn transmit_bytes_available(&self) -> u32 {
@@ -184,11 +206,11 @@ impl I2C {
         (read_addr(self.base() + I2C_BUFSTAT) >> 8) & 0x3F
     }
 
-    fn irq_handler(&self) {
+    fn irq_handler(&mut self) {
         let value = read_addr(self.base() + I2C_IRQSTATUS);
 
         if value & XRDY != 0 {
-            for _ in 0..TRANSMIT_THRESHOLD {
+            for _ in 0..min(TRANSMIT_THRESHOLD, self.transmit_buffer.len() as u32) {
                 self.write_data();
             }
 
@@ -207,7 +229,7 @@ impl I2C {
 
         if value & RRDY != 0 {
             for _ in 0..RECEIVE_THRESHOLD {
-                let _data = read_addr(self.base() + I2C_DATA);
+                self.read_data();
             }
 
             write_addr(self.base() + I2C_IRQSTATUS, RRDY);
@@ -216,7 +238,7 @@ impl I2C {
 
         if value & RDR != 0 {
             for _ in 0..self.receive_bytes_available() {
-                let _data = read_addr(self.base() + I2C_DATA);
+                self.read_data();
             }
 
             write_addr(self.base() + I2C_IRQSTATUS, RDR);

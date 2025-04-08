@@ -37,7 +37,8 @@ pub fn _start() {
     sysclock::initialize();
     tasks::init();
 
-    i2c::transmit();
+    let data = &[0xFF, 0xFF, 0xFF];
+    i2c::transmit(data);
 
     gpio::write(GPIO1_24, true);
 
