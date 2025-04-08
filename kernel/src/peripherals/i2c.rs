@@ -6,7 +6,7 @@ use crate::{
 };
 use libfenix::{
     self,
-    gpio::pins::{GPIO1_21, GPIO1_22, GPIO1_24, GPIO2_11},
+    gpio::pins::{GPIO1_21, GPIO1_22, GPIO1_23, GPIO1_24},
     read_addr, set_bit, write_addr,
 };
 
@@ -45,13 +45,11 @@ const XRDY: u32 = 1 << 4; // Transmit Ready
 const RRDY: u32 = 1 << 3; // Receive Ready
 const NACK: u32 = 1 << 1; // No Acknowledge
 
-const RECEIVE_THRESHOLD: u32 = (16 << 8) - 1;
-const TRANSMIT_THRESHOLD: u32 = 16 - 1;
+const RECEIVE_THRESHOLD: u32 = 16;
+const TRANSMIT_THRESHOLD: u32 = 16;
 
 const TEST_ENABLE: u32 = 1 << 15;
 const TEST_MODE: u32 = 12;
-
-const MAX_FIFO_LENGTH: u32 = 32;
 
 pub fn initialize() {
     clock::enable(FuncClock::I2C2);
@@ -69,24 +67,41 @@ pub fn initialize() {
     // init
     set_mode();
     setup_irq();
+    setup_threshold();
 }
 
 pub fn irq_handler() {
     let value = read_addr(I2C_BASE + I2C_IRQSTATUS);
 
     if value & XRDY != 0 {
-        write_data(0xFF);
-        gpio::write(GPIO1_21, true);
+        for _ in 0..min(count(), transmit_bytes_available()) {
+            write_data(0xFF);
+        }
 
         write_addr(I2C_BASE + I2C_IRQSTATUS, XRDY);
         return;
     }
 
+    if value & XDR != 0 {
+        write_addr(I2C_BASE + I2C_IRQSTATUS, XDR);
+        return;
+    }
+
     if value & RRDY != 0 {
-        let _data = read_addr(I2C_BASE + I2C_DATA);
-        gpio::write(GPIO1_22, true);
+        for _ in 0..min(count(), receive_bytes_available()) {
+            let _data = read_addr(I2C_BASE + I2C_DATA);
+        }
 
         write_addr(I2C_BASE + I2C_IRQSTATUS, RRDY);
+        return;
+    }
+
+    if value & RDR != 0 {
+        for _ in 0..count() {
+            let _data = read_addr(I2C_BASE + I2C_DATA);
+        }
+
+        write_addr(I2C_BASE + I2C_IRQSTATUS, RDR);
         return;
     }
 
@@ -124,6 +139,25 @@ fn init_clocks() {
 
     write_addr(I2C_BASE + I2C_SCLL, divider - 7);
     write_addr(I2C_BASE + I2C_SCLH, divider - 5);
+}
+
+fn setup_threshold() {
+    write_addr(
+        I2C_BASE + I2C_BUF,
+        (RECEIVE_THRESHOLD - 1) << 8 | (TRANSMIT_THRESHOLD - 1),
+    );
+}
+
+fn transmit_bytes_available() -> u32 {
+    read_addr(I2C_BASE + I2C_BUFSTAT) & 0x3F
+}
+
+fn receive_bytes_available() -> u32 {
+    (read_addr(I2C_BASE + I2C_BUFSTAT) >> 8) & 0x3F
+}
+
+fn count() -> u32 {
+    read_addr(I2C_BASE + I2C_CNT)
 }
 
 fn set_own_address() {
@@ -166,7 +200,7 @@ pub fn enable_test_mode() {
 }
 
 pub fn transmit() {
-    const COUNT: u32 = 13;
+    const COUNT: u32 = 18;
 
     set_slave(0x50);
     set_count(COUNT);
