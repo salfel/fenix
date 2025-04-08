@@ -1,14 +1,20 @@
 use crate::{
-    gpio,
     internals::clock::{self, FuncClock},
     interrupts::{self, Interrupt, Mode},
 };
-use libfenix::{self, clear_bit, gpio::pins::GPIO1_21, read_addr, set_bit, write_addr};
+use libfenix::{
+    self,
+    gpio::pins::{GPIO1_21, GPIO1_22},
+    read_addr, set_bit, write_addr,
+};
+
+use super::gpio;
 
 const I2C2: u32 = 0x4819C000;
 
 const SYS_CLOCK: u32 = 48_000_000;
 const INTERNAL_CLOCK: u32 = 12_000_000;
+const OUTPUT_CLOCK: u32 = 100_000;
 
 const I2C_BASE: u32 = I2C2;
 
@@ -29,29 +35,50 @@ const I2C_SYSTEST: u32 = 0xBC;
 const I2C_SYSS: u32 = 0x90;
 
 const XRDY: u32 = 1 << 4;
+const BF: u32 = 1 << 8;
+
+const TEST_ENABLE: u32 = 1 << 15;
+const TEST_MODE: u32 = 13;
 
 pub fn initialize() {
     clock::enable(FuncClock::I2C2);
 
-    interrupts::enable_interrupt(Interrupt::I2C2INT, Mode::IRQ, 2);
-    interrupts::register_handler(handle_irq, Interrupt::I2C2INT);
+    interrupts::enable_interrupt(Interrupt::I2C2INT, Mode::IRQ, 2); // enable irq
+    interrupts::register_handler(irq_handler, Interrupt::I2C2INT); // register handler
 
-    reset();
+    // config
+    soft_reset();
     init_clocks();
-    set_own_address(0);
+    set_own_address();
     enable();
     wait_reset();
+
+    // init
+    set_mode();
     setup_irq();
 }
 
-fn clear_interrupts() {
-    write_addr(I2C_BASE + I2C_IRQSTATUS_SET, 0x7FF);
-    write_addr(I2C_BASE + I2C_IRQSTATUS, 0x7FF);
-    write_addr(I2C_BASE + I2C_IRQSTATUS_CLR, 0x7FF);
+static mut BUS_FREE: bool = true;
+
+pub fn irq_handler() {
+    let value = read_addr(I2C_BASE + I2C_IRQSTATUS);
+
+    if value & XRDY != 0 {
+        write_addr(I2C_BASE + I2C_DATA, 0xFF);
+
+        write_addr(I2C_BASE + I2C_IRQSTATUS, XRDY);
+        gpio::write(GPIO1_21, true);
+    }
+
+    if value & BF != 0 {
+        unsafe { BUS_FREE = true };
+
+        write_addr(I2C_BASE + I2C_IRQSTATUS, BF);
+        gpio::write(GPIO1_22, true);
+    }
 }
 
-fn reset() {
-    clear_bit(I2C_BASE + I2C_CON, 15);
+fn soft_reset() {
     write_addr(I2C_BASE + I2C_SYSC, read_addr(I2C_BASE + I2C_SYSC) | 0x2);
 }
 
@@ -60,85 +87,64 @@ fn wait_reset() {
 }
 
 fn init_clocks() {
-    let mut divider = SYS_CLOCK / INTERNAL_CLOCK;
-    write_addr(I2C_BASE + I2C_PSC, divider - 1);
+    let prescaler = (SYS_CLOCK / INTERNAL_CLOCK) - 1;
+    write_addr(I2C_BASE + I2C_PSC, prescaler);
+
+    let mut divider = INTERNAL_CLOCK / OUTPUT_CLOCK;
     divider /= 2;
 
     write_addr(I2C_BASE + I2C_SCLL, divider - 7);
     write_addr(I2C_BASE + I2C_SCLH, divider - 5);
 }
 
-fn set_own_address(address: u32) {
-    write_addr(I2C_BASE + I2C_OA, address);
+fn set_own_address() {
+    write_addr(I2C_BASE + I2C_OA, 0x50);
 }
 
 fn enable() {
     set_bit(I2C_BASE + I2C_CON, 15);
 }
 
-fn setup_mode() {
+fn set_mode() {
     let value = read_addr(I2C_BASE + I2C_CON);
-    write_addr(I2C_BASE + I2C_CON, value | 0x3 << 9);
+    write_addr(I2C_BASE + I2C_CON, value | 0x3 << 9); // setup master transmitter
 }
 
 fn setup_irq() {
-    write_addr(I2C_BASE + I2C_IRQSTATUS_SET, 0);
-
-    //libfenix::gpio::write(GPIO1_21, false);
+    let value = read_addr(I2C_BASE + I2C_IRQSTATUS_SET);
+    write_addr(I2C_BASE + I2C_IRQSTATUS_SET, value | XRDY | BF);
 }
 
-fn handle_irq() {
-    let value = read_addr(I2C_BASE + I2C_IRQSTATUS);
-    if value & XRDY != 0 {
-        write_addr(I2C_BASE + I2C_DATA, 0xFF);
-
-        write_addr(I2C_BASE + I2C_IRQSTATUS, XRDY);
-    }
-}
-
-fn busy() -> bool {
-    let value = read_addr(I2C_BASE + I2C_IRQSTATUS_RAW);
-    value & (1 << 12) != 0
-}
-
-fn wait_busy() {
-    while busy() {}
-}
-
-fn start() {
-    write_addr(I2C_BASE + I2C_CON, read_addr(I2C_BASE + I2C_CON) | 0x1);
-    write_addr(
-        I2C_BASE + I2C_CON,
-        read_addr(I2C_BASE + I2C_CON) | (0x1 << 1),
-    );
+fn set_slave(address: u32) {
+    write_addr(I2C_BASE + I2C_SA, address);
 }
 
 fn set_count(count: u32) {
     write_addr(I2C_BASE + I2C_CNT, count);
 }
 
-fn set_slave_address(address: u8) {
-    write_addr(I2C_BASE + I2C_SA, address as u32);
+fn busy() -> bool {
+    let result = unsafe { !BUS_FREE };
+    unsafe { BUS_FREE = false };
+    result
 }
 
-fn trasmit_ready() -> bool {
-    let value = read_addr(I2C_BASE + I2C_IRQSTATUS_RAW);
-    value & (1 << 4) != 0
-}
-
-pub fn transmit(data: u8, slave_address: u8) {
-    set_count(1);
-    clear_interrupts();
-    setup_mode();
-    set_slave_address(slave_address);
-    wait_busy();
-    start();
+fn set_start_stop() {
+    let value = read_addr(I2C_BASE + I2C_CON);
+    write_addr(I2C_BASE + I2C_CON, value | 0x3);
 }
 
 pub fn enable_test_mode() {
-    let mut value = 0;
-    value |= 0x1 << 15; // enable module
-    value |= 0x3 << 12; // loop back mode
+    let value = read_addr(I2C_BASE + I2C_SYSTEST);
+    write_addr(
+        I2C_BASE + I2C_SYSTEST,
+        value | TEST_ENABLE | (0x3 << TEST_MODE),
+    );
+}
 
-    write_addr(I2C_BASE + I2C_SYSTEST, value);
+pub fn transmit() {
+    set_slave(0x30);
+    set_count(1);
+    while busy() {}
+    set_start_stop();
 }
