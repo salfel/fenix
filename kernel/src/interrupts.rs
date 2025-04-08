@@ -52,7 +52,7 @@ pub fn enable_interrupt(interrupt: Interrupt, mode: Mode, priority: u8) {
     };
 
     write_addr(addr, enable_fiq | (priority << 2) as u32);
-    set_bit(INTC + bank.get_mir() + 4, interrupt_number);
+    set_bit(INTC + bank.get_mir() + 4, interrupt_number % 32);
 }
 
 static mut INTERRUPT_HANDLERS: &mut [fn(); 128] = &mut [noop; 128];
