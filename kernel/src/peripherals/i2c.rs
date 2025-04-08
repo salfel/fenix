@@ -41,6 +41,7 @@ const I2C_BUFSTAT: u32 = 0xC0;
 const XDR: u32 = 1 << 14; // Transmit Draining
 const RDR: u32 = 1 << 13; // Receive Draining
 const BF: u32 = 1 << 8; // Bus Free
+const AAER: u32 = 1 << 7; // Address Acknowledge Error
 const XRDY: u32 = 1 << 4; // Transmit Ready
 const RRDY: u32 = 1 << 3; // Receive Ready
 const NACK: u32 = 1 << 1; // No Acknowledge
@@ -74,8 +75,8 @@ pub fn irq_handler() {
     let value = read_addr(I2C_BASE + I2C_IRQSTATUS);
 
     if value & XRDY != 0 {
-        for _ in 0..min(count(), transmit_bytes_available()) {
-            write_data(0xFF);
+        for _ in 0..TRANSMIT_THRESHOLD {
+            write_data();
         }
 
         write_addr(I2C_BASE + I2C_IRQSTATUS, XRDY);
@@ -83,12 +84,16 @@ pub fn irq_handler() {
     }
 
     if value & XDR != 0 {
+        for _ in 0..transmit_bytes_available() {
+            write_data();
+        }
+
         write_addr(I2C_BASE + I2C_IRQSTATUS, XDR);
         return;
     }
 
     if value & RRDY != 0 {
-        for _ in 0..min(count(), receive_bytes_available()) {
+        for _ in 0..RECEIVE_THRESHOLD {
             let _data = read_addr(I2C_BASE + I2C_DATA);
         }
 
@@ -97,7 +102,7 @@ pub fn irq_handler() {
     }
 
     if value & RDR != 0 {
-        for _ in 0..count() {
+        for _ in 0..receive_bytes_available() {
             let _data = read_addr(I2C_BASE + I2C_DATA);
         }
 
@@ -110,8 +115,8 @@ pub fn irq_handler() {
     }
 }
 
-fn write_data(data: u8) {
-    write_addr(I2C_BASE + I2C_DATA, data.into());
+fn write_data() {
+    write_addr(I2C_BASE + I2C_DATA, 0xFF);
 }
 
 fn setup_irq() {
@@ -200,7 +205,7 @@ pub fn enable_test_mode() {
 }
 
 pub fn transmit() {
-    const COUNT: u32 = 18;
+    const COUNT: u32 = 52;
 
     set_slave(0x50);
     set_count(COUNT);
