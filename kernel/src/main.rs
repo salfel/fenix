@@ -36,11 +36,11 @@ pub fn _start() {
     sysclock::initialize();
     tasks::init();
 
-    let message = "Hello, world!";
     let i2c = i2c::get_i2c();
     i2c.begin(0x10);
-    i2c.write(message.as_bytes());
-    i2c.write(message.as_bytes());
+    i2c.write_str("Hello, world!");
+    i2c.write_char('\n');
+    i2c.write_str("This is me, Felix!");
     i2c.end_transmission();
 
     gpio::write(GPIO1_24, true);

@@ -5,14 +5,7 @@ use crate::{
     internals::clock::{self, FuncClock},
     interrupts::{self, Interrupt, Mode},
 };
-use libfenix::{
-    self,
-    gpio::{
-        self,
-        pins::{GPIO1_21, GPIO1_22},
-    },
-    read_addr, set_bit, write_addr,
-};
+use libfenix::{self, read_addr, set_bit, write_addr};
 
 const SYS_CLOCK: u32 = 48_000_000;
 const INTERNAL_CLOCK: u32 = 12_000_000;
@@ -179,7 +172,7 @@ impl I2C {
         while self.busy() {}
     }
 
-    pub fn write(&mut self, data: &[u8]) {
+    pub fn write_buf(&mut self, data: &[u8]) {
         if self.address.is_none() {
             panic!("I2C not initialized");
         }
@@ -191,9 +184,20 @@ impl I2C {
         if self.ready {
             self.set_count(data.len() as u32);
             self.start();
+            self.ready = false;
         }
+    }
 
-        self.ready = false;
+    pub fn write(&mut self, data: u8) {
+        self.write_buf(&[data]);
+    }
+
+    pub fn write_str(&mut self, data: &str) {
+        self.write_buf(data.as_bytes());
+    }
+
+    pub fn write_char(&mut self, data: char) {
+        self.write_buf(&[data as u8]);
     }
 
     pub fn end_transmission(&mut self) {
@@ -224,10 +228,6 @@ impl I2C {
 
     fn set_count(&self, count: u32) {
         write_addr(self.base() + I2C_CNT, count);
-    }
-
-    fn count(&self) -> u32 {
-        read_addr(self.base() + I2C_CNT)
     }
 
     fn busy(&self) -> bool {
