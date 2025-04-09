@@ -157,6 +157,16 @@ impl I2C {
     pub fn begin(&mut self, slave_address: u32) {
         self.set_slave(slave_address);
         self.address = Some(slave_address);
+
+        let mode = I2cMode::Transmitter;
+        self.set_mode(&mode);
+        self.mode = Some(mode);
+
+        self.transmit_buffer.clear();
+
+        self.enable_interrupts();
+
+        while self.busy() {}
     }
 
     pub fn transmit(&mut self, data: &[u8]) {
@@ -164,18 +174,11 @@ impl I2C {
             panic!("I2C not initialized");
         }
 
-        let mode = I2cMode::Transmitter;
-        self.set_mode(&mode);
-        self.mode = Some(mode);
-
-        self.transmit_buffer.clear();
         for byte in data {
             self.transmit_buffer.push(*byte);
         }
 
         self.set_count(data.len() as u32);
-        while self.busy() {}
-        self.enable_interrupts();
         self.set_start_stop();
     }
 
@@ -217,6 +220,11 @@ impl I2C {
     fn set_start_stop(&self) {
         let value = read_addr(self.base() + I2C_CON);
         write_addr(self.base() + I2C_CON, value | 0x3);
+    }
+
+    fn start(&self) {
+        let value = read_addr(self.base() + I2C_CON);
+        write_addr(self.base() + I2C_CON, value | 0x1);
     }
 
     fn write_data(&mut self) {
