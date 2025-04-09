@@ -31,12 +31,6 @@ const I2C_SYSS: u32 = 0x90;
 const I2C_BUF: u32 = 0x94;
 const I2C_BUFSTAT: u32 = 0xC0;
 
-const XDR: u32 = 1 << 14; // Transmit Draining
-const RDR: u32 = 1 << 13; // Receive Draining
-const XRDY: u32 = 1 << 4; // Transmit Ready
-const RRDY: u32 = 1 << 3; // Receive Ready
-const NACK: u32 = 1 << 1; // No Acknowledge
-
 const RECEIVE_THRESHOLD: u32 = 16;
 const TRANSMIT_THRESHOLD: u32 = 16;
 
@@ -62,6 +56,7 @@ static mut I2C: I2C = I2C::new(I2cModule::I2C2);
 
 pub struct I2C {
     module: I2cModule,
+    mode: Option<I2cMode>,
     address: Option<u32>,
     receive_buffer: Vec<u8>,
     transmit_buffer: Vec<u8>,
@@ -72,6 +67,7 @@ impl I2C {
     const fn new(module: I2cModule) -> Self {
         Self {
             module,
+            mode: None,
             address: None,
             receive_buffer: Vec::new(),
             transmit_buffer: Vec::new(),
@@ -97,8 +93,6 @@ impl I2C {
         self.wait_reset();
 
         // init
-        self.set_mode();
-        self.setup_irq();
         self.setup_threshold();
     }
 
@@ -132,9 +126,13 @@ impl I2C {
         while read_addr(self.base() + I2C_SYSS) & 0x1 == 0 {}
     }
 
-    fn set_mode(&self) {
+    fn set_mode(&self, mode: &I2cMode) {
         let value = read_addr(self.base() + I2C_CON);
-        write_addr(self.base() + I2C_CON, value | 0x3 << 9); // setup master transmitter
+        let is_transmitter = matches!(mode, I2cMode::Transmitter);
+        write_addr(
+            self.base() + I2C_CON,
+            value | 1 << 10 | (is_transmitter as u32) << 9,
+        );
     }
 
     fn setup_threshold(&self) {
@@ -144,12 +142,14 @@ impl I2C {
         );
     }
 
-    fn setup_irq(&self) {
+    fn enable_irq(&self, irq: I2cInterrupt) {
         let value = read_addr(self.base() + I2C_IRQSTATUS_SET);
-        write_addr(
-            self.base() + I2C_IRQSTATUS_SET,
-            value | XRDY | RRDY | XDR | RDR | NACK,
-        );
+        write_addr(self.base() + I2C_IRQSTATUS_SET, value | irq as u32);
+    }
+
+    fn disable_irq(&self, irq: I2cInterrupt) {
+        let value = read_addr(self.base() + I2C_IRQSTATUS_CLR);
+        write_addr(self.base() + I2C_IRQSTATUS_CLR, value | irq as u32);
     }
 
     fn enable_test_mode(&self) {
@@ -170,6 +170,10 @@ impl I2C {
             panic!("I2C not initialized");
         }
 
+        let mode = I2cMode::Transmitter;
+        self.set_mode(&mode);
+        self.mode = Some(mode);
+
         self.transmit_buffer.clear();
         for byte in data {
             self.transmit_buffer.push(*byte);
@@ -177,7 +181,30 @@ impl I2C {
 
         self.set_count(data.len() as u32);
         while self.busy() {}
+        self.enable_interrupts();
         self.set_start_stop();
+    }
+
+    pub fn end(&mut self) {
+        self.address = None;
+        self.mode = None;
+        self.disable_interrupts();
+    }
+
+    fn enable_interrupts(&self) {
+        if let Some(mode) = &self.mode {
+            for interrupt in mode.interrupts() {
+                self.enable_irq(*interrupt);
+            }
+        }
+    }
+
+    fn disable_interrupts(&self) {
+        if let Some(mode) = &self.mode {
+            for interrupt in mode.interrupts() {
+                self.disable_irq(*interrupt);
+            }
+        }
     }
 
     fn set_slave(&self, address: u32) {
@@ -220,44 +247,51 @@ impl I2C {
     fn irq_handler(&mut self) {
         let value = read_addr(self.base() + I2C_IRQSTATUS);
 
-        if value & XRDY != 0 {
+        if value & I2cInterrupt::XRDY as u32 != 0 {
             for _ in 0..min(TRANSMIT_THRESHOLD, self.transmit_buffer.len() as u32) {
                 self.write_data();
             }
 
-            write_addr(self.base() + I2C_IRQSTATUS, XRDY);
+            write_addr(self.base() + I2C_IRQSTATUS, I2cInterrupt::XRDY as u32);
             return;
         }
 
-        if value & XDR != 0 {
+        if value & I2cInterrupt::XDR as u32 != 0 {
             for _ in 0..self.transmit_bytes_available() {
                 self.write_data();
             }
 
-            write_addr(self.base() + I2C_IRQSTATUS, XDR);
+            write_addr(self.base() + I2C_IRQSTATUS, I2cInterrupt::XDR as u32);
             return;
         }
 
-        if value & RRDY != 0 {
+        if value & I2cInterrupt::RRDY as u32 != 0 {
             for _ in 0..RECEIVE_THRESHOLD {
                 self.read_data();
             }
 
-            write_addr(self.base() + I2C_IRQSTATUS, RRDY);
+            write_addr(self.base() + I2C_IRQSTATUS, I2cInterrupt::RRDY as u32);
             return;
         }
 
-        if value & RDR != 0 {
+        if value & I2cInterrupt::RDR as u32 != 0 {
             for _ in 0..self.receive_bytes_available() {
                 self.read_data();
             }
 
-            write_addr(self.base() + I2C_IRQSTATUS, RDR);
+            write_addr(self.base() + I2C_IRQSTATUS, I2cInterrupt::RDR as u32);
             return;
         }
 
-        if value & NACK != 0 {
-            write_addr(self.base() + I2C_IRQSTATUS, NACK);
+        if value & I2cInterrupt::ARDY as u32 != 0 {
+            self.end();
+
+            write_addr(self.base() + I2C_IRQSTATUS, I2cInterrupt::ARDY as u32);
+            return;
+        }
+
+        if value & I2cInterrupt::NACK as u32 != 0 {
+            write_addr(self.base() + I2C_IRQSTATUS, I2cInterrupt::NACK as u32);
         }
     }
 }
@@ -270,4 +304,39 @@ fn irq_handler() {
 #[derive(Clone, Copy)]
 enum I2cModule {
     I2C2 = 0x4819_C000,
+}
+
+enum I2cMode {
+    Transmitter,
+    Receiver,
+}
+
+impl I2cMode {
+    fn interrupts(&self) -> &[I2cInterrupt] {
+        match self {
+            I2cMode::Transmitter => &[
+                I2cInterrupt::XRDY,
+                I2cInterrupt::XDR,
+                I2cInterrupt::ARDY,
+                I2cInterrupt::NACK,
+            ],
+            I2cMode::Receiver => &[
+                I2cInterrupt::RRDY,
+                I2cInterrupt::RDR,
+                I2cInterrupt::ARDY,
+                I2cInterrupt::NACK,
+            ],
+        }
+    }
+}
+
+#[allow(clippy::upper_case_acronyms)]
+#[derive(Clone, Copy)]
+enum I2cInterrupt {
+    XDR = 1 << 14, // Transmit Draining
+    RDR = 1 << 13, // Receive Draining
+    XRDY = 1 << 4, // Transmit Ready
+    RRDY = 1 << 3, // Receive Ready
+    ARDY = 1 << 2, // Access Ready
+    NACK = 1 << 1, // No Acknowledge
 }
