@@ -43,6 +43,10 @@ pub fn _start() {
     i2c.write_str("This is me, Felix!");
     i2c.end_transmission();
 
+    i2c.begin(0x10);
+    i2c.write_str("Hello, world!");
+    i2c.end_transmission();
+
     gpio::write(GPIO1_24, true);
 
     for program in PROGRAMS {

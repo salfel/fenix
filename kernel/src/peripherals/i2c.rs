@@ -1,11 +1,13 @@
-use core::cmp::min;
+use core::{arch::asm, cmp::min};
 
 use crate::{
     alloc::vec::Vec,
     internals::clock::{self, FuncClock},
     interrupts::{self, Interrupt, Mode},
 };
-use libfenix::{self, read_addr, set_bit, write_addr};
+use libfenix::{self, gpio::pins::GPIO1_21, read_addr, set_bit, write_addr};
+
+use super::gpio;
 
 const SYS_CLOCK: u32 = 48_000_000;
 const INTERNAL_CLOCK: u32 = 12_000_000;
@@ -50,8 +52,8 @@ static mut I2C: I2C = I2C::new(I2cModule::I2C2);
 pub struct I2C {
     module: I2cModule,
     mode: Option<I2cMode>,
-    address: Option<u32>,
     ready: bool,
+    done: bool,
     receive_buffer: Vec<u8>,
     transmit_buffer: Vec<u8>,
     transmit_index: usize,
@@ -62,8 +64,8 @@ impl I2C {
         Self {
             module,
             mode: None,
-            address: None,
             ready: true,
+            done: false,
             receive_buffer: Vec::new(),
             transmit_buffer: Vec::new(),
             transmit_index: 0,
@@ -158,7 +160,6 @@ impl I2C {
 
     pub fn begin(&mut self, slave_address: u32) {
         self.set_slave(slave_address);
-        self.address = Some(slave_address);
 
         let mode = I2cMode::Transmitter;
         self.set_mode(&mode);
@@ -169,14 +170,11 @@ impl I2C {
 
         self.enable_interrupts();
 
+        // will loop endlessly if the pull-up resistors are not connected
         while self.busy() {}
     }
 
     pub fn write_buf(&mut self, data: &[u8]) {
-        if self.address.is_none() {
-            panic!("I2C not initialized");
-        }
-
         for byte in data {
             self.transmit_buffer.push(*byte);
         }
@@ -201,9 +199,18 @@ impl I2C {
     }
 
     pub fn end_transmission(&mut self) {
-        self.address = None;
-        self.mode = None;
-        self.disable_interrupts();
+        loop {
+            if self.ready {
+                break;
+            }
+
+            // added nop instruction to remove compiler optimizations
+            unsafe {
+                asm!("nop");
+            }
+        }
+
+        self.done = true;
     }
 
     fn enable_interrupts(&self) {
@@ -240,9 +247,13 @@ impl I2C {
         write_addr(self.base() + I2C_CON, value | 0x1);
     }
 
-    fn stop(&self) {
+    fn stop(&mut self) {
         let value = read_addr(self.base() + I2C_CON);
         write_addr(self.base() + I2C_CON, value | 0x2);
+
+        self.disable_interrupts();
+        self.mode = None;
+        self.ready = true;
     }
 
     fn write_data(&mut self) {
@@ -317,6 +328,8 @@ impl I2C {
         }
 
         if value & I2cInterrupt::NACK as u32 != 0 {
+            self.stop();
+
             write_addr(self.base() + I2C_IRQSTATUS, I2cInterrupt::NACK as u32);
         }
     }
