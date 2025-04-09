@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use core::cmp::min;
 
 use crate::{
@@ -40,11 +38,6 @@ const TEST_MODE: u32 = 12;
 pub fn initialize() {
     let i2c = get_i2c();
     i2c.initialize();
-}
-
-pub fn transmit(data: &[u8]) {
-    let i2c = get_i2c();
-    i2c.transmit(data);
 }
 
 #[allow(static_mut_refs)]
@@ -152,6 +145,7 @@ impl I2C {
         write_addr(self.base() + I2C_IRQSTATUS_CLR, value | irq as u32);
     }
 
+    #[allow(unused)]
     fn enable_test_mode(&self) {
         let value = read_addr(self.base() + I2C_SYSTEST);
         write_addr(
@@ -306,6 +300,7 @@ enum I2cModule {
     I2C2 = 0x4819_C000,
 }
 
+#[allow(unused)]
 enum I2cMode {
     Transmitter,
     Receiver,
