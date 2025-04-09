@@ -179,13 +179,14 @@ impl I2C {
         }
 
         self.set_count(data.len() as u32);
-        self.set_start_stop();
+        self.start();
     }
 
     pub fn end(&mut self) {
         self.address = None;
         self.mode = None;
         self.disable_interrupts();
+        self.stop();
     }
 
     fn enable_interrupts(&self) {
@@ -225,6 +226,11 @@ impl I2C {
     fn start(&self) {
         let value = read_addr(self.base() + I2C_CON);
         write_addr(self.base() + I2C_CON, value | 0x1);
+    }
+
+    fn stop(&self) {
+        let value = read_addr(self.base() + I2C_CON);
+        write_addr(self.base() + I2C_CON, value | 0x2);
     }
 
     fn write_data(&mut self) {
@@ -286,8 +292,6 @@ impl I2C {
         }
 
         if value & I2cInterrupt::ARDY as u32 != 0 {
-            self.end();
-
             write_addr(self.base() + I2C_IRQSTATUS, I2cInterrupt::ARDY as u32);
             return;
         }

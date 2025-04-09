@@ -40,6 +40,7 @@ pub fn _start() {
     let i2c = i2c::get_i2c();
     i2c.begin(0x10);
     i2c.transmit(message.as_bytes());
+    i2c.end();
 
     gpio::write(GPIO1_24, true);
 
