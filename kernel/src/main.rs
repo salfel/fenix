@@ -39,8 +39,9 @@ pub fn _start() {
     let message = "Hello, world!";
     let i2c = i2c::get_i2c();
     i2c.begin(0x10);
-    i2c.transmit(message.as_bytes());
-    i2c.end();
+    i2c.write(message.as_bytes());
+    i2c.write(message.as_bytes());
+    i2c.end_transmission();
 
     gpio::write(GPIO1_24, true);
 

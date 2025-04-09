@@ -5,7 +5,14 @@ use crate::{
     internals::clock::{self, FuncClock},
     interrupts::{self, Interrupt, Mode},
 };
-use libfenix::{self, read_addr, set_bit, write_addr};
+use libfenix::{
+    self,
+    gpio::{
+        self,
+        pins::{GPIO1_21, GPIO1_22},
+    },
+    read_addr, set_bit, write_addr,
+};
 
 const SYS_CLOCK: u32 = 48_000_000;
 const INTERNAL_CLOCK: u32 = 12_000_000;
@@ -51,6 +58,7 @@ pub struct I2C {
     module: I2cModule,
     mode: Option<I2cMode>,
     address: Option<u32>,
+    ready: bool,
     receive_buffer: Vec<u8>,
     transmit_buffer: Vec<u8>,
     transmit_index: usize,
@@ -62,6 +70,7 @@ impl I2C {
             module,
             mode: None,
             address: None,
+            ready: true,
             receive_buffer: Vec::new(),
             transmit_buffer: Vec::new(),
             transmit_index: 0,
@@ -163,13 +172,14 @@ impl I2C {
         self.mode = Some(mode);
 
         self.transmit_buffer.clear();
+        self.transmit_index = 0;
 
         self.enable_interrupts();
 
         while self.busy() {}
     }
 
-    pub fn transmit(&mut self, data: &[u8]) {
+    pub fn write(&mut self, data: &[u8]) {
         if self.address.is_none() {
             panic!("I2C not initialized");
         }
@@ -178,15 +188,18 @@ impl I2C {
             self.transmit_buffer.push(*byte);
         }
 
-        self.set_count(data.len() as u32);
-        self.start();
+        if self.ready {
+            self.set_count(data.len() as u32);
+            self.start();
+        }
+
+        self.ready = false;
     }
 
-    pub fn end(&mut self) {
+    pub fn end_transmission(&mut self) {
         self.address = None;
         self.mode = None;
         self.disable_interrupts();
-        self.stop();
     }
 
     fn enable_interrupts(&self) {
@@ -213,14 +226,13 @@ impl I2C {
         write_addr(self.base() + I2C_CNT, count);
     }
 
+    fn count(&self) -> u32 {
+        read_addr(self.base() + I2C_CNT)
+    }
+
     fn busy(&self) -> bool {
         let value = read_addr(self.base() + I2C_IRQSTATUS_RAW);
         value & (1 << 12) != 0
-    }
-
-    fn set_start_stop(&self) {
-        let value = read_addr(self.base() + I2C_CON);
-        write_addr(self.base() + I2C_CON, value | 0x3);
     }
 
     fn start(&self) {
@@ -292,6 +304,14 @@ impl I2C {
         }
 
         if value & I2cInterrupt::ARDY as u32 != 0 {
+            let remaining = self.transmit_buffer.len() - self.transmit_index;
+            if remaining == 0 {
+                self.stop();
+            } else {
+                self.set_count(remaining as u32);
+                self.start();
+            }
+
             write_addr(self.base() + I2C_IRQSTATUS, I2cInterrupt::ARDY as u32);
             return;
         }
