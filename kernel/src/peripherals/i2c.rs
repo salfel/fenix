@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use core::cmp::min;
 
 use crate::{
@@ -44,7 +46,6 @@ const TEST_MODE: u32 = 12;
 pub fn initialize() {
     let i2c = get_i2c();
     i2c.initialize();
-    i2c.enable_test_mode();
 }
 
 pub fn transmit(data: &[u8]) {
@@ -53,14 +54,15 @@ pub fn transmit(data: &[u8]) {
 }
 
 #[allow(static_mut_refs)]
-fn get_i2c() -> &'static mut I2C {
+pub fn get_i2c() -> &'static mut I2C {
     unsafe { &mut I2C }
 }
 
 static mut I2C: I2C = I2C::new(I2cModule::I2C2);
 
-struct I2C {
+pub struct I2C {
     module: I2cModule,
+    address: Option<u32>,
     receive_buffer: Vec<u8>,
     transmit_buffer: Vec<u8>,
     transmit_index: usize,
@@ -70,6 +72,7 @@ impl I2C {
     const fn new(module: I2cModule) -> Self {
         Self {
             module,
+            address: None,
             receive_buffer: Vec::new(),
             transmit_buffer: Vec::new(),
             transmit_index: 0,
@@ -157,13 +160,21 @@ impl I2C {
         );
     }
 
-    fn transmit(&mut self, data: &[u8]) {
+    pub fn begin(&mut self, slave_address: u32) {
+        self.set_slave(slave_address);
+        self.address = Some(slave_address);
+    }
+
+    pub fn transmit(&mut self, data: &[u8]) {
+        if self.address.is_none() {
+            panic!("I2C not initialized");
+        }
+
         self.transmit_buffer.clear();
         for byte in data {
             self.transmit_buffer.push(*byte);
         }
 
-        self.set_slave(0x50);
         self.set_count(data.len() as u32);
         while self.busy() {}
         self.set_start_stop();
