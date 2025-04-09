@@ -271,6 +271,10 @@ impl I2C {
         read_addr(self.base() + I2C_BUFSTAT) & 0x3F
     }
 
+    fn transmit_bytes_left(&self) -> u32 {
+        self.transmit_buffer.len() as u32 - self.transmit_index as u32
+    }
+
     fn receive_bytes_available(&self) -> u32 {
         (read_addr(self.base() + I2C_BUFSTAT) >> 8) & 0x3F
     }
@@ -279,7 +283,7 @@ impl I2C {
         let value = read_addr(self.base() + I2C_IRQSTATUS);
 
         if value & I2cInterrupt::XRDY as u32 != 0 {
-            for _ in 0..min(TRANSMIT_THRESHOLD, self.transmit_buffer.len() as u32) {
+            for _ in 0..min(TRANSMIT_THRESHOLD, self.transmit_bytes_left()) {
                 self.write_data();
             }
 
