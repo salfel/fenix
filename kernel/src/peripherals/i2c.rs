@@ -5,9 +5,7 @@ use crate::{
     internals::clock::{self, FuncClock},
     interrupts::{self, Interrupt, Mode},
 };
-use libfenix::{self, gpio::pins::GPIO1_21, read_addr, set_bit, write_addr};
-
-use super::gpio;
+use libfenix::{self, clear_bit, read_addr, set_bit, write_addr};
 
 const SYS_CLOCK: u32 = 48_000_000;
 const INTERNAL_CLOCK: u32 = 12_000_000;
@@ -119,6 +117,10 @@ impl I2C {
         set_bit(self.base() + I2C_CON, 15);
     }
 
+    fn disable(&self) {
+        clear_bit(self.base() + I2C_CON, 15);
+    }
+
     fn wait_reset(&self) {
         while read_addr(self.base() + I2C_SYSS) & 0x1 == 0 {}
     }
@@ -159,6 +161,8 @@ impl I2C {
     }
 
     pub fn begin(&mut self, slave_address: u32) {
+        self.enable();
+
         self.set_slave(slave_address);
 
         let mode = I2cMode::Transmitter;
@@ -167,8 +171,7 @@ impl I2C {
 
         self.transmit_buffer.clear();
         self.transmit_index = 0;
-
-        self.enable_interrupts();
+        self.clear_transmit_fifo();
 
         // will loop endlessly if the pull-up resistors are not connected
         while self.busy() {}
@@ -183,6 +186,7 @@ impl I2C {
             self.set_count(data.len() as u32);
             self.start();
             self.ready = false;
+            self.enable_interrupts();
         }
     }
 
@@ -211,6 +215,7 @@ impl I2C {
         }
 
         self.done = true;
+        self.disable();
     }
 
     fn enable_interrupts(&self) {
@@ -235,6 +240,10 @@ impl I2C {
 
     fn set_count(&self, count: u32) {
         write_addr(self.base() + I2C_CNT, count);
+    }
+
+    fn clear_transmit_fifo(&self) {
+        set_bit(self.base() + I2C_BUF, 6);
     }
 
     fn busy(&self) -> bool {
