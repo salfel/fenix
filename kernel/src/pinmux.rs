@@ -6,6 +6,8 @@ const CONF_GMPC_A0: u32 = 0x840; // GPIO1_16
 const CONF_GMPC_A1: u32 = 0x844; // GPIO1_17
 const CONF_GMPC_A2: u32 = 0x848; // GPIO1_18
 const CONF_GMPC_A3: u32 = 0x84C; // GPIO1_19
+const CONF_UART1_CTSN: u32 = 0x978; // I2C2_SDA
+const CONF_UART1_RTSN: u32 = 0x97C; // I2C2_SCL
 
 pub fn configure() {
     set_pin_mode(CONF_GPMC_BEN1, 7, true, PullResistor::PullDown);
@@ -13,6 +15,8 @@ pub fn configure() {
     set_pin_mode(CONF_GMPC_A1, 7, true, PullResistor::PullDown);
     set_pin_mode(CONF_GMPC_A2, 7, true, PullResistor::PullDown);
     set_pin_mode(CONF_GMPC_A3, 7, true, PullResistor::PullDown);
+    set_pin_mode(CONF_UART1_CTSN, 3, true, PullResistor::None);
+    set_pin_mode(CONF_UART1_RTSN, 3, true, PullResistor::None);
 }
 
 pub fn set_pin_mode(offset: u32, mode: u32, input_enable: bool, pull_resistor: PullResistor) {
@@ -32,12 +36,10 @@ pub enum PullResistor {
 
 impl PullResistor {
     pub fn to_mask(self) -> u32 {
-        let value = match self {
+        match self {
             PullResistor::PullDown => 0b00,
             PullResistor::PullUp => 0b10,
             PullResistor::None => 0b01,
-        };
-
-        value << 3
+        }
     }
 }

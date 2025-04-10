@@ -1,7 +1,7 @@
-use core::arch::asm;
 use crate::gpio::GpioPin;
+use core::arch::asm;
 
-pub enum Syscall {
+pub enum Syscall<'a> {
     Exit,
     Yield {
         sp: u32,
@@ -16,9 +16,16 @@ pub enum Syscall {
         pin: GpioPin,
         value: bool,
     },
+    I2cBegin {
+        slave_address: u32,
+    },
+    I2cWrite {
+        data: &'a [u8],
+    },
+    I2cEnd,
 }
 
-impl Syscall {
+impl Syscall<'_> {
     pub fn call(self) -> Option<u32> {
         match self {
             Syscall::Exit => unsafe {
@@ -49,6 +56,18 @@ impl Syscall {
                 value,
             } => unsafe {
                 asm!("push {{lr}}", "svc 0x4", "pop {{lr}}", in("r0") bank as u32, in("r1") pin, in("r2") value as u32);
+                None
+            },
+            Syscall::I2cBegin { slave_address } => unsafe {
+                asm!("svc 0x5", in("r0") slave_address);
+                None
+            },
+            Syscall::I2cWrite { data } => unsafe {
+                asm!("svc 0x6", in("r0") data.as_ptr(), in("r1") data.len());
+                None
+            },
+            Syscall::I2cEnd => unsafe {
+                asm!("svc 0x7");
                 None
             },
         }

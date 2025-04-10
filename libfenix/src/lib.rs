@@ -1,14 +1,14 @@
 #![no_std]
 
 pub mod gpio;
-mod sysclock;
-mod sys;
+pub mod i2c;
 mod kernel;
+mod sys;
+mod sysclock;
 
+pub use kernel::*;
 pub use sys::*;
 pub use sysclock::*;
-pub use kernel::*;
-
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
