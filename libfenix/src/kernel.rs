@@ -1,5 +1,5 @@
-use core::arch::asm;
 use crate::gpio::GpioPin;
+use core::arch::asm;
 
 pub enum Syscall<'a> {
     Exit,
@@ -59,15 +59,15 @@ impl Syscall<'_> {
                 None
             },
             Syscall::I2cBegin { slave_address } => unsafe {
-                asm!("push {{lr}}", "svc 0x5", "pop {{lr}}", in("r0") slave_address);
+                asm!("svc 0x5", in("r0") slave_address);
                 None
             },
             Syscall::I2cWrite { data } => unsafe {
-                asm!("push {{lr}}", "svc 0x6", "pop {{lr}}", in("r0") data.as_ptr(), in("r1") data.len());
+                asm!("svc 0x6", in("r0") data.as_ptr(), in("r1") data.len());
                 None
             },
             Syscall::I2cEnd => unsafe {
-                asm!("push {{lr}}", "svc 0x7", "pop {{lr}}");
+                asm!("svc 0x7");
                 None
             },
         }

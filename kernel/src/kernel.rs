@@ -5,7 +5,7 @@ use crate::{
         sysclock::millis,
         tasks::{scheduler, TaskState},
     },
-    peripherals::{gpio::{self}, i2c},
+    peripherals::{gpio::{self}, i2c}, sync::mutex::{disable_interrupts, enable_interrupts, restore_cpsr},
 };
 use libfenix::{gpio::pins::GPIO1_21, Syscall};
 
@@ -149,8 +149,10 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
             SyscallReturn::value(0)
         },
         Syscall::I2cEnd => {
+            enable_interrupts();
             let i2c = i2c::get_i2c();
             i2c.end_transmission();
+            disable_interrupts();
 
             SyscallReturn::value(0)
         },
