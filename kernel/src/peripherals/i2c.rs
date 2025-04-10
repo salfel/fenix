@@ -160,7 +160,7 @@ impl I2C {
         );
     }
 
-    pub fn begin(&mut self, slave_address: u32) {
+    pub fn begin_transmission(&mut self, slave_address: u32) {
         self.enable();
 
         self.set_slave(slave_address);

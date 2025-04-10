@@ -1,6 +1,6 @@
 use crate::Syscall;
 
-pub fn begin(slave_address: u32) {
+pub fn begin_transmission(slave_address: u32) {
     let syscall = Syscall::I2cBegin { slave_address };
     syscall.call();
 }

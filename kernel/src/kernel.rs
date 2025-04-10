@@ -140,7 +140,7 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
         }
         Syscall::I2cBegin { slave_address } => {
             let i2c = i2c::get_i2c();
-            i2c.begin(slave_address);
+            i2c.begin_transmission(slave_address);
 
             SyscallReturn::value(0)
         }
