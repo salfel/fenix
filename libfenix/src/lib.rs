@@ -4,6 +4,7 @@ pub mod gpio;
 mod sysclock;
 mod sys;
 mod kernel;
+pub mod i2c;
 
 pub use sys::*;
 pub use sysclock::*;
