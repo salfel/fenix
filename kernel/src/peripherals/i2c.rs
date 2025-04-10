@@ -5,7 +5,7 @@ use crate::{
     internals::clock::{self, FuncClock},
     interrupts::{self, Interrupt, Mode},
 };
-use libfenix::{self, clear_bit, gpio::{self, pins::{GPIO1_21, GPIO1_22, GPIO1_23}}, read_addr, set_bit, write_addr};
+use libfenix::{self, clear_bit, read_addr, set_bit, write_addr};
 
 const SYS_CLOCK: u32 = 48_000_000;
 const INTERNAL_CLOCK: u32 = 12_000_000;

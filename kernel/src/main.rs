@@ -4,7 +4,8 @@
 use alloc::heap;
 use include_programs::include_programs;
 use internals::{
-    mmu, sysclock,
+    mmu,
+    sysclock::{self},
     tasks::{self, create_task},
 };
 use kernel::kernel_loop;
@@ -35,6 +36,15 @@ pub fn _start() {
     i2c::initialize();
     sysclock::initialize();
     tasks::init();
+
+    let mut counter = 0;
+    while counter < 5 {
+        let i2c = i2c::get_i2c();
+        i2c.begin(0x10);
+        i2c.write_str("Hello, world!");
+        i2c.end_transmission();
+        counter += 1;
+    }
 
     gpio::write(GPIO1_24, true);
 
