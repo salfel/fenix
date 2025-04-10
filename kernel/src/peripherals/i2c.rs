@@ -178,6 +178,10 @@ impl I2C {
     }
 
     pub fn write_buf(&mut self, data: &[u8]) {
+        if data.is_empty() {
+            return;
+        }
+
         for byte in data {
             self.transmit_buffer.push(*byte);
         }
@@ -214,6 +218,9 @@ impl I2C {
             }
         }
 
+        self.stop();
+        self.disable_interrupts();
+        self.mode = None;
         self.done = true;
         self.disable();
     }
@@ -259,10 +266,6 @@ impl I2C {
     fn stop(&mut self) {
         let value = read_addr(self.base() + I2C_CON);
         write_addr(self.base() + I2C_CON, value | 0x2);
-
-        self.disable_interrupts();
-        self.mode = None;
-        self.ready = true;
     }
 
     fn write_data(&mut self) {
@@ -330,7 +333,7 @@ impl I2C {
         if value & I2cInterrupt::ARDY as u32 != 0 {
             let remaining = self.transmit_buffer.len() - self.transmit_index;
             if remaining == 0 {
-                self.stop();
+                self.ready = true;
             } else {
                 self.set_count(remaining as u32);
                 self.start();
@@ -341,7 +344,7 @@ impl I2C {
         }
 
         if value & I2cInterrupt::NACK as u32 != 0 {
-            self.stop();
+            self.ready = true;
 
             write_addr(self.base() + I2C_IRQSTATUS, I2cInterrupt::NACK as u32);
         }
