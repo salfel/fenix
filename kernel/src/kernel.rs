@@ -5,9 +5,13 @@ use crate::{
         sysclock::millis,
         tasks::{scheduler, TaskState},
     },
-    peripherals::{gpio::{self}, i2c}, sync::mutex::{disable_interrupts, enable_interrupts, restore_cpsr},
+    interrupts,
+    peripherals::{
+        gpio::{self},
+        i2c,
+    },
 };
-use libfenix::{gpio::pins::GPIO1_21, Syscall};
+use libfenix::Syscall;
 
 struct SyscallError {}
 
@@ -123,9 +127,7 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
 
             SyscallReturn::exit()
         }
-        Syscall::Millis => {
-            SyscallReturn::value(millis())
-        }
+        Syscall::Millis => SyscallReturn::value(millis()),
         Syscall::GpioWrite { pin, value } => {
             gpio::write(pin, value);
 
@@ -135,27 +137,27 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
             let value = gpio::read(pin);
 
             SyscallReturn::value(value as u32)
-        },
+        }
         Syscall::I2cBegin { slave_address } => {
             let i2c = i2c::get_i2c();
             i2c.begin(slave_address);
 
             SyscallReturn::value(0)
-        },
+        }
         Syscall::I2cWrite { data } => {
             let i2c = i2c::get_i2c();
             i2c.write_buf(data);
 
             SyscallReturn::value(0)
-        },
+        }
         Syscall::I2cEnd => {
-            enable_interrupts();
-            let i2c = i2c::get_i2c();
-            i2c.end_transmission();
-            disable_interrupts();
+            interrupts::enabled(|| {
+                let i2c = i2c::get_i2c();
+                i2c.end_transmission();
+            });
 
             SyscallReturn::value(0)
-        },
+        }
     }
 }
 

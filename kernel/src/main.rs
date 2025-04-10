@@ -9,7 +9,7 @@ use internals::{
     tasks::{self, create_task},
 };
 use kernel::kernel_loop;
-use libfenix::gpio::pins::{GPIO1_21, GPIO1_22, GPIO1_24};
+use libfenix::gpio::pins::GPIO1_24;
 use peripherals::{gpio, i2c};
 
 pub mod alloc;

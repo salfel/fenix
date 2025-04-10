@@ -1,28 +1,7 @@
-use core::arch::asm;
 use core::cell::UnsafeCell;
 use core::ops::{Deref, DerefMut};
 
-pub fn disable_interrupts() -> u32 {
-    let cpsr: u32;
-    unsafe {
-        asm!("mrs {0}, cpsr", out(reg) cpsr);
-        asm!("msr cpsr_c, {0}", in(reg) cpsr | 0x80)
-    };
-
-    cpsr
-}
-
-pub fn enable_interrupts() {
-    let cpsr: u32;
-    unsafe {
-        asm!("mrs {0}, cpsr", out(reg) cpsr);
-        asm!("msr cpsr_c, {0}", in(reg) cpsr & !0x80)
-    };
-}
-
-pub fn restore_cpsr(cpsr: u32) {
-    unsafe { asm!("msr cpsr_c, {0}", in(reg) cpsr) };
-}
+use crate::interrupts::{disable_interrupts, restore_cpsr};
 
 pub struct Mutex<T: Sized> {
     inner: UnsafeCell<T>,

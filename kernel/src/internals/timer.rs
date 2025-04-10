@@ -20,7 +20,7 @@ pub fn register_timer(dm_timer: DmTimer, reload: u32, handler: fn()) {
 pub fn get_timer(interrupt: Interrupt) -> &'static Option<Timer> {
     let dm_timer = match DmTimer::try_new(interrupt) {
         Some(dm_timer) => dm_timer,
-        None => return &None
+        None => return &None,
     };
 
     unsafe { &TIMERS[dm_timer as usize] }
