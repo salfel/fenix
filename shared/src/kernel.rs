@@ -23,6 +23,7 @@ pub enum Syscall<'a> {
         data: &'a [u8],
     },
     I2cEnd,
+    Panic
 }
 
 impl Syscall<'_> {
@@ -70,6 +71,10 @@ impl Syscall<'_> {
                 asm!("svc 0x7");
                 None
             },
+            Syscall::Panic => unsafe {
+                asm!("svc 0x8");
+                None
+            }
         }
     }
 }

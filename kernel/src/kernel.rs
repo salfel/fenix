@@ -53,6 +53,7 @@ impl<'a> TryInto<Syscall<'a>> for &TrapFrame {
                 data: unsafe { core::slice::from_raw_parts(self.r0 as *mut u8, self.r1 as usize) },
             }),
             7 => Ok(Syscall::I2cEnd),
+            8 => Ok(Syscall::Panic),
             _ => Err(SyscallError {}),
         }
     }
@@ -157,6 +158,17 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
             });
 
             SyscallReturn::value(0)
+        }
+        Syscall::Panic => {
+            let scheduler = scheduler();
+
+            if let Some(task) = scheduler.current() {
+                task.terminate();
+            }
+
+            scheduler.cycle();
+
+            SyscallReturn::exit()
         }
     }
 }
