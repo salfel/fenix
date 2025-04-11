@@ -1,7 +1,6 @@
 #![no_std]
 #![no_main]
 
-use shared::alloc::heap;
 use include_programs::include_programs;
 use internals::{
     mmu,
@@ -9,10 +8,11 @@ use internals::{
     tasks::{self, create_task},
 };
 use kernel::kernel_loop;
-use shared::gpio::pins::GPIO1_24;
 use peripherals::{gpio, i2c};
+use shared::gpio::pins::GPIO1_24;
 
 pub mod exceptions;
+pub mod heap;
 pub mod internals;
 pub mod interrupts;
 pub mod kernel;

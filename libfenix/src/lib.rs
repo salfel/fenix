@@ -1,5 +1,6 @@
 #![no_std]
 
+pub mod alloc;
 pub mod gpio;
 pub mod i2c;
 mod sysclock;

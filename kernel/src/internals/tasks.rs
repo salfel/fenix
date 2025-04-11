@@ -1,9 +1,12 @@
 use core::{cell::UnsafeCell, ptr};
 
+use shared::alloc::heap::BumpAllocator;
+
 use super::mmu::L2SmallPageTableEntry;
 use crate::sysclock::millis;
 
-pub const MAX_TASKS: usize = 4;
+const MAX_TASKS: usize = 4;
+const STACK_GUARD: usize = 1024;
 
 #[derive(PartialEq)]
 pub enum TaskState {
@@ -23,6 +26,7 @@ pub struct Task {
     id: usize,
     pub state: TaskState,
     pub context: TaskContext,
+    pub allocator: BumpAllocator,
     page: L2SmallPageTableEntry,
 }
 
@@ -32,6 +36,7 @@ impl Task {
             id: 0,
             state: TaskState::Terminated,
             context: TaskContext { sp: 0, pc: 0 },
+            allocator: BumpAllocator::new(),
             page: L2SmallPageTableEntry::empty(),
         }
     }
@@ -153,6 +158,7 @@ impl Scheduler {
         task.state = TaskState::Ready;
         task.context.sp = task.page.end();
         task.context.pc = task.page.start();
+        task.allocator.init(code.len(), task.page.end() as usize - STACK_GUARD);
         Some(task.id)
     }
 

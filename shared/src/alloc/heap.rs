@@ -2,20 +2,6 @@ use core::{alloc::GlobalAlloc, ptr};
 
 use crate::sync::mutex::Mutex;
 
-pub fn initialize() {
-    let allocator = &raw mut ALLOCATOR;
-
-    unsafe {
-        (*allocator).init(
-            &heap_start as *const usize as usize,
-            &heap_end as *const usize as usize,
-        );
-    }
-}
-
-#[global_allocator]
-static mut ALLOCATOR: BumpAllocator = BumpAllocator::new();
-
 pub struct BumpAllocator {
     heap_start: usize,
     heap_end: usize,
@@ -23,7 +9,7 @@ pub struct BumpAllocator {
 }
 
 impl BumpAllocator {
-    const fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             heap_start: 0,
             heap_end: 0,
@@ -31,10 +17,24 @@ impl BumpAllocator {
         }
     }
 
-    fn init(&mut self, start: usize, end: usize) {
+    pub const fn start(start: usize) -> Self {
+        Self {
+            heap_start: start,
+            heap_end: 0,
+            next: Mutex::new(start),
+        }
+    }
+
+    pub fn init(&mut self, start: usize, end: usize) {
         self.heap_start = start;
         self.heap_end = end;
         *self.next.lock() = start;
+    }
+}
+
+impl Default for BumpAllocator {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -58,9 +58,4 @@ unsafe impl GlobalAlloc for BumpAllocator {
 
 fn align_up(addr: usize, align: usize) -> usize {
     (addr + align - 1) & !(align - 1)
-}
-
-extern "C" {
-    static heap_start: usize;
-    static heap_end: usize;
 }

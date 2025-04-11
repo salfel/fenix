@@ -1,4 +1,7 @@
-use core::convert::TryInto;
+use core::{
+    alloc::{GlobalAlloc, Layout},
+    convert::TryInto,
+};
 
 use crate::{
     internals::{
@@ -54,6 +57,17 @@ impl<'a> TryInto<Syscall<'a>> for &TrapFrame {
             }),
             7 => Ok(Syscall::I2cEnd),
             8 => Ok(Syscall::Panic),
+            9 => Ok(Syscall::Alloc {
+                layout: unsafe {
+                    Layout::from_size_align_unchecked(self.r0 as usize, self.r1 as usize)
+                },
+            }),
+            10 => Ok(Syscall::Dealloc {
+                ptr: self.r0 as *mut u8,
+                layout: unsafe {
+                    Layout::from_size_align_unchecked(self.r1 as usize, self.r2 as usize)
+                },
+            }),
             _ => Err(SyscallError {}),
         }
     }
@@ -75,6 +89,13 @@ impl SyscallReturn {
 
     fn value(value: u32) -> Self {
         SyscallReturn { exit: false, value }
+    }
+
+    fn none() -> Self {
+        SyscallReturn {
+            exit: false,
+            value: 0,
+        }
     }
 }
 
@@ -132,7 +153,7 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
         Syscall::GpioWrite { pin, value } => {
             gpio::write(pin, value);
 
-            SyscallReturn::value(0)
+            SyscallReturn::none()
         }
         Syscall::GpioRead { pin } => {
             let value = gpio::read(pin);
@@ -143,13 +164,13 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
             let i2c = i2c::get_i2c();
             i2c.begin_transmission(slave_address);
 
-            SyscallReturn::value(0)
+            SyscallReturn::none()
         }
         Syscall::I2cWrite { data } => {
             let i2c = i2c::get_i2c();
             i2c.write_buf(data);
 
-            SyscallReturn::value(0)
+            SyscallReturn::none()
         }
         Syscall::I2cEnd => {
             interrupts::enabled(|| {
@@ -169,6 +190,23 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
             scheduler.cycle();
 
             SyscallReturn::exit()
+        }
+        Syscall::Alloc { layout } => {
+            let scheduler = scheduler();
+            if let Some(task) = scheduler.current() {
+                let ptr = unsafe { task.allocator.alloc(layout) };
+                SyscallReturn::value(ptr as u32);
+            }
+
+            SyscallReturn::none()
+        }
+        Syscall::Dealloc { ptr, layout } => {
+            let scheduler = scheduler();
+            if let Some(task) = scheduler.current() {
+                unsafe { task.allocator.dealloc(ptr, layout) };
+            }
+
+            SyscallReturn::none()
         }
     }
 }
