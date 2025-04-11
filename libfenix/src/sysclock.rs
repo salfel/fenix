@@ -1,4 +1,4 @@
-use crate::Syscall;
+use shared::kernel::Syscall;
 use core::arch::global_asm;
 
 pub fn millis() -> u32 {

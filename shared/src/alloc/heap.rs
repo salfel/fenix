@@ -2,28 +2,6 @@ use core::{alloc::GlobalAlloc, ptr};
 
 use crate::sync::mutex::Mutex;
 
-extern crate alloc;
-
-/// # Safety
-///
-/// This function is unsafe because it is an allocation function.
-/// It is up to the caller to ensure that the memory is valid for the type of data being allocated.
-pub unsafe fn alloc(layout: core::alloc::Layout) -> *mut u8 {
-    let allocator = &raw mut ALLOCATOR;
-
-    (*allocator).alloc(layout)
-}
-
-/// # Safety
-///
-/// This function is unsafe because it is an deallocation function.
-/// It is up to the caller to ensure that the memory is valid for the type of data being allocated.
-pub unsafe fn dealloc(ptr: *mut u8, layout: core::alloc::Layout) {
-    let allocator = &raw mut ALLOCATOR;
-
-    (*allocator).dealloc(ptr, layout)
-}
-
 pub fn initialize() {
     let allocator = &raw mut ALLOCATOR;
 

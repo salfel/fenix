@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use alloc::heap;
+use shared::alloc::heap;
 use include_programs::include_programs;
 use internals::{
     mmu,
@@ -9,17 +9,15 @@ use internals::{
     tasks::{self, create_task},
 };
 use kernel::kernel_loop;
-use libfenix::gpio::pins::GPIO1_24;
+use shared::gpio::pins::GPIO1_24;
 use peripherals::{gpio, i2c};
 
-pub mod alloc;
 pub mod exceptions;
 pub mod internals;
 pub mod interrupts;
 pub mod kernel;
 pub mod peripherals;
 pub mod pinmux;
-pub mod sync;
 
 static PROGRAMS: &[&[u8]] = include_programs!();
 

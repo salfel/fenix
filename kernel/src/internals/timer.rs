@@ -1,5 +1,5 @@
 use crate::interrupts::{self, Interrupt};
-use libfenix::write_addr;
+use shared::sys::write_addr;
 
 use super::clock::FuncClock;
 

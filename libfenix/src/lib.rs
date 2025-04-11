@@ -2,12 +2,10 @@
 
 pub mod gpio;
 pub mod i2c;
-mod kernel;
-mod sys;
 mod sysclock;
 
-pub use kernel::*;
-pub use sys::*;
+pub use shared::kernel;
+
 pub use sysclock::*;
 
 #[panic_handler]

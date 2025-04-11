@@ -1,6 +1,6 @@
-use core::arch::asm;
+use shared::sys::{noop, read_addr, set_bit, write_addr};
 
-use libfenix::{noop, read_addr, set_bit, write_addr, INTC};
+const INTC: u32 = 0x48200000;
 
 const INTC_ILR: u32 = 0x100;
 const INTC_SIR_IRQ: u32 = 0x40;
@@ -52,50 +52,6 @@ pub fn execute(interrupt: Option<Interrupt>) {
 
 pub fn clear() {
     write_addr(INTC + INTC_CONTROL, 0x1);
-}
-
-pub fn enable_interrupts() -> u32 {
-    let cpsr: u32;
-    unsafe {
-        asm!("mrs {0}, cpsr", out(reg) cpsr);
-        asm!("msr cpsr_c, {0}", in(reg) cpsr & !0x80)
-    };
-
-    cpsr
-}
-
-pub fn disable_interrupts() -> u32 {
-    let cpsr: u32;
-    unsafe {
-        asm!("mrs {0}, cpsr", out(reg) cpsr);
-        asm!("msr cpsr_c, {0}", in(reg) cpsr | 0x80)
-    };
-
-    cpsr
-}
-
-pub fn restore_cpsr(cpsr: u32) {
-    unsafe { asm!("msr cpsr_c, {0}", in(reg) cpsr) };
-}
-
-pub fn enabled<F, T>(f: F) -> T
-where
-    F: FnOnce() -> T,
-{
-    let cpsr = enable_interrupts();
-    let result = f();
-    restore_cpsr(cpsr);
-    result
-}
-
-pub fn free<F, T>(f: F) -> T
-where
-    F: FnOnce() -> T,
-{
-    let cpsr = disable_interrupts();
-    let result = f();
-    restore_cpsr(cpsr);
-    result
 }
 
 pub enum Interrupt {

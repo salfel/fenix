@@ -1,4 +1,4 @@
-use crate::Syscall;
+use shared::kernel::Syscall;
 
 pub fn begin_transmission(slave_address: u32) {
     let syscall = Syscall::I2cBegin { slave_address };

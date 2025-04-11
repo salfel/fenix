@@ -1,4 +1,4 @@
-use libfenix::write_addr;
+use shared::sys::write_addr;
 
 enum ClockModule {
     CmPer = 0x44E0_0000,

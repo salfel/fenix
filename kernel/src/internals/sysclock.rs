@@ -1,4 +1,4 @@
-use crate::sync::mutex::Mutex;
+use shared::sync::mutex::Mutex;
 
 use super::timer::{self, DmTimer};
 

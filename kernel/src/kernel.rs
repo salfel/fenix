@@ -5,13 +5,13 @@ use crate::{
         sysclock::millis,
         tasks::{scheduler, TaskState},
     },
-    interrupts,
     peripherals::{
         gpio::{self},
         i2c,
     },
 };
-use libfenix::Syscall;
+use shared::interrupts;
+use shared::kernel::Syscall;
 
 struct SyscallError {}
 

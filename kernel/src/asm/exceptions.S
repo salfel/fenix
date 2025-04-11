@@ -1,3 +1,5 @@
+.global __aeabi_unwind_cpp_pr0
+
 .global setup_exceptions
 .global vectors
 
@@ -18,3 +20,7 @@ setup_exceptions:
     dsb
 
     bx lr
+
+
+__aeabi_unwind_cpp_pr0:
+    b .
