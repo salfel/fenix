@@ -14,12 +14,15 @@ name = "kernel"
 version = "0.1.0"
 dependencies = [
  "include_programs",
- "libfenix",
+ "shared",
 ]
 
 [[package]]
 name = "libfenix"
 version = "0.1.0"
+dependencies = [
+ "shared",
+]
 
 [[package]]
 name = "proc-macro2"
@@ -38,6 +41,10 @@ checksum = "1885c039570dc00dcb4ff087a89e185fd56bae234ddc7f056a945bf36467248d"
 dependencies = [
  "proc-macro2",
 ]
+
+[[package]]
+name = "shared"
+version = "0.1.0"
 
 [[package]]
 name = "unicode-ident"

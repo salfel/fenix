@@ -1,11 +1,11 @@
 use core::{arch::asm, cmp::min};
 
+use shared::alloc::vec::Vec;
 use crate::{
-    alloc::vec::Vec,
     internals::clock::{self, FuncClock},
     interrupts::{self, Interrupt, Mode},
 };
-use libfenix::{self, clear_bit, read_addr, set_bit, write_addr};
+use shared::sys::{clear_bit, read_addr, set_bit, write_addr};
 
 const SYS_CLOCK: u32 = 48_000_000;
 const INTERNAL_CLOCK: u32 = 12_000_000;

@@ -5,6 +5,7 @@ members = [
     "include_programs",
     "user", 
     "kernel", 
+    "shared", 
 ]
 resolver = "2"
 

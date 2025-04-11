@@ -1,5 +1,5 @@
 use crate::gpio::GpioPin;
-use core::arch::asm;
+use core::{alloc::Layout, arch::asm};
 
 pub enum Syscall<'a> {
     Exit,
@@ -23,6 +23,14 @@ pub enum Syscall<'a> {
         data: &'a [u8],
     },
     I2cEnd,
+    Panic,
+    Alloc {
+        layout: Layout,
+    },
+    Dealloc {
+        ptr: *mut u8,
+        layout: Layout,
+    }
 }
 
 impl Syscall<'_> {
@@ -68,6 +76,21 @@ impl Syscall<'_> {
             },
             Syscall::I2cEnd => unsafe {
                 asm!("svc 0x7");
+                None
+            },
+            Syscall::Panic => unsafe {
+                asm!("svc 0x8");
+                None
+            },
+            Syscall::Alloc { layout } => unsafe {
+                let ptr: u32;
+
+                asm!("svc 0x9", in("r0") layout.size(), in("r1") layout.align(), lateout("r0") ptr);
+
+                Some(ptr)
+            },
+            Syscall::Dealloc { ptr, layout } => unsafe {
+                asm!("svc 0xa", in("r0") ptr, in("r1") layout.size(), in("r2") layout.align());
                 None
             },
         }

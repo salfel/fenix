@@ -1,14 +1,14 @@
 #![no_main]
 #![no_std]
 
-use libfenix::{i2c, wait};
+use libfenix::{gpio::{self, GPIO1_23}, wait};
 
 #[no_mangle]
 fn _start() {
+    let mut status = true;
     loop {
-        i2c::begin_transmission(0x10);
-        i2c::write_buf("Hello world!".as_bytes());
-        i2c::end_transmission();
+        gpio::write(GPIO1_23, status);
         wait(1000);
+        status = !status;
     }
 }

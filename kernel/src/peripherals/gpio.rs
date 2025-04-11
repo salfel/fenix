@@ -2,11 +2,12 @@ use crate::{
     internals::clock,
     interrupts::{self, Interrupt, Mode},
 };
-use libfenix::{
+use shared::{gpio::{GpioBank, GpioPin},sys::{
     clear_bit,
-    gpio::{GpioBank, GpioPin},
-    noop, read_addr, read_bit, set_bit, write_addr, GPIO1,
-};
+    noop, read_addr, read_bit, set_bit, write_addr,
+}};
+
+const GPIO1: u32 = 0x4804C000;
 
 const GPIO_OE: u32 = 0x134;
 const GPIO_DATAIN: u32 = 0x138;

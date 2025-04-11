@@ -1,11 +1,11 @@
 [package]
-name = "libfenix"
+name = "shared"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-shared = { path = "../shared" }
 
 [lib]
+name = "shared"
 test = false
 bench = false

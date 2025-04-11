@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-libfenix = { path = "../libfenix" }
+shared = { path = "../shared" }
 include_programs = { path = "../include_programs" }
 
 [build-dependencies]
