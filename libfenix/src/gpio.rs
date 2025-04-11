@@ -10,3 +10,4 @@ pub fn write(pin: GpioPin, value: bool) {
     syscall.call();
 }
 
+pub use shared::gpio::pins::*;
