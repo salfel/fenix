@@ -5,8 +5,11 @@ use crate::{
     interrupts::{self, Interrupt, Mode},
 };
 use embedded_hal::i2c;
-use shared::sys::{read_addr, set_bit, write_addr};
 use shared::{alloc::vec::Vec, sys::clear_bit};
+use shared::{
+    i2c::I2cError,
+    sys::{read_addr, set_bit, write_addr},
+};
 
 const SYS_CLOCK: u32 = 48_000_000;
 const INTERNAL_CLOCK: u32 = 12_000_000;
@@ -360,25 +363,6 @@ impl I2C {
 
     fn receive_bytes_available(&self) -> u32 {
         (read_addr(self.base() + I2C_BUFSTAT) >> 8) & 0x3F
-    }
-}
-
-#[derive(Clone, Copy, Debug)]
-pub enum I2cError {
-    Nack,
-    ArbitrationLoss,
-    Overrun,
-    Bus,
-}
-
-impl i2c::Error for I2cError {
-    fn kind(&self) -> i2c::ErrorKind {
-        match self {
-            I2cError::Nack => i2c::ErrorKind::NoAcknowledge(i2c::NoAcknowledgeSource::Unknown),
-            I2cError::ArbitrationLoss => i2c::ErrorKind::ArbitrationLoss,
-            I2cError::Overrun => i2c::ErrorKind::Overrun,
-            I2cError::Bus => i2c::ErrorKind::Bus,
-        }
     }
 }
 
