@@ -34,24 +34,22 @@ impl Syscall<'_> {
     pub fn call(self) -> Option<u32> {
         match self {
             Syscall::Exit => unsafe {
-                asm!("svc 0x0");
-                None
+                asm!("svc 0x0", options(noreturn));
             },
             Syscall::Yield { sp, pc, until } => unsafe {
-                asm!("svc 0x1", in("r0") sp, in("r1") pc, in("r2") until.unwrap_or(0));
-                None
+                asm!("svc 0x1", in("r0") sp, in("r1") pc, in("r2") until.unwrap_or(0), options(noreturn));
             },
             Syscall::Millis => unsafe {
                 let millis: u32;
 
-                asm!("push {{lr}}", "svc 0x2", "pop {{lr}}", out("r0") millis);
+                asm!("svc 0x2", out("r0") millis);
                 Some(millis)
             },
             Syscall::GpioRead { pin: (pin, bank) } => {
                 let value: u32;
 
                 unsafe {
-                    asm!("push {{lr}}", "svc 0x3", "pop {{lr}}", in("r0") bank as u32, in("r1") pin, lateout("r0") value);
+                    asm!("svc 0x3", in("r0") bank as u32, in("r1") pin, lateout("r0") value);
                 }
 
                 Some(value)
@@ -60,7 +58,7 @@ impl Syscall<'_> {
                 pin: (pin, bank),
                 value,
             } => unsafe {
-                asm!("push {{lr}}", "svc 0x4", "pop {{lr}}", in("r0") bank as u32, in("r1") pin, in("r2") value as u32);
+                asm!("svc 0x4", in("r0") bank as u32, in("r1") pin, in("r2") value as u32);
                 None
             },
             Syscall::I2cWrite { address, data } => unsafe {
