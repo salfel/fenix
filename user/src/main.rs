@@ -8,6 +8,4 @@ fn _start() {
     i2c::write_str(0x10, "Hello there1");
     i2c::write_str(0x10, "Hello there2");
     gpio::write(GPIO1_21, true);
-
-    loop {}
 }
