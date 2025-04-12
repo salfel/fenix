@@ -3,6 +3,12 @@
 version = 4
 
 [[package]]
+name = "embedded-hal"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "361a90feb7004eca4019fb28352a9465666b24f840f5c3cddf0ff13920590b89"
+
+[[package]]
 name = "include_programs"
 version = "0.1.0"
 dependencies = [
@@ -13,6 +19,7 @@ dependencies = [
 name = "kernel"
 version = "0.1.0"
 dependencies = [
+ "embedded-hal",
  "include_programs",
  "shared",
 ]

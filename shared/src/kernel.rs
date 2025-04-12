@@ -16,13 +16,10 @@ pub enum Syscall<'a> {
         pin: GpioPin,
         value: bool,
     },
-    I2cBegin {
-        slave_address: u32,
-    },
     I2cWrite {
+        address: u8,
         data: &'a [u8],
     },
-    I2cEnd,
     Panic,
     Alloc {
         layout: Layout,
@@ -66,31 +63,23 @@ impl Syscall<'_> {
                 asm!("push {{lr}}", "svc 0x4", "pop {{lr}}", in("r0") bank as u32, in("r1") pin, in("r2") value as u32);
                 None
             },
-            Syscall::I2cBegin { slave_address } => unsafe {
-                asm!("svc 0x5", in("r0") slave_address);
-                None
-            },
-            Syscall::I2cWrite { data } => unsafe {
-                asm!("svc 0x6", in("r0") data.as_ptr(), in("r1") data.len());
-                None
-            },
-            Syscall::I2cEnd => unsafe {
-                asm!("svc 0x7");
+            Syscall::I2cWrite { address, data } => unsafe {
+                asm!("svc 0x5", in("r0") address, in("r1") data.as_ptr(), in("r2") data.len());
                 None
             },
             Syscall::Panic => unsafe {
-                asm!("svc 0x8");
+                asm!("svc 0x6");
                 None
             },
             Syscall::Alloc { layout } => unsafe {
                 let ptr: u32;
 
-                asm!("svc 0x9", in("r0") layout.size(), in("r1") layout.align(), lateout("r0") ptr);
+                asm!("svc 0x7", in("r0") layout.size(), in("r1") layout.align(), lateout("r0") ptr);
 
                 Some(ptr)
             },
             Syscall::Dealloc { ptr, layout } => unsafe {
-                asm!("svc 0xa", in("r0") ptr, in("r1") layout.size(), in("r2") layout.align());
+                asm!("svc 0x8", in("r0") ptr, in("r1") layout.size(), in("r2") layout.align());
                 None
             },
         }

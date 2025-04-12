@@ -1,37 +1,30 @@
 use shared::kernel::Syscall;
 
-pub fn begin_transmission(slave_address: u32) {
-    let syscall = Syscall::I2cBegin { slave_address };
-    syscall.call();
-}
-
-pub fn write(data: u8) {
+pub fn write(address: u8,data: u8) {
     let syscall = Syscall::I2cWrite {
+        address,
         data: &[data],
     };
     syscall.call();
 }
 
-pub fn write_buf(data: &[u8]) {
-    let syscall = Syscall::I2cWrite { data };
+pub fn write_buf(address: u8,data: &[u8]) {
+    let syscall = Syscall::I2cWrite { address,data };
     syscall.call();
 }
 
-pub fn write_str(data: &str) {
+pub fn write_str(address: u8,data: &str) {
     let syscall = Syscall::I2cWrite {
+        address,
         data: data.as_bytes(),
     };
     syscall.call();
 }
 
-pub fn write_char(data: char) {
+pub fn write_char(address: u8,data: char) {
     let syscall = Syscall::I2cWrite {
+        address,
         data: &[data as u8],
     };
-    syscall.call();
-}
-
-pub fn end_transmission() {
-    let syscall = Syscall::I2cEnd;
     syscall.call();
 }

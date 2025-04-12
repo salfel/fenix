@@ -49,20 +49,17 @@ impl<'a> TryInto<Syscall<'a>> for &TrapFrame {
                 pin: (self.r1, self.r0.into()),
                 value: self.r2 != 0,
             }),
-            5 => Ok(Syscall::I2cBegin {
-                slave_address: self.r0,
+            5 => Ok(Syscall::I2cWrite {
+                address: self.r0 as u8,
+                data: unsafe { core::slice::from_raw_parts(self.r1 as *mut u8, self.r2 as usize) },
             }),
-            6 => Ok(Syscall::I2cWrite {
-                data: unsafe { core::slice::from_raw_parts(self.r0 as *mut u8, self.r1 as usize) },
-            }),
-            7 => Ok(Syscall::I2cEnd),
-            8 => Ok(Syscall::Panic),
-            9 => Ok(Syscall::Alloc {
+            6 => Ok(Syscall::Panic),
+            7 => Ok(Syscall::Alloc {
                 layout: unsafe {
                     Layout::from_size_align_unchecked(self.r0 as usize, self.r1 as usize)
                 },
             }),
-            10 => Ok(Syscall::Dealloc {
+            8 => Ok(Syscall::Dealloc {
                 ptr: self.r0 as *mut u8,
                 layout: unsafe {
                     Layout::from_size_align_unchecked(self.r1 as usize, self.r2 as usize)
@@ -160,25 +157,14 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
 
             SyscallReturn::value(value as u32)
         }
-        Syscall::I2cBegin { slave_address } => {
+        Syscall::I2cWrite { address, data } => {
             let i2c = i2c::get_i2c();
-            i2c.begin_transmission(slave_address);
-
-            SyscallReturn::none()
-        }
-        Syscall::I2cWrite { data } => {
-            let i2c = i2c::get_i2c();
-            i2c.write_buf(data);
-
-            SyscallReturn::none()
-        }
-        Syscall::I2cEnd => {
             interrupts::enabled(|| {
-                let i2c = i2c::get_i2c();
-                i2c.end_transmission();
+                // todo don't return result for now
+                let _ = i2c.write(address, data);
             });
 
-            SyscallReturn::value(0)
+            SyscallReturn::none()
         }
         Syscall::Panic => {
             let scheduler = scheduler();

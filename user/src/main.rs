@@ -1,14 +1,13 @@
 #![no_main]
 #![no_std]
 
-use libfenix::{gpio::{self, GPIO1_23}, wait};
+use libfenix::{gpio::{self, GPIO1_21}, i2c};
 
 #[no_mangle]
 fn _start() {
-    let mut status = true;
-    loop {
-        gpio::write(GPIO1_23, status);
-        wait(1000);
-        status = !status;
-    }
+    i2c::write_str(0x10, "Hello there1");
+    i2c::write_str(0x10, "Hello there2");
+    gpio::write(GPIO1_21, true);
+
+    loop {}
 }
