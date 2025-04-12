@@ -2,7 +2,9 @@ use shared::{kernel::Syscall, gpio::GpioPin};
 
 pub fn read(pin: GpioPin) -> bool {
     let syscall = Syscall::GpioRead { pin };
-    syscall.call().unwrap() != 0
+    unsafe {
+        syscall.call().unwrap().gpio_read
+    }
 }
 
 pub fn write(pin: GpioPin, value: bool) {

@@ -1,4 +1,4 @@
-use crate::gpio::GpioPin;
+use crate::{gpio::GpioPin, i2c::I2cError};
 use core::{alloc::Layout, arch::asm};
 
 pub enum Syscall<'a> {
@@ -27,11 +27,11 @@ pub enum Syscall<'a> {
     Dealloc {
         ptr: *mut u8,
         layout: Layout,
-    }
+    },
 }
 
 impl Syscall<'_> {
-    pub fn call(self) -> Option<u32> {
+    pub fn call(self) -> Option<SyscallReturnValue> {
         match self {
             Syscall::Exit => unsafe {
                 asm!("svc 0x0", options(noreturn));
@@ -43,7 +43,7 @@ impl Syscall<'_> {
                 let millis: u32;
 
                 asm!("svc 0x2", out("r0") millis);
-                Some(millis)
+                Some(SyscallReturnValue { millis })
             },
             Syscall::GpioRead { pin: (pin, bank) } => {
                 let value: u32;
@@ -52,7 +52,9 @@ impl Syscall<'_> {
                     asm!("svc 0x3", in("r0") bank as u32, in("r1") pin, lateout("r0") value);
                 }
 
-                Some(value)
+                Some(SyscallReturnValue {
+                    gpio_read: value != 0,
+                })
             }
             Syscall::GpioWrite {
                 pin: (pin, bank),
@@ -62,8 +64,13 @@ impl Syscall<'_> {
                 None
             },
             Syscall::I2cWrite { address, data } => unsafe {
-                asm!("svc 0x5", in("r0") address, in("r1") data.as_ptr(), in("r2") data.len());
-                None
+                let error: u32;
+
+                asm!("svc 0x5", in("r0") address, in("r1") data.as_ptr(), in("r2") data.len(), lateout("r0") error);
+
+                Some(SyscallReturnValue {
+                    i2c_write: error.into(),
+                })
             },
             Syscall::Panic => unsafe {
                 asm!("svc 0x6");
@@ -74,7 +81,9 @@ impl Syscall<'_> {
 
                 asm!("svc 0x7", in("r0") layout.size(), in("r1") layout.align(), lateout("r0") ptr);
 
-                Some(ptr)
+                Some(SyscallReturnValue {
+                    alloc: ptr as *mut u8,
+                })
             },
             Syscall::Dealloc { ptr, layout } => unsafe {
                 asm!("svc 0x8", in("r0") ptr, in("r1") layout.size(), in("r2") layout.align());
@@ -82,4 +91,13 @@ impl Syscall<'_> {
             },
         }
     }
+}
+
+#[repr(C)]
+pub union SyscallReturnValue {
+    pub millis: u32,
+    pub gpio_read: bool,
+    pub i2c_write: I2cError,
+    pub alloc: *mut u8,
+    pub none: (),
 }

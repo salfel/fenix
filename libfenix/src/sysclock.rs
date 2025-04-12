@@ -3,7 +3,9 @@ use core::arch::global_asm;
 
 pub fn millis() -> u32 {
     let syscall = Syscall::Millis;
-    syscall.call().unwrap()
+    unsafe {
+        syscall.call().unwrap().millis
+    }
 }
 
 global_asm!(

@@ -11,7 +11,9 @@ struct Allocator {}
 unsafe impl GlobalAlloc for Allocator {
     unsafe fn alloc(&self, layout: core::alloc::Layout) -> *mut u8 {
         let syscall = Syscall::Alloc { layout };
-        syscall.call().unwrap() as *mut u8
+        unsafe {
+            syscall.call().unwrap().alloc
+        }
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: core::alloc::Layout) {
