@@ -44,7 +44,7 @@ pub struct L2SmallPageTableEntry {
 }
 
 impl L2SmallPageTableEntry {
-    pub fn try_new(asid: Option<u32>) -> Option<Self> {
+    pub fn try_new(virtual_address: u32, asid: Option<u32>) -> Option<Self> {
         let current_index =
             (0..PAGE_TABLE_SIZE as u32).find(|&i| unsafe { !USED_PAGES[i as usize] })?;
         unsafe {
@@ -54,7 +54,7 @@ impl L2SmallPageTableEntry {
 
         Some(L2SmallPageTableEntry {
             asid,
-            virtual_address: 0,
+            virtual_address: virtual_address & !0xFFF,
             physical_address: BASE_ADDRESS + offset,
             permissions: AccessPermissions::Full,
         })

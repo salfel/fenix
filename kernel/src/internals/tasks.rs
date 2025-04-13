@@ -8,6 +8,9 @@ use crate::sysclock::millis;
 const MAX_TASKS: usize = 4;
 const STACK_GUARD: usize = 1024;
 
+const CODE_PAGE_LOCATION: u32 = 0x0;
+const DATA_PAGE_LOCATION: u32 = 0x1000;
+
 #[derive(PartialEq)]
 pub enum TaskState {
     Ready,
@@ -27,7 +30,8 @@ pub struct Task {
     pub state: TaskState,
     pub context: TaskContext,
     pub allocator: BumpAllocator,
-    page: L2SmallPageTableEntry,
+    code_page: L2SmallPageTableEntry,
+    data_page: L2SmallPageTableEntry,
 }
 
 impl Task {
@@ -37,7 +41,8 @@ impl Task {
             state: TaskState::Terminated,
             context: TaskContext { sp: 0, pc: 0 },
             allocator: BumpAllocator::new(),
-            page: L2SmallPageTableEntry::empty(),
+            code_page: L2SmallPageTableEntry::empty(),
+            data_page: L2SmallPageTableEntry::empty(),
         }
     }
 
@@ -58,7 +63,8 @@ impl Task {
 
     pub fn terminate(&mut self) {
         self.state = TaskState::Terminated;
-        self.page.unregister();
+        self.data_page.unregister();
+        self.code_page.unregister();
     }
 }
 
@@ -145,21 +151,25 @@ impl Scheduler {
     pub fn create_task(&mut self, code: &[u8]) -> Option<usize> {
         let task_id = self.task_with_state(TaskState::Terminated)?.id;
 
-        let page = L2SmallPageTableEntry::try_new(Some(task_id as u32))?;
-        page.register();
+        let code_page = L2SmallPageTableEntry::try_new(CODE_PAGE_LOCATION, Some(task_id as u32))?;
+        code_page.register();
 
-        let dest = page.start() as *mut u8;
+        let data_page = L2SmallPageTableEntry::try_new(DATA_PAGE_LOCATION, Some(task_id as u32))?;
+        data_page.register();
+
+        let dest = code_page.start() as *mut u8;
         unsafe {
             ptr::copy_nonoverlapping(code.as_ptr(), dest, code.len());
         }
 
         let task = self.task_mut(task_id);
-        task.page = page;
+        task.code_page = code_page;
+        task.data_page = data_page;
         task.state = TaskState::Ready;
-        task.context.sp = task.page.end();
-        task.context.pc = task.page.start();
+        task.context.sp = task.data_page.end();
+        task.context.pc = task.code_page.start();
         task.allocator
-            .init(code.len(), task.page.end() as usize - STACK_GUARD);
+            .init(task.data_page.start() as usize, task.data_page.end() as usize - STACK_GUARD);
         Some(task.id)
     }
 
@@ -176,14 +186,16 @@ impl Scheduler {
         match task.state {
             TaskState::Ready => {
                 task.state = TaskState::Running;
-                task.page.register();
+                task.code_page.register();
+                task.data_page.register();
                 unsafe {
                     switch_context(task.context.sp, task.context.pc);
                 }
             }
             TaskState::Stored => {
                 task.state = TaskState::Running;
-                task.page.register();
+                task.code_page.register();
+                task.data_page.register();
                 unsafe {
                     restore_context(task.context.sp, task.context.pc);
                 }
