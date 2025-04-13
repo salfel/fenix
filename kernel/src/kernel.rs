@@ -13,8 +13,8 @@ use crate::{
         i2c,
     },
 };
-use shared::{interrupts, kernel::SyscallReturnValue};
 use shared::kernel::Syscall;
+use shared::{interrupts, kernel::SyscallReturnValue};
 
 struct SyscallError {}
 
@@ -70,7 +70,6 @@ impl<'a> TryInto<Syscall<'a>> for &TrapFrame {
     }
 }
 
-
 #[repr(C)]
 struct SyscallReturn {
     exit: bool,
@@ -86,10 +85,7 @@ impl SyscallReturn {
     }
 
     fn value(value: SyscallReturnValue) -> Self {
-        SyscallReturn {
-            exit: false,
-            value,
-        }
+        SyscallReturn { exit: false, value }
     }
 
     fn none() -> Self {
@@ -185,7 +181,7 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
             let scheduler = scheduler();
             if let Some(task) = scheduler.current() {
                 let ptr = unsafe { task.allocator.alloc(layout) };
-                return SyscallReturn::value(SyscallReturnValue { alloc: ptr })
+                return SyscallReturn::value(SyscallReturnValue { alloc: ptr });
             }
 
             SyscallReturn::none()

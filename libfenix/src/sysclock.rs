@@ -1,11 +1,9 @@
-use shared::kernel::Syscall;
 use core::arch::global_asm;
+use shared::kernel::Syscall;
 
 pub fn millis() -> u32 {
     let syscall = Syscall::Millis;
-    unsafe {
-        syscall.call().unwrap().millis
-    }
+    unsafe { syscall.call().unwrap().millis }
 }
 
 global_asm!(

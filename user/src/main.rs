@@ -1,7 +1,10 @@
 #![no_main]
 #![no_std]
 
-use libfenix::{gpio::{self, GPIO1_21}, i2c};
+use libfenix::{
+    gpio::{self, GPIO1_21},
+    i2c,
+};
 
 #[no_mangle]
 fn _start() {

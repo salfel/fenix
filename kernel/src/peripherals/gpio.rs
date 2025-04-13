@@ -2,10 +2,10 @@ use crate::{
     internals::clock,
     interrupts::{self, Interrupt, Mode},
 };
-use shared::{gpio::{GpioBank, GpioPin},sys::{
-    clear_bit,
-    noop, read_addr, read_bit, set_bit, write_addr,
-}};
+use shared::{
+    gpio::{GpioBank, GpioPin},
+    sys::{clear_bit, noop, read_addr, read_bit, set_bit, write_addr},
+};
 
 const GPIO1: u32 = 0x4804C000;
 

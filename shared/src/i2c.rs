@@ -13,7 +13,7 @@ impl i2c::Error for I2cError {
         match self {
             I2cError::Nack => i2c::ErrorKind::NoAcknowledge(i2c::NoAcknowledgeSource::Unknown),
             I2cError::ArbitrationLoss => i2c::ErrorKind::ArbitrationLoss,
-            I2cError::Success =>i2c::ErrorKind::Other
+            I2cError::Success => i2c::ErrorKind::Other,
         }
     }
 }

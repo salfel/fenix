@@ -158,7 +158,8 @@ impl Scheduler {
         task.state = TaskState::Ready;
         task.context.sp = task.page.end();
         task.context.pc = task.page.start();
-        task.allocator.init(code.len(), task.page.end() as usize - STACK_GUARD);
+        task.allocator
+            .init(code.len(), task.page.end() as usize - STACK_GUARD);
         Some(task.id)
     }
 
