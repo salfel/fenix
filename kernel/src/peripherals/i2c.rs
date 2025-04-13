@@ -9,15 +9,11 @@ use crate::{
     interrupts::{self, Interrupt, Mode},
 };
 use embedded_hal::i2c;
-use shared::{
-    alloc::vec::Vec,
-    sys::clear_bit,
-};
+use shared::{alloc::vec::Vec, i2c::PRINT_ADDRESS, sys::clear_bit};
 use shared::{
     i2c::I2cError,
     sys::{read_addr, set_bit, write_addr},
 };
-
 
 const SYS_CLOCK: u32 = 48_000_000;
 const INTERNAL_CLOCK: u32 = 12_000_000;
@@ -128,7 +124,7 @@ impl i2c::I2c for I2C {
 
 impl fmt::Write for I2C {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        match self.write(0x10, s.as_bytes()) {
+        match self.write(PRINT_ADDRESS, s.as_bytes()) {
             Ok(_) => Ok(()),
             Err(_) => Err(fmt::Error),
         }
