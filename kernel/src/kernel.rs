@@ -13,7 +13,7 @@ use crate::{
         i2c,
     },
 };
-use shared::kernel::Syscall;
+use shared::{i2c::I2cError, kernel::Syscall};
 use shared::{interrupts, kernel::SyscallReturnValue};
 
 struct SyscallError {}
@@ -159,12 +159,14 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
         }
         Syscall::I2cWrite { address, data } => {
             let i2c = i2c::get_i2c();
+            let mut error: I2cError = I2cError::Success;
             interrupts::enabled(|| {
-                // todo don't return result for now
-                let _ = i2c.write(address, data);
+                if let Err(err) = i2c.write(address, data) {
+                    error = err
+                }
             });
 
-            SyscallReturn::none()
+            SyscallReturn::value(SyscallReturnValue { i2c_write: error })
         }
         Syscall::Panic => {
             let scheduler = scheduler();
