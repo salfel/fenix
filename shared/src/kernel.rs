@@ -31,6 +31,27 @@ pub enum Syscall<'a> {
 }
 
 impl Syscall<'_> {
+    /// Executes the system call corresponding to the `Syscall` variant.
+    ///
+    /// This method dispatches a supervisor call (SVC) via inline assembly, performing low-level operations
+    /// based on the variant. For variants that produce a result (such as `Millis`, `GpioRead`, `I2cWrite`, and `Alloc`),
+    /// it returns `Some(SyscallReturnValue)` containing the outcome; for others (like `GpioWrite`, `Panic`, and `Dealloc`),
+    /// it returns `None`. Note that for the `Exit`, `Yield`, and `Panic` variants the call does not return normally.
+    ///
+    /// # Examples
+    ///
+    /// Retrieve the current time in milliseconds:
+    ///
+    /// ```rust
+    /// let result = Syscall::Millis.call();
+    /// if let Some(ret) = result {
+    ///     // Accessing a union field is unsafe.
+    ///     unsafe {
+    ///         let millis = ret.millis;
+    ///         println!("Current time (ms): {}", millis);
+    ///     }
+    /// }
+    /// ```
     pub fn call(self) -> Option<SyscallReturnValue> {
         match self {
             Syscall::Exit => unsafe {

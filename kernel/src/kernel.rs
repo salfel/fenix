@@ -30,6 +30,29 @@ struct TrapFrame {
 impl<'a> TryInto<Syscall<'a>> for &TrapFrame {
     type Error = SyscallError;
 
+    /// Attempts to convert a trap frame into a syscall variant based on the value in register `r12`.
+    ///
+    /// The conversion uses the register values to decode the syscall type and its parameters:
+    /// - `0`: Returns an exit syscall.
+    /// - `1`: Returns a yield syscall with a saved stack pointer (`r0`), program counter (`r1`), and an optional timeout (derived from `r2`).
+    /// - `2`: Returns a milliseconds syscall.
+    /// - `3`: Returns a GPIO read syscall, where the pin is determined by `r1` and `r0`.
+    /// - `4`: Returns a GPIO write syscall with a boolean value from `r2` and pin information from `r1` and `r0`.
+    /// - `5`: Returns an I2C write syscall with the I2C device address from `r0` and a data slice constructed unsafely from `r1` and `r2`.
+    /// - `6`: Returns a panic syscall.
+    /// - `7`: Returns an allocation syscall with a memory layout created from `r0` (size) and `r1` (alignment).
+    /// - `8`: Returns a deallocation syscall with the pointer from `r0` and a layout from `r1` and `r2`.
+    ///
+    /// Returns a [`Result`] containing the corresponding syscall variant on success, or a [`SyscallError`] if the syscall type is unrecognized.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// // Construct a trap frame that should decode to an exit syscall.
+    /// let tf = TrapFrame { r0: 0, r1: 0, r2: 0, r3: 0, r12: 0 };
+    /// let syscall = tf.try_into();
+    /// assert!(matches!(syscall, Ok(Syscall::Exit)));
+    ///```
     fn try_into(self) -> Result<Syscall<'a>, Self::Error> {
         match self.r12 {
             0 => Ok(Syscall::Exit),
@@ -77,6 +100,17 @@ struct SyscallReturn {
 }
 
 impl SyscallReturn {
+    /// Returns a `SyscallReturn` configured to signal an exit condition.
+    ///
+    /// This function creates a new `SyscallReturn` where the `exit` flag is set to true and the
+    /// return value is marked as `none`, indicating that no additional data is provided upon exit.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let ret = SyscallReturn::exit();
+    /// assert!(ret.exit);
+    /// ```
     fn exit() -> Self {
         SyscallReturn {
             exit: true,
@@ -84,10 +118,36 @@ impl SyscallReturn {
         }
     }
 
+    /// Constructs a new `SyscallReturn` with the provided return value, marking it as non-terminating.
+    ///
+    /// This function creates a `SyscallReturn` instance with the `exit` flag set to `false` and
+    /// embeds the specified `value` as its return data.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// // Create a SyscallReturn with a specific return value.
+    /// let ret_val = SyscallReturnValue::millis(1234);
+    /// let result = SyscallReturn::value(ret_val);
+    /// assert!(!result.exit);
+    /// ```
     fn value(value: SyscallReturnValue) -> Self {
         SyscallReturn { exit: false, value }
     }
 
+    /// Returns a `SyscallReturn` representing a syscall that produces no result.
+    ///
+    /// This method creates a `SyscallReturn` with the `exit` flag set to `false` and the `value`
+    /// field set to indicate that there is no return value.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let ret = SyscallReturn::none();
+    /// assert!(!ret.exit);
+    /// // Depending on your inspection methods, further checks on `ret.value` should confirm
+    /// // that it represents a `none` variant.
+    /// ```
     fn none() -> Self {
         SyscallReturn {
             exit: false,
@@ -97,6 +157,44 @@ impl SyscallReturn {
 }
 
 #[no_mangle]
+/**
+Handles a software interrupt by decoding and dispatching a system call based on the provided trap frame.
+
+This function converts a trap frame—which represents the CPU state at the time of the interrupt—into a corresponding system call.
+It then executes the appropriate action, such as terminating or yielding the current task, interfacing with peripherals (GPIO or I2C),
+returning the system uptime in milliseconds, or managing memory allocation. An invalid trap frame that cannot be converted to a valid
+system call will trigger a panic.
+
+# Examples
+```rust
+// The following test simulates a Syscall::Millis call to verify that swi_handler returns a valid uptime value.
+// In a real kernel, the trap frame would be populated by hardware upon a software interrupt.
+#[cfg(test)]
+mod tests {
+    use core::convert::TryFrom;
+    use super::*;
+
+    // Dummy conversion to simulate a Syscall::Millis from a TrapFrame.
+    impl TryFrom<&TrapFrame> for Syscall {
+        type Error = ();
+        fn try_from(_frame: &TrapFrame) -> Result<Self, Self::Error> {
+            Ok(Syscall::Millis)
+        }
+    }
+
+    #[test]
+    fn test_swi_handler_millis() {
+        let frame = TrapFrame { r0: 0, r1: 0, r2: 0, r3: 0, r12: 0 };
+        let ret = swi_handler(&frame);
+        if let SyscallReturnValue { millis } = ret.value {
+            assert!(millis > 0, "Expected positive milliseconds value");
+        } else {
+            panic!("Expected a millis return value");
+        }
+    }
+}
+```
+*/
 extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
     let syscall: Syscall = match frame.try_into() {
         Ok(syscall) => syscall,

@@ -1,6 +1,18 @@
 use core::arch::global_asm;
 use shared::kernel::Syscall;
 
+/// Returns the current system time in milliseconds.
+///
+/// This function uses the `Syscall::Millis` variant to perform a system call that retrieves
+/// the current time in milliseconds. It executes the call in an unsafe block and unwraps the
+/// result to obtain the millisecond count. Panics if the underlying system call fails.
+///
+/// # Examples
+///
+/// ```
+/// let current_time = millis();
+/// println!("Current time in ms: {}", current_time);
+/// ```
 pub fn millis() -> u32 {
     let syscall = Syscall::Millis;
     unsafe { syscall.call().unwrap().millis }

@@ -9,6 +9,24 @@ pub enum GpioBank {
 }
 
 impl From<u32> for GpioBank {
+    /// Converts a 32-bit memory address into its corresponding `GpioBank` variant.
+    ///
+    /// This function matches the input address against known GPIO bank addresses:
+    /// - `0x44E0_7000` maps to `GpioBank::Gpio0`
+    /// - `0x4804_C000` maps to `GpioBank::Gpio1`
+    /// - `0x481A_C000` maps to `GpioBank::Gpio2`
+    /// - `0x481A_E000` maps to `GpioBank::Gpio3`
+    ///
+    /// # Panics
+    ///
+    /// Panics with `"invalid gpio bank"` if the value does not match any of the expected addresses.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let bank = GpioBank::from(0x44E0_7000);
+    /// assert_eq!(bank, GpioBank::Gpio0);
+    /// ```
     fn from(value: u32) -> Self {
         match value {
             0x44E0_7000 => GpioBank::Gpio0,

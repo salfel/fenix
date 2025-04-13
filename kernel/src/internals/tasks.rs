@@ -142,6 +142,36 @@ impl Scheduler {
         None
     }
 
+    /// Creates a new task by loading the provided code into an available terminated task slot.
+    ///
+    /// This method searches for a task in the terminated state and, if one is found, initializes it for execution.
+    /// It allocates and registers a memory page, copies the supplied code into the newly allocated space, and
+    /// configures the task’s execution context by setting the stack pointer, program counter, and initializing
+    /// the task's memory allocator. If no terminated task slot is available or if page allocation fails, it returns `None`.
+    ///
+    /// # Parameters
+    ///
+    /// - `code`: A byte slice containing the code to be loaded into the task's memory.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Some(task_id)` if the task is successfully created and initialized; otherwise, returns `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use your_crate::Scheduler;
+    /// let mut scheduler = Scheduler::new();
+    /// let code: &[u8] = &[0x90, 0x90, 0xC3]; // Example: two NOPs followed by a RET.
+    ///
+    /// if let Some(task_id) = scheduler.create_task(code) {
+    ///     // Task was created successfully.
+    ///     println!("Created task with id: {}", task_id);
+    /// } else {
+    ///     // Task creation failed.
+    ///     eprintln!("Failed to create task");
+    /// }
+    /// ```
     pub fn create_task(&mut self, code: &[u8]) -> Option<usize> {
         let task_id = self.task_with_state(TaskState::Terminated)?.id;
 
