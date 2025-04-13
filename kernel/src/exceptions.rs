@@ -1,4 +1,4 @@
-use shared::gpio::pins::{GPIO1_21, GPIO1_22, GPIO1_23};
+use shared::{gpio::pins::{GPIO1_21, GPIO1_22, GPIO1_23}, interrupts::disable_interrupts};
 
 use super::gpio;
 
@@ -25,5 +25,7 @@ fn undefined_handler() {
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
+    disable_interrupts();
+
     loop {}
 }
