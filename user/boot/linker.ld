@@ -2,7 +2,7 @@ MEMORY {
     ram (rwx) : ORIGIN = 0x0, LENGTH = 0x1000
 }
 
-ENTRY(__wrap__start)
+ENTRY(_start)
 SECTIONS {
     .text : { 
         *(.text*)
