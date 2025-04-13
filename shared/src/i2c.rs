@@ -1,5 +1,7 @@
 use embedded_hal::i2c;
 
+pub const PRINT_ADDRESS: u8 = 0x10;
+
 #[derive(Clone, Copy, Debug)]
 #[repr(u32)]
 pub enum I2cError {

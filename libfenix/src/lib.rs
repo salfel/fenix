@@ -22,3 +22,9 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 
     loop {}
 }
+
+#[no_mangle]
+fn __aeabi_unwind_cpp_pr0() {
+    let syscall = Syscall::Panic;
+    syscall.call();
+}

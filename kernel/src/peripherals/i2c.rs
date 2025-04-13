@@ -1,15 +1,23 @@
-use core::{arch::asm, cmp::min};
+use core::{
+    arch::asm,
+    cmp::min,
+    fmt::{self, Arguments, Write},
+};
 
 use crate::{
     internals::clock::{self, FuncClock},
     interrupts::{self, Interrupt, Mode},
 };
 use embedded_hal::i2c;
-use shared::{alloc::vec::Vec, sys::clear_bit};
+use shared::{
+    alloc::vec::Vec,
+    sys::clear_bit,
+};
 use shared::{
     i2c::I2cError,
     sys::{read_addr, set_bit, write_addr},
 };
+
 
 const SYS_CLOCK: u32 = 48_000_000;
 const INTERNAL_CLOCK: u32 = 12_000_000;
@@ -104,6 +112,8 @@ impl i2c::I2c for I2C {
                     self.stop();
                     self.disable();
 
+                    self.error = None;
+
                     return Err(error);
                 }
             }
@@ -113,6 +123,39 @@ impl i2c::I2c for I2C {
         self.disable();
 
         Ok(())
+    }
+}
+
+impl fmt::Write for I2C {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        match self.write(0x10, s.as_bytes()) {
+            Ok(_) => Ok(()),
+            Err(_) => Err(fmt::Error),
+        }
+    }
+}
+
+pub fn print(args: Arguments<'_>) {
+    let i2c = get_i2c();
+    i2c.write_fmt(args).unwrap();
+}
+
+pub fn println(args: Arguments<'_>) {
+    let i2c = get_i2c();
+    i2c.write_fmt(format_args!("{}\n", args)).unwrap();
+}
+
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => {
+        $crate::i2c::print(format_args!($($arg)*))
+    }
+}
+
+#[macro_export]
+macro_rules! println {
+    ($($arg:tt)*) => {
+        $crate::i2c::println(format_args!($($arg)*))
     }
 }
 
