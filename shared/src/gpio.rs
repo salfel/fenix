@@ -20,7 +20,6 @@ impl From<u32> for GpioBank {
     }
 }
 
-
 pub mod pins {
     use super::{GpioBank, GpioPin};
 

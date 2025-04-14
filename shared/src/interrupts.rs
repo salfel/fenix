@@ -43,4 +43,3 @@ where
     restore_cpsr(cpsr);
     result
 }
-

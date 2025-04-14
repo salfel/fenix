@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 shared = { path = "../shared" }
 include_programs = { path = "../include_programs" }
+embedded-hal = "1.0.0"
 
 [build-dependencies]
 

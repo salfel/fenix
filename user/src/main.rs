@@ -1,14 +1,17 @@
 #![no_main]
 #![no_std]
 
-use libfenix::{gpio::{self, GPIO1_23}, wait};
+use libfenix::{
+    exit,
+    gpio::{self, GPIO1_21},
+    println,
+};
 
 #[no_mangle]
 fn _start() {
-    let mut status = true;
-    loop {
-        gpio::write(GPIO1_23, status);
-        wait(1000);
-        status = !status;
-    }
+    println!("Hello from user mode!");
+    println!("This is me, Felix");
+    gpio::write(GPIO1_21, true);
+
+    exit();
 }

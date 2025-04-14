@@ -13,8 +13,8 @@ use crate::{
         i2c,
     },
 };
-use shared::interrupts;
-use shared::kernel::Syscall;
+use shared::{i2c::I2cError, kernel::Syscall};
+use shared::{interrupts, kernel::SyscallReturnValue};
 
 struct SyscallError {}
 
@@ -49,20 +49,17 @@ impl<'a> TryInto<Syscall<'a>> for &TrapFrame {
                 pin: (self.r1, self.r0.into()),
                 value: self.r2 != 0,
             }),
-            5 => Ok(Syscall::I2cBegin {
-                slave_address: self.r0,
+            5 => Ok(Syscall::I2cWrite {
+                address: self.r0 as u8,
+                data: unsafe { core::slice::from_raw_parts(self.r1 as *mut u8, self.r2 as usize) },
             }),
-            6 => Ok(Syscall::I2cWrite {
-                data: unsafe { core::slice::from_raw_parts(self.r0 as *mut u8, self.r1 as usize) },
-            }),
-            7 => Ok(Syscall::I2cEnd),
-            8 => Ok(Syscall::Panic),
-            9 => Ok(Syscall::Alloc {
+            6 => Ok(Syscall::Panic),
+            7 => Ok(Syscall::Alloc {
                 layout: unsafe {
                     Layout::from_size_align_unchecked(self.r0 as usize, self.r1 as usize)
                 },
             }),
-            10 => Ok(Syscall::Dealloc {
+            8 => Ok(Syscall::Dealloc {
                 ptr: self.r0 as *mut u8,
                 layout: unsafe {
                     Layout::from_size_align_unchecked(self.r1 as usize, self.r2 as usize)
@@ -76,25 +73,25 @@ impl<'a> TryInto<Syscall<'a>> for &TrapFrame {
 #[repr(C)]
 struct SyscallReturn {
     exit: bool,
-    value: u32,
+    value: SyscallReturnValue,
 }
 
 impl SyscallReturn {
     fn exit() -> Self {
         SyscallReturn {
             exit: true,
-            value: 0,
+            value: SyscallReturnValue { none: () },
         }
     }
 
-    fn value(value: u32) -> Self {
+    fn value(value: SyscallReturnValue) -> Self {
         SyscallReturn { exit: false, value }
     }
 
     fn none() -> Self {
         SyscallReturn {
             exit: false,
-            value: 0,
+            value: SyscallReturnValue { none: () },
         }
     }
 }
@@ -149,7 +146,7 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
 
             SyscallReturn::exit()
         }
-        Syscall::Millis => SyscallReturn::value(millis()),
+        Syscall::Millis => SyscallReturn::value(SyscallReturnValue { millis: millis() }),
         Syscall::GpioWrite { pin, value } => {
             gpio::write(pin, value);
 
@@ -158,27 +155,18 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
         Syscall::GpioRead { pin } => {
             let value = gpio::read(pin);
 
-            SyscallReturn::value(value as u32)
+            SyscallReturn::value(SyscallReturnValue { gpio_read: value })
         }
-        Syscall::I2cBegin { slave_address } => {
+        Syscall::I2cWrite { address, data } => {
             let i2c = i2c::get_i2c();
-            i2c.begin_transmission(slave_address);
-
-            SyscallReturn::none()
-        }
-        Syscall::I2cWrite { data } => {
-            let i2c = i2c::get_i2c();
-            i2c.write_buf(data);
-
-            SyscallReturn::none()
-        }
-        Syscall::I2cEnd => {
+            let mut error: I2cError = I2cError::Success;
             interrupts::enabled(|| {
-                let i2c = i2c::get_i2c();
-                i2c.end_transmission();
+                if let Err(err) = i2c.write(address, data) {
+                    error = err
+                }
             });
 
-            SyscallReturn::value(0)
+            SyscallReturn::value(SyscallReturnValue { i2c_write: error })
         }
         Syscall::Panic => {
             let scheduler = scheduler();
@@ -195,7 +183,7 @@ extern "C" fn swi_handler(frame: &TrapFrame) -> SyscallReturn {
             let scheduler = scheduler();
             if let Some(task) = scheduler.current() {
                 let ptr = unsafe { task.allocator.alloc(layout) };
-                SyscallReturn::value(ptr as u32);
+                return SyscallReturn::value(SyscallReturnValue { alloc: ptr });
             }
 
             SyscallReturn::none()
