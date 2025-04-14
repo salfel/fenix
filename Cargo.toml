@@ -1,0 +1,15 @@
+[package]
+name = "fenix"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[features]
+default = ["bblack"]
+bblack = []
+
+[lib]
+name = "fenix"
+test = false
+bench = false
