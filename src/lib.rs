@@ -11,6 +11,7 @@ pub fn init() {
     vectors::init();
 
     peripherals::gpio::init();
+    internals::sysclock::init();
 }
 
 #[panic_handler]

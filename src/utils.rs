@@ -1,3 +1,5 @@
+use core::arch::asm;
+
 #[inline]
 pub fn wreg(address: u32, data: u32) {
     unsafe {
@@ -26,4 +28,8 @@ pub fn rbit(address: u32, bit: u32) -> bool {
     (data & (1 << bit)) != 0
 }
 
-pub fn nop() {}
+pub fn nop() {
+    unsafe {
+        asm!("nop");
+    }
+}
