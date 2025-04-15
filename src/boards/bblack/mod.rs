@@ -1,2 +1,2 @@
-pub(super) mod clock;
+pub mod clock;
 pub mod peripherals;
