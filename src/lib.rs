@@ -3,6 +3,7 @@
 pub(crate) mod boards;
 pub mod internals;
 pub mod peripherals;
+pub mod tasks;
 pub(crate) mod utils;
 pub(crate) mod vectors;
 

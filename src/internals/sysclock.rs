@@ -22,6 +22,7 @@ impl Sysclock {
 
         unsafe {
             (*sysclock).ticks += 1;
+            should_switch = true;
         }
     }
 }
@@ -52,4 +53,8 @@ pub fn wait(ms: u32) {
         // needed to prevent compiler optimizations
         nop();
     }
+}
+
+extern "C" {
+    static mut should_switch: bool;
 }
