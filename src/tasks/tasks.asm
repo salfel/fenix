@@ -33,6 +33,8 @@ store_context:
     mov r0, sp
     ldr r1, temp_pc
 
+    b save_context
+
 restore_context:
     mov sp, r0
 
