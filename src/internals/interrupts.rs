@@ -25,7 +25,7 @@ global_asm!(
 "
 );
 
-pub trait InterruptRegister {
+pub(crate) trait InterruptRegister {
     fn enable(&self, interrupt: Interrupt, priority: u8);
 
     fn register_handler(&mut self, interrupt: Interrupt, handler: fn());

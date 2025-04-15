@@ -10,7 +10,7 @@ pub enum GpioMode {
 
 pub type GpioPin = (u8, GpioBank);
 
-pub trait GpioRegister {
+pub(crate) trait GpioRegister {
     type Bank;
 
     fn init(&self);

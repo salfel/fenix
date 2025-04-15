@@ -3,7 +3,7 @@ use crate::boards::bblack::internals::timer::{self, Register};
 
 pub use timer::Timer;
 
-pub trait TimerRegister {
+pub(crate) trait TimerRegister {
     type Timer;
 
     fn register(&mut self, timer: Self::Timer, micros: u32, callback: fn());
