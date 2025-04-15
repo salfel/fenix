@@ -5,25 +5,7 @@ use crate::boards::bblack::internals::interrupts::{self, Register};
 
 pub use interrupts::Interrupt;
 
-global_asm!(
-    "
-    handle_interrupt:
-        sub lr, lr, #4
-        stmfd sp!, {{r0-r12, lr}}
-
-        mrs r11, spsr
-        push {{r11}}
-
-        bl interrupt_handler
-
-        dsb
-
-        pop {{r11}}
-        msr spsr, r11 
-
-        ldmfd sp!, {{r0-r12, pc}}^
-"
-);
+global_asm!(include_str!("interrupts.asm"));
 
 pub(crate) trait InterruptRegister {
     fn enable(&self, interrupt: Interrupt, priority: u8);
