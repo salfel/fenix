@@ -1,6 +1,10 @@
 use core::arch::global_asm;
 
-use crate::utils::{rreg, wbit, wreg};
+#[cfg(feature = "bblack")]
+use crate::boards::bblack::{self, internals::interrupts::Register};
+
+#[cfg(feature = "bblack")]
+pub use bblack::internals::interrupts::Interrupt;
 
 global_asm!(
     "
@@ -22,115 +26,43 @@ global_asm!(
 "
 );
 
-const INTC: u32 = 0x48200000;
+pub trait InterruptRegister {
+    type Interrupt;
 
-const INTC_ILR: u32 = 0x100;
-const INTC_SIR_IRQ: u32 = 0x40;
-const INTC_CONTROL: u32 = 0x48;
+    fn enable(&self, interrupt: Self::Interrupt, priority: u8);
 
-static mut INTERRUPT_HANDLERS: &mut [fn(); 128] = &mut [noop; 128];
+    fn register_handler(&mut self, interrupt: Self::Interrupt, handler: fn());
 
-#[no_mangle]
-fn interrupt_handler() {
-    let interrupt = current();
-    execute(interrupt);
-    clear();
+    fn current(&self) -> Self::Interrupt;
+
+    fn handle_interrupt(&self);
 }
 
-pub fn enable_interrupt(interrupt: Interrupt, mode: Mode, priority: u8) {
-    let interrupt_number = interrupt as u32;
+static mut INTERRUPT_REGISTER: Register = Register::new();
 
-    let addr = INTC + INTC_ILR + (4 * interrupt_number);
-    let enable_fiq = match mode {
-        Mode::IRQ => 0,
-        Mode::FIQ => 1,
-    };
-    let bank = match InterruptBank::new(interrupt_number) {
-        Some(bank) => bank,
-        None => return,
-    };
-
-    wreg(addr, enable_fiq | (priority << 2) as u32);
-    wbit(INTC + bank.get_mir() + 4, interrupt_number % 32, true);
-}
-
-pub fn register_handler(handler: fn(), interrupt: Interrupt) {
+#[allow(static_mut_refs)]
+pub fn enable(interrupt: Interrupt, priority: u8) {
     unsafe {
-        INTERRUPT_HANDLERS[interrupt as usize] = handler;
+        INTERRUPT_REGISTER.enable(interrupt, priority);
     }
 }
 
-pub fn current() -> Option<Interrupt> {
-    let num = rreg(INTC + INTC_SIR_IRQ) & 0x7F;
-
-    Interrupt::new(num)
-}
-
-pub fn execute(interrupt: Option<Interrupt>) {
-    if let Some(interrupt) = interrupt {
-        unsafe { INTERRUPT_HANDLERS[interrupt as usize]() }
+#[allow(static_mut_refs)]
+pub fn register_handler(interrupt: Interrupt, handler: fn()) {
+    unsafe {
+        INTERRUPT_REGISTER.register_handler(interrupt, handler);
     }
 }
 
-pub fn clear() {
-    wreg(INTC + INTC_CONTROL, 0x1);
+#[allow(static_mut_refs)]
+pub fn current() -> Interrupt {
+    unsafe { INTERRUPT_REGISTER.current() }
 }
 
-pub enum Interrupt {
-    TINT2 = 68,
-    TINT3 = 69,
-    TINT4 = 92,
-    TINT5 = 93,
-    TINT6 = 94,
-    TINT7 = 95,
-}
-
-impl Interrupt {
-    pub fn new(num: u32) -> Option<Self> {
-        match num {
-            68 => Some(Interrupt::TINT2),
-            69 => Some(Interrupt::TINT3),
-            92 => Some(Interrupt::TINT4),
-            93 => Some(Interrupt::TINT5),
-            94 => Some(Interrupt::TINT6),
-            95 => Some(Interrupt::TINT7),
-            _ => None,
-        }
+#[allow(static_mut_refs)]
+#[no_mangle]
+extern "C" fn interrupt_handler() {
+    unsafe {
+        INTERRUPT_REGISTER.handle_interrupt();
     }
 }
-
-pub enum Mode {
-    IRQ,
-    FIQ,
-}
-
-#[repr(u32)]
-enum InterruptBank {
-    Int0,
-    Int1,
-    Int2,
-    Int3,
-}
-
-impl InterruptBank {
-    pub fn new(n: u32) -> Option<InterruptBank> {
-        match n {
-            0..32 => Some(InterruptBank::Int0),
-            32..64 => Some(InterruptBank::Int1),
-            64..96 => Some(InterruptBank::Int2),
-            96..128 => Some(InterruptBank::Int3),
-            _ => None,
-        }
-    }
-
-    fn get_mir(&self) -> u32 {
-        match self {
-            InterruptBank::Int0 => 0x84,
-            InterruptBank::Int1 => 0xA4,
-            InterruptBank::Int2 => 0xC4,
-            InterruptBank::Int3 => 0xE4,
-        }
-    }
-}
-
-fn noop() {}

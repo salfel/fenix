@@ -60,8 +60,8 @@ impl Timer {
     fn init_interrupt(&self) {
         self.irq_enable();
 
-        interrupts::register_handler(Self::handle_timer_irq, self.timer.interrupt());
-        interrupts::enable_interrupt(self.timer.interrupt(), interrupts::Mode::IRQ, 0);
+        interrupts::enable(self.timer.interrupt(), 0);
+        interrupts::register_handler(self.timer.interrupt(), Self::handle_timer_irq);
     }
 
     fn start(&self) {
@@ -83,15 +83,13 @@ impl Timer {
     fn handle_timer_irq() {
         let interrupt = interrupts::current();
 
-        if let Some(interrupt) = interrupt {
-            let timer = get_timer(interrupt);
+        let timer = get_timer(interrupt);
 
-            if let Some(timer) = timer {
-                timer.irq_disable();
-                timer.irq_acknowledge();
-                (timer.handler)();
-                timer.irq_enable();
-            }
+        if let Some(timer) = timer {
+            timer.irq_disable();
+            timer.irq_acknowledge();
+            (timer.handler)();
+            timer.irq_enable();
         }
     }
 }
