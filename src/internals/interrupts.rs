@@ -1,10 +1,9 @@
 use core::arch::global_asm;
 
 #[cfg(feature = "bblack")]
-use crate::boards::bblack::{self, internals::interrupts::Register};
+use crate::boards::bblack::internals::interrupts::{self, Register};
 
-#[cfg(feature = "bblack")]
-pub use bblack::internals::interrupts::Interrupt;
+pub use interrupts::Interrupt;
 
 global_asm!(
     "

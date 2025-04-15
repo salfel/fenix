@@ -1,6 +1,5 @@
 #[cfg(feature = "bblack")]
-use crate::boards::bblack::peripherals::gpio;
-use crate::boards::bblack::peripherals::gpio::Register;
+use crate::boards::bblack::peripherals::gpio::{self, Register};
 
 pub use gpio::{pins, GpioBank};
 

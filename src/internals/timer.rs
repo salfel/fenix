@@ -1,5 +1,5 @@
 #[cfg(feature = "bblack")]
-use crate::boards::bblack::internals::timer::{Register, self};
+use crate::boards::bblack::internals::timer::{self, Register};
 
 pub use timer::Timer;
 
@@ -15,9 +15,7 @@ static mut TIMER_REGISTER: Register = Register::new();
 
 #[allow(static_mut_refs)]
 pub(crate) fn current_handler() -> fn() {
-    unsafe {
-        TIMER_REGISTER.current_handler()
-    }
+    unsafe { TIMER_REGISTER.current_handler() }
 }
 
 #[allow(static_mut_refs)]
