@@ -11,8 +11,6 @@ const INTC_CONTROL: u32 = 0x48;
 
 const MIR_CLR_OFFSET: u32 = 0x4;
 
-static mut INTERRUPT_HANDLERS: &mut [fn(); 128] = &mut [noop; 128];
-
 pub struct Register {
     handlers: [fn(); 128],
 }
@@ -72,12 +70,6 @@ impl Register {
 impl Default for Register {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-pub fn register_handler(handler: fn(), interrupt: Interrupt) {
-    unsafe {
-        INTERRUPT_HANDLERS[interrupt as usize] = handler;
     }
 }
 
