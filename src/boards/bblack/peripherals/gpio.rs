@@ -26,7 +26,7 @@ impl Register {
 impl GpioRegister for Register {
     type Bank = GpioBank;
 
-    fn init(&mut self) {
+    fn init(&self) {
         clock::enable(FuncClock::Gpio1);
         clock::enable(FuncClock::Gpio2);
         clock::enable(FuncClock::Gpio3);
@@ -38,7 +38,7 @@ impl GpioRegister for Register {
         }
     }
 
-    fn pin_mode(&mut self, (pin, bank): GpioPin, mode: GpioMode) {
+    fn pin_mode(&self, (pin, bank): GpioPin, mode: GpioMode) {
         match mode {
             GpioMode::Input => {
                 wbit(bank as u32 + GPIO_OE, pin as u32, true);
@@ -49,7 +49,7 @@ impl GpioRegister for Register {
         }
     }
 
-    fn write(&mut self, (pin, bank): GpioPin, value: bool) {
+    fn write(&self, (pin, bank): GpioPin, value: bool) {
         if value {
             wbit(bank as u32 + GPIO_DATAOUT, pin as u32, true);
         } else {
