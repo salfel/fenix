@@ -24,7 +24,7 @@ impl InterruptRegister for Register {
             Some(bank) => bank,
             None => return,
         };
-        let mode = Mode::IRQ;
+        let mode = Mode::Irq;
 
         wreg(addr, mode as u32 | (priority << 2) as u32);
         wbit(
@@ -96,9 +96,10 @@ impl Interrupt {
     }
 }
 
+#[allow(dead_code)]
 pub enum Mode {
-    IRQ = 0,
-    FIQ = 1,
+    Irq = 0,
+    Fiq = 1,
 }
 
 #[repr(u32)]
