@@ -25,3 +25,5 @@ pub fn rbit(address: u32, bit: u32) -> bool {
     let data = rreg(address);
     (data & (1 << bit)) != 0
 }
+
+pub fn nop() {}
