@@ -18,9 +18,7 @@ pub struct Register {
 }
 
 impl InterruptRegister for Register {
-    type Interrupt = Interrupt;
-
-    fn enable(&self, interrupt: Self::Interrupt, priority: u8) {
+    fn enable(&self, interrupt: Interrupt, priority: u8) {
         let interrupt_number = interrupt as u32;
 
         let addr = INTC + INTC_ILR + (4 * interrupt_number);
@@ -38,7 +36,7 @@ impl InterruptRegister for Register {
         );
     }
 
-    fn register_handler(&mut self, interrupt: Self::Interrupt, handler: fn()) {
+    fn register_handler(&mut self, interrupt: Interrupt, handler: fn()) {
         self.handlers[interrupt as usize] = handler;
     }
 

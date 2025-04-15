@@ -27,13 +27,11 @@ global_asm!(
 );
 
 pub trait InterruptRegister {
-    type Interrupt;
+    fn enable(&self, interrupt: Interrupt, priority: u8);
 
-    fn enable(&self, interrupt: Self::Interrupt, priority: u8);
+    fn register_handler(&mut self, interrupt: Interrupt, handler: fn());
 
-    fn register_handler(&mut self, interrupt: Self::Interrupt, handler: fn());
-
-    fn current(&self) -> Self::Interrupt;
+    fn current(&self) -> Interrupt;
 
     fn handle_interrupt(&self);
 }
