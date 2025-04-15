@@ -1,5 +1,6 @@
 #[cfg(feature = "bblack")]
-use crate::boards::bblack::peripherals::gpio::{self, Register};
+use crate::boards::bblack::peripherals::gpio;
+use crate::boards::bblack::peripherals::gpio::Register;
 
 pub use gpio::{GpioBank, pins};
 
@@ -10,16 +11,16 @@ pub enum GpioMode {
 
 pub type GpioPin = (u8, GpioBank);
 
-pub(crate) trait GpioRegister {
+pub trait GpioRegister {
     type Bank;
 
     fn init(&mut self);
 
-    fn pin_mode(&mut self, pin: u8, bank: Self::Bank, mode: GpioMode);
+    fn pin_mode(&mut self, pin: GpioPin, mode: GpioMode);
 
-    fn write(&mut self, pin: u8, bank: Self::Bank, value: bool);
+    fn write(&mut self, pin: GpioPin, value: bool);
 
-    fn read(&self, pin: u8, bank: Self::Bank) -> bool;
+    fn read(&self, pin: GpioPin) -> bool;
 }
 
 static mut REGISTER: Register = Register::new();
@@ -32,20 +33,20 @@ pub(crate) fn init() {
 }
 
 #[allow(static_mut_refs)]
-pub fn pin_mode((pin, bank): GpioPin, mode: GpioMode) {
+pub fn pin_mode(pin: GpioPin, mode: GpioMode) {
     unsafe {
-        REGISTER.pin_mode(pin, bank, mode);
+        REGISTER.pin_mode(pin, mode);
     }
 }
 
 #[allow(static_mut_refs)]
-pub fn write((pin, bank): GpioPin, value: bool) {
+pub fn write(pin: GpioPin, value: bool) {
     unsafe {
-        REGISTER.write(pin, bank, value);
+        REGISTER.write(pin, value);
     }
 }
 
 #[allow(static_mut_refs)]
-pub fn read((pin, bank): GpioPin) -> bool {
-    unsafe { REGISTER.read(pin, bank) }
+pub fn read(pin: GpioPin) -> bool {
+    unsafe { REGISTER.read(pin) }
 }

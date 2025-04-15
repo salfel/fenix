@@ -1,7 +1,7 @@
 use crate::{
     boards::bblack::clock::{self, FuncClock},
-    peripherals::gpio::{GpioMode, GpioRegister},
-    utils::{rbit, wbit, wreg},
+    peripherals::gpio::{GpioMode, GpioPin, GpioRegister},
+    utils::{rbit, wbit},
 };
 
 const GPIO_OE: u32 = 0x134;
@@ -15,7 +15,7 @@ pub enum GpioBank {
     Bank3 = 0x481A_E000,
 }
 
-pub(crate) struct Register;
+pub struct Register;
 
 impl Register {
     pub const fn new() -> Self {
@@ -32,15 +32,13 @@ impl GpioRegister for Register {
         clock::enable(FuncClock::Gpio3);
         clock::enable(FuncClock::Gpio0);
 
-        wreg(GpioBank::Bank1 as u32 + GPIO_OE, !0);
-
         for i in 21..=24 {
             // enable gpio to power leds on the board
-            self.pin_mode(i, GpioBank::Bank1, GpioMode::Output);
+            self.pin_mode((i, GpioBank::Bank1), GpioMode::Output);
         }
     }
 
-    fn pin_mode(&mut self, pin: u8, bank: Self::Bank, mode: GpioMode) {
+    fn pin_mode(&mut self, (pin, bank): GpioPin, mode: GpioMode) {
         match mode {
             GpioMode::Input => {
                 wbit(bank as u32 + GPIO_OE, pin as u32, true);
@@ -51,7 +49,7 @@ impl GpioRegister for Register {
         }
     }
 
-    fn write(&mut self, pin: u8, bank: Self::Bank, value: bool) {
+    fn write(&mut self, (pin, bank): GpioPin, value: bool) {
         if value {
             wbit(bank as u32 + GPIO_DATAOUT, pin as u32, true);
         } else {
@@ -59,7 +57,7 @@ impl GpioRegister for Register {
         }
     }
 
-    fn read(&self, pin: u8, bank: Self::Bank) -> bool {
+    fn read(&self, (pin, bank): GpioPin) -> bool {
         rbit(bank as u32 + GPIO_DATAIN, pin as u32)
     }
 }
@@ -71,8 +69,8 @@ impl Default for Register {
 }
 
 pub mod pins {
-    use crate::peripherals::gpio::GpioPin;
     use super::GpioBank;
+    use crate::peripherals::gpio::GpioPin;
 
     pub const GPIO0_0: GpioPin = (0, GpioBank::Bank0);
     pub const GPIO0_1: GpioPin = (1, GpioBank::Bank0);
