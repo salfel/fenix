@@ -1,10 +1,10 @@
 #![no_std]
 
-pub mod boards;
+pub(crate) mod boards;
 pub mod internals;
 pub mod peripherals;
 pub(crate) mod utils;
-pub mod vectors;
+pub(crate) mod vectors;
 
 #[inline(always)]
 pub fn init() {
