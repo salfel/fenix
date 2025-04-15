@@ -11,18 +11,18 @@ pub trait TimerRegister {
     fn current_handler(&self) -> fn();
 }
 
-static mut TIMER_REGISTERS: Register = Register::new();
+static mut TIMER_REGISTER: Register = Register::new();
 
 #[allow(static_mut_refs)]
 pub(crate) fn current_handler() -> fn() {
     unsafe {
-        TIMER_REGISTERS.current_handler()
+        TIMER_REGISTER.current_handler()
     }
 }
 
 #[allow(static_mut_refs)]
 pub fn register_timer(timer: Timer, micros: u32, handler: fn()) {
     unsafe {
-        TIMER_REGISTERS.register(timer, micros, handler);
+        TIMER_REGISTER.register(timer, micros, handler);
     }
 }

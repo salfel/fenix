@@ -23,20 +23,20 @@ pub trait GpioRegister {
     fn read(&self, pin: GpioPin) -> bool;
 }
 
-static REGISTER: Register = Register::new();
+static GPIO_REGISTER: Register = Register::new();
 
 pub(crate) fn init() {
-    REGISTER.init();
+    GPIO_REGISTER.init();
 }
 
 pub fn pin_mode(pin: GpioPin, mode: GpioMode) {
-    REGISTER.pin_mode(pin, mode);
+    GPIO_REGISTER.pin_mode(pin, mode);
 }
 
 pub fn write(pin: GpioPin, value: bool) {
-    REGISTER.write(pin, value);
+    GPIO_REGISTER.write(pin, value);
 }
 
 pub fn read(pin: GpioPin) -> bool {
-    REGISTER.read(pin)
+    GPIO_REGISTER.read(pin)
 }
