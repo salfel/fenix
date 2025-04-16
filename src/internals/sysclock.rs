@@ -1,4 +1,4 @@
-use crate::utils::nop;
+use crate::{tasks::executing, utils::nop};
 
 use super::timer::{register_timer, Timer};
 
@@ -22,7 +22,9 @@ impl Sysclock {
 
         unsafe {
             (*sysclock).ticks += 1;
-            should_switch = true;
+            if executing() {
+                should_switch = true;
+            }
         }
     }
 }
