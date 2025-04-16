@@ -3,14 +3,13 @@
 .global should_switch
 
 switch_context:
-    mov r1, sp
+    str sp, temp_sp
     mov sp, r0
-
-    push {{r1, lr}}
 
     blx r1
 
-    pop {{r1, lr}}
+    ldr sp, temp_sp
+
     bx lr
 
 store_context:
@@ -33,9 +32,12 @@ store_context:
     mov r0, sp
     ldr r1, temp_pc
 
+    ldr sp, temp_sp
+
     b save_context
 
 restore_context:
+    str sp, temp_sp
     mov sp, r0
 
     str r1, temp_pc
@@ -46,6 +48,8 @@ restore_context:
     pop {{r0-r12, lr}}
 
     ldr pc, temp_pc
+
+temp_sp: .word 0
 
 temp_spsr: .word 0
 temp_pc: .word 0

@@ -7,7 +7,7 @@ global_asm!(include_str!("tasks.asm"));
 
 static mut TASK_MANAGER: TaskManager = TaskManager::new();
 
-struct TaskCreationError;
+pub struct TaskCreationError;
 
 struct TaskManager {
     tasks: [Option<Task>; MAX_TASKS],
@@ -16,17 +16,8 @@ struct TaskManager {
 
 impl TaskManager {
     const fn new() -> Self {
-        let mut tasks = [const { None }; MAX_TASKS];
-        tasks[0] = Some(Task {
-            stack: [0; TASK_STACK_SIZE],
-            sp: 0,
-            pc: 0,
-            priority: 0,
-            state: TaskState::Ready,
-        });
-
         TaskManager {
-            tasks,
+            tasks: [const { None }; MAX_TASKS],
             current_task: 0,
         }
     }
@@ -45,53 +36,110 @@ impl TaskManager {
         self.task(self.current_task)
     }
 
-    fn create_task(&mut self, new_task: Task) -> Result<(), TaskCreationError> {
-        for task in self.tasks.iter_mut() {
+    fn create_task(&mut self, entry_point: fn(), priority: u8) -> Result<(), TaskCreationError> {
+        for (i, task) in self.tasks.iter_mut().enumerate() {
             if task.is_none() {
+                let stack = [0; TASK_STACK_SIZE];
+
+                let new_task = Task {
+                    id: i as u32,
+                    sp: &stack as *const u8 as usize + TASK_STACK_SIZE,
+                    pc: entry_point as usize,
+                    priority,
+                    state: TaskState::Ready,
+                    stack,
+                };
+
                 *task = Some(new_task);
-                return Ok(());
             }
         }
 
         Err(TaskCreationError)
     }
 
-    fn save_context(&mut self, sp: u32, pc: u32) {
+    fn cycle(&mut self) {
+        let mut highest_priority = None;
+
+        self.tasks.iter().for_each(|task| {
+            if let Some(task) = task {
+                if !task.state.executable() {
+                    return;
+                }
+
+                match highest_priority {
+                    None => highest_priority = Some((task.id, task.priority)),
+                    Some((_, priority)) => {
+                        let var_name = priority < task.priority;
+                        if var_name {
+                            highest_priority = Some((task.id, task.priority));
+                        }
+                    }
+                }
+            }
+        });
+
+        let task_id = highest_priority.unwrap().0;
+        self.current_task = task_id as usize;
+        let task = self.current().unwrap();
+
+        match task.state {
+            TaskState::Ready => {
+                task.state = TaskState::Running;
+                unsafe {
+                    switch_context(task.sp, task.pc);
+                }
+            }
+            TaskState::Stored => {
+                task.state = TaskState::Running;
+                unsafe {
+                    restore_context(task.sp, task.pc);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn save_context(&mut self, sp: usize, pc: usize) {
         let task = self.current();
         if let Some(task) = task {
             task.sp = sp;
             task.pc = pc;
+            task.state = TaskState::Stored;
         }
 
-        self.restore_context();
-    }
-
-    fn restore_context(&mut self) {
-        let task = &mut self.tasks[self.current_task];
-        if let Some(task) = task {
-            unsafe {
-                restore_context(task.sp, task.pc);
-            }
-        }
+        kernel_loop();
     }
 }
 
 struct Task {
-    stack: [u32; TASK_STACK_SIZE],
-    sp: u32,
-    pc: u32,
+    id: u32,
+    sp: usize,
+    pc: usize,
     priority: u8,
+    stack: [u8; TASK_STACK_SIZE],
     state: TaskState,
 }
 
 enum TaskState {
     Ready,
+    Stored,
     Running,
     Blocked,
 }
 
+impl TaskState {
+    fn executable(&self) -> bool {
+        match self {
+            TaskState::Ready => true,
+            TaskState::Stored => true,
+            TaskState::Running => false,
+            TaskState::Blocked => false,
+        }
+    }
+}
+
 #[no_mangle]
-fn save_context(sp: u32, pc: u32) {
+fn save_context(sp: usize, pc: usize) {
     let task_manager = &raw mut TASK_MANAGER;
 
     unsafe {
@@ -99,6 +147,23 @@ fn save_context(sp: u32, pc: u32) {
     }
 }
 
+pub fn kernel_loop() -> ! {
+    let task_manager = &raw mut TASK_MANAGER;
+
+    loop {
+        unsafe {
+            (*task_manager).cycle();
+        }
+    }
+}
+
+pub fn create_task(entry_point: fn(), priority: u8) -> Result<(), TaskCreationError> {
+    let task_manager = &raw mut TASK_MANAGER;
+
+    unsafe { (*task_manager).create_task(entry_point, priority) }
+}
+
 extern "C" {
-    fn restore_context(sp: u32, pc: u32);
+    fn switch_context(sp: usize, pc: usize);
+    fn restore_context(sp: usize, pc: usize);
 }
