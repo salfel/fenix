@@ -65,22 +65,20 @@ impl TaskManager {
     fn cycle(&mut self) {
         let mut highest_priority = None;
 
-        self.tasks.iter().for_each(|task| {
-            if let Some(task) = task {
-                if !task.state.executable() {
-                    return;
-                }
+        for task in self.tasks.iter().flatten() {
+            if !task.state.executable() {
+                continue;
+            }
 
-                match highest_priority {
-                    None => highest_priority = Some((task.id, task.priority)),
-                    Some((_, priority)) => {
-                        if priority < task.priority {
-                            highest_priority = Some((task.id, task.priority));
-                        }
+            match highest_priority {
+                None => highest_priority = Some((task.id, task.priority)),
+                Some((_, priority)) => {
+                    if task.priority < priority {
+                        highest_priority = Some((task.id, task.priority));
                     }
                 }
             }
-        });
+        }
 
         let task_id = match highest_priority {
             Some((id, _)) => id,
