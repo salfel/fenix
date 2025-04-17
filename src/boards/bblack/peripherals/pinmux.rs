@@ -1,20 +1,14 @@
 use crate::{peripherals::gpio::GpioPin, utils::wreg};
 
-use super::gpio::{
-    pins::{
-        GPIO0_23, GPIO0_26, GPIO0_27, GPIO1_12, GPIO1_13, GPIO1_15, GPIO1_2, GPIO1_24, GPIO1_3,
-        GPIO1_4, GPIO1_5, GPIO1_6, GPIO1_7, GPIO3_13,
-    },
-    GpioBank,
-};
+use super::gpio::pins::*;
 
 const CONTROL_MODULE_BASE: u32 = 0x44E10000;
 
-pub fn mux_pin(pin: Pin, mode: u8, input: bool, pull_resistor: PullResistor) {
+pub fn mux_pin(pin: Pin, mode: u32, input: bool, pull_resistor: PullResistor) {
     let address = CONTROL_MODULE_BASE + pin.offset;
     wreg(
         address,
-        mode as u32 & 0x7 | pull_resistor.to_mask() << 3 | (input as u32) << 5,
+        mode | (pull_resistor.to_mask() << 3) | ((input as u32) << 5),
     );
 }
 
@@ -51,7 +45,7 @@ impl PullResistor {
     }
 }
 
-const GPMC_AD0: Pin = Pin {
+pub const GPMC_AD0: Pin = Pin {
     offset: 0x800,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -60,9 +54,9 @@ const GPMC_AD0: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((0, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_0),
 };
-const GPMC_AD1: Pin = Pin {
+pub const GPMC_AD1: Pin = Pin {
     offset: 0x804,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -71,9 +65,9 @@ const GPMC_AD1: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((1, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_1),
 };
-const GPMC_AD2: Pin = Pin {
+pub const GPMC_AD2: Pin = Pin {
     offset: 0x808,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -82,9 +76,9 @@ const GPMC_AD2: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((2, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_2),
 };
-const GPMC_AD3: Pin = Pin {
+pub const GPMC_AD3: Pin = Pin {
     offset: 0x80C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -93,9 +87,9 @@ const GPMC_AD3: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((3, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_3),
 };
-const GPMC_AD4: Pin = Pin {
+pub const GPMC_AD4: Pin = Pin {
     offset: 0x810,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -104,9 +98,9 @@ const GPMC_AD4: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((4, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_4),
 };
-const GPMC_AD5: Pin = Pin {
+pub const GPMC_AD5: Pin = Pin {
     offset: 0x814,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -115,9 +109,9 @@ const GPMC_AD5: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((5, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_5),
 };
-const GPMC_AD6: Pin = Pin {
+pub const GPMC_AD6: Pin = Pin {
     offset: 0x818,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -126,9 +120,9 @@ const GPMC_AD6: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((6, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_6),
 };
-const GPMC_AD7: Pin = Pin {
+pub const GPMC_AD7: Pin = Pin {
     offset: 0x81C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -137,9 +131,9 @@ const GPMC_AD7: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((7, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_7),
 };
-const GPMC_AD8: Pin = Pin {
+pub const GPMC_AD8: Pin = Pin {
     offset: 0x820,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -148,9 +142,9 @@ const GPMC_AD8: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((22, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_22),
 };
-const GPMC_AD9: Pin = Pin {
+pub const GPMC_AD9: Pin = Pin {
     offset: 0x824,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -159,9 +153,9 @@ const GPMC_AD9: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((23, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_23),
 };
-const GPMC_AD10: Pin = Pin {
+pub const GPMC_AD10: Pin = Pin {
     offset: 0x828,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -170,9 +164,9 @@ const GPMC_AD10: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((26, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_26),
 };
-const GPMC_AD11: Pin = Pin {
+pub const GPMC_AD11: Pin = Pin {
     offset: 0x82C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -181,9 +175,9 @@ const GPMC_AD11: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((27, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_27),
 };
-const GPMC_AD12: Pin = Pin {
+pub const GPMC_AD12: Pin = Pin {
     offset: 0x830,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -192,9 +186,9 @@ const GPMC_AD12: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((12, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_12),
 };
-const GPMC_AD13: Pin = Pin {
+pub const GPMC_AD13: Pin = Pin {
     offset: 0x834,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -203,9 +197,9 @@ const GPMC_AD13: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((13, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_13),
 };
-const GPMC_AD14: Pin = Pin {
+pub const GPMC_AD14: Pin = Pin {
     offset: 0x838,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -214,9 +208,9 @@ const GPMC_AD14: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((14, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_14),
 };
-const GPMC_AD15: Pin = Pin {
+pub const GPMC_AD15: Pin = Pin {
     offset: 0x83C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -225,9 +219,9 @@ const GPMC_AD15: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((15, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_15),
 };
-const GPMC_A0: Pin = Pin {
+pub const GPMC_A0: Pin = Pin {
     offset: 0x840,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -236,9 +230,9 @@ const GPMC_A0: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((16, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_16),
 };
-const GPMC_A1: Pin = Pin {
+pub const GPMC_A1: Pin = Pin {
     offset: 0x844,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -247,9 +241,9 @@ const GPMC_A1: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((17, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_17),
 };
-const GPMC_A2: Pin = Pin {
+pub const GPMC_A2: Pin = Pin {
     offset: 0x848,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -258,9 +252,9 @@ const GPMC_A2: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((18, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_18),
 };
-const GPMC_A3: Pin = Pin {
+pub const GPMC_A3: Pin = Pin {
     offset: 0x84C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -269,9 +263,9 @@ const GPMC_A3: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((19, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_19),
 };
-const GPMC_A4: Pin = Pin {
+pub const GPMC_A4: Pin = Pin {
     offset: 0x850,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -280,9 +274,9 @@ const GPMC_A4: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((20, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_20),
 };
-const GPMC_A5: Pin = Pin {
+pub const GPMC_A5: Pin = Pin {
     offset: 0x854,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -291,9 +285,9 @@ const GPMC_A5: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((21, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_21),
 };
-const GPMC_A6: Pin = Pin {
+pub const GPMC_A6: Pin = Pin {
     offset: 0x858,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -302,9 +296,9 @@ const GPMC_A6: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((22, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_22),
 };
-const GPMC_A7: Pin = Pin {
+pub const GPMC_A7: Pin = Pin {
     offset: 0x85C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -313,9 +307,9 @@ const GPMC_A7: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((23, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_23),
 };
-const GPMC_A8: Pin = Pin {
+pub const GPMC_A8: Pin = Pin {
     offset: 0x860,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -324,9 +318,9 @@ const GPMC_A8: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((24, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_24),
 };
-const GPMC_A9: Pin = Pin {
+pub const GPMC_A9: Pin = Pin {
     offset: 0x864,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -335,9 +329,9 @@ const GPMC_A9: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((25, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_25),
 };
-const GPMC_A10: Pin = Pin {
+pub const GPMC_A10: Pin = Pin {
     offset: 0x868,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -346,9 +340,9 @@ const GPMC_A10: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((26, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_26),
 };
-const GPMC_A11: Pin = Pin {
+pub const GPMC_A11: Pin = Pin {
     offset: 0x86C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -357,9 +351,9 @@ const GPMC_A11: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((27, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_27),
 };
-const GPMC_WAIT0: Pin = Pin {
+pub const GPMC_WAIT0: Pin = Pin {
     offset: 0x870,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -368,9 +362,9 @@ const GPMC_WAIT0: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((30, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_30),
 };
-const GPMC_WPN: Pin = Pin {
+pub const GPMC_WPN: Pin = Pin {
     offset: 0x874,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -379,9 +373,9 @@ const GPMC_WPN: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((31, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_31),
 };
-const GPMC_BEN1: Pin = Pin {
+pub const GPMC_BEN1: Pin = Pin {
     offset: 0x878,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -390,9 +384,9 @@ const GPMC_BEN1: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((28, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_28),
 };
-const GPMC_CSN0: Pin = Pin {
+pub const GPMC_CSN0: Pin = Pin {
     offset: 0x87C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -401,9 +395,9 @@ const GPMC_CSN0: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((29, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_29),
 };
-const GPMC_CSN1: Pin = Pin {
+pub const GPMC_CSN1: Pin = Pin {
     offset: 0x880,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -412,9 +406,9 @@ const GPMC_CSN1: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((30, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_30),
 };
-const GPMC_CSN2: Pin = Pin {
+pub const GPMC_CSN2: Pin = Pin {
     offset: 0x884,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -423,9 +417,9 @@ const GPMC_CSN2: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((31, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_31),
 };
-const GPMC_CSN3: Pin = Pin {
+pub const GPMC_CSN3: Pin = Pin {
     offset: 0x888,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -434,9 +428,9 @@ const GPMC_CSN3: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((0, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_0),
 };
-const GPMC_CLK: Pin = Pin {
+pub const GPMC_CLK: Pin = Pin {
     offset: 0x88C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -445,9 +439,9 @@ const GPMC_CLK: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((1, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_1),
 };
-const GPMC_ADVN_ALE: Pin = Pin {
+pub const GPMC_ADVN_ALE: Pin = Pin {
     offset: 0x890,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -456,9 +450,9 @@ const GPMC_ADVN_ALE: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((2, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_2),
 };
-const GPMC_OEN_REN: Pin = Pin {
+pub const GPMC_OEN_REN: Pin = Pin {
     offset: 0x894,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -467,9 +461,9 @@ const GPMC_OEN_REN: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((3, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_3),
 };
-const GPMC_WEN: Pin = Pin {
+pub const GPMC_WEN: Pin = Pin {
     offset: 0x898,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -478,9 +472,9 @@ const GPMC_WEN: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((4, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_4),
 };
-const GPMC_BEN0_CLE: Pin = Pin {
+pub const GPMC_BEN0_CLE: Pin = Pin {
     offset: 0x89C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -489,9 +483,9 @@ const GPMC_BEN0_CLE: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((5, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_5),
 };
-const LCD_DATA0: Pin = Pin {
+pub const LCD_DATA0: Pin = Pin {
     offset: 0x8A0,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -500,9 +494,9 @@ const LCD_DATA0: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((6, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_6),
 };
-const LCD_DATA1: Pin = Pin {
+pub const LCD_DATA1: Pin = Pin {
     offset: 0x8A4,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -511,9 +505,9 @@ const LCD_DATA1: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((7, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_7),
 };
-const LCD_DATA2: Pin = Pin {
+pub const LCD_DATA2: Pin = Pin {
     offset: 0x8A8,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -522,9 +516,9 @@ const LCD_DATA2: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((8, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_8),
 };
-const LCD_DATA3: Pin = Pin {
+pub const LCD_DATA3: Pin = Pin {
     offset: 0x8AC,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -533,9 +527,9 @@ const LCD_DATA3: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((9, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_9),
 };
-const LCD_DATA4: Pin = Pin {
+pub const LCD_DATA4: Pin = Pin {
     offset: 0x8B0,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -544,9 +538,9 @@ const LCD_DATA4: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((10, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_10),
 };
-const LCD_DATA5: Pin = Pin {
+pub const LCD_DATA5: Pin = Pin {
     offset: 0x8B4,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -555,9 +549,9 @@ const LCD_DATA5: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((11, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_11),
 };
-const LCD_DATA6: Pin = Pin {
+pub const LCD_DATA6: Pin = Pin {
     offset: 0x8B8,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -566,9 +560,9 @@ const LCD_DATA6: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((12, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_12),
 };
-const LCD_DATA7: Pin = Pin {
+pub const LCD_DATA7: Pin = Pin {
     offset: 0x8BC,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -577,9 +571,9 @@ const LCD_DATA7: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((13, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_13),
 };
-const LCD_DATA8: Pin = Pin {
+pub const LCD_DATA8: Pin = Pin {
     offset: 0x8C0,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -588,9 +582,9 @@ const LCD_DATA8: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((14, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_14),
 };
-const LCD_DATA9: Pin = Pin {
+pub const LCD_DATA9: Pin = Pin {
     offset: 0x8C4,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -599,9 +593,9 @@ const LCD_DATA9: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((15, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_15),
 };
-const LCD_DATA10: Pin = Pin {
+pub const LCD_DATA10: Pin = Pin {
     offset: 0x8C8,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -610,9 +604,9 @@ const LCD_DATA10: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((16, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_16),
 };
-const LCD_DATA11: Pin = Pin {
+pub const LCD_DATA11: Pin = Pin {
     offset: 0x8CC,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -621,9 +615,9 @@ const LCD_DATA11: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((17, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_17),
 };
-const LCD_DATA12: Pin = Pin {
+pub const LCD_DATA12: Pin = Pin {
     offset: 0x8D0,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -632,9 +626,9 @@ const LCD_DATA12: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((8, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_8),
 };
-const LCD_DATA13: Pin = Pin {
+pub const LCD_DATA13: Pin = Pin {
     offset: 0x8D4,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -643,9 +637,9 @@ const LCD_DATA13: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((9, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_9),
 };
-const LCD_DATA14: Pin = Pin {
+pub const LCD_DATA14: Pin = Pin {
     offset: 0x8D8,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -654,9 +648,9 @@ const LCD_DATA14: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((10, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_10),
 };
-const LCD_DATA15: Pin = Pin {
+pub const LCD_DATA15: Pin = Pin {
     offset: 0x8DC,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -665,9 +659,9 @@ const LCD_DATA15: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((11, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_11),
 };
-const LCD_VSYNC: Pin = Pin {
+pub const LCD_VSYNC: Pin = Pin {
     offset: 0x8E0,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -676,9 +670,9 @@ const LCD_VSYNC: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((22, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_22),
 };
-const LCD_HSYNC: Pin = Pin {
+pub const LCD_HSYNC: Pin = Pin {
     offset: 0x8E4,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -687,9 +681,9 @@ const LCD_HSYNC: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((23, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_23),
 };
-const LCD_PCLK: Pin = Pin {
+pub const LCD_PCLK: Pin = Pin {
     offset: 0x8E8,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -698,9 +692,9 @@ const LCD_PCLK: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((24, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_24),
 };
-const LCD_AC_BIAS_EN: Pin = Pin {
+pub const LCD_AC_BIAS_EN: Pin = Pin {
     offset: 0x8EC,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -709,9 +703,9 @@ const LCD_AC_BIAS_EN: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((25, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_25),
 };
-const MMC0_DAT3: Pin = Pin {
+pub const MMC0_DAT3: Pin = Pin {
     offset: 0x8F0,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -720,9 +714,9 @@ const MMC0_DAT3: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((26, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_26),
 };
-const MMC0_DAT2: Pin = Pin {
+pub const MMC0_DAT2: Pin = Pin {
     offset: 0x8F4,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -731,9 +725,9 @@ const MMC0_DAT2: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((27, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_27),
 };
-const MMC0_DAT1: Pin = Pin {
+pub const MMC0_DAT1: Pin = Pin {
     offset: 0x8F8,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -742,9 +736,9 @@ const MMC0_DAT1: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((28, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_28),
 };
-const MMC0_DAT0: Pin = Pin {
+pub const MMC0_DAT0: Pin = Pin {
     offset: 0x8FC,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -753,9 +747,9 @@ const MMC0_DAT0: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((29, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_29),
 };
-const MMC0_CLK: Pin = Pin {
+pub const MMC0_CLK: Pin = Pin {
     offset: 0x900,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -764,9 +758,9 @@ const MMC0_CLK: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((30, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_30),
 };
-const MMC0_CMD: Pin = Pin {
+pub const MMC0_CMD: Pin = Pin {
     offset: 0x904,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -775,9 +769,9 @@ const MMC0_CMD: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((31, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_31),
 };
-const MII1_COL: Pin = Pin {
+pub const MII1_COL: Pin = Pin {
     offset: 0x908,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -786,9 +780,9 @@ const MII1_COL: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((0, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_0),
 };
-const MII1_CRS: Pin = Pin {
+pub const MII1_CRS: Pin = Pin {
     offset: 0x90C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -797,9 +791,9 @@ const MII1_CRS: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((1, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_1),
 };
-const MII1_RX_ER: Pin = Pin {
+pub const MII1_RX_ER: Pin = Pin {
     offset: 0x910,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -808,9 +802,9 @@ const MII1_RX_ER: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((2, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_2),
 };
-const MII1_TX_EN: Pin = Pin {
+pub const MII1_TX_EN: Pin = Pin {
     offset: 0x914,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -819,9 +813,9 @@ const MII1_TX_EN: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((3, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_3),
 };
-const MII1_RX_DV: Pin = Pin {
+pub const MII1_RX_DV: Pin = Pin {
     offset: 0x918,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -830,9 +824,9 @@ const MII1_RX_DV: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((4, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_4),
 };
-const MII1_TXD3: Pin = Pin {
+pub const MII1_TXD3: Pin = Pin {
     offset: 0x91C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -841,9 +835,9 @@ const MII1_TXD3: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((0, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_0),
 };
-const MII1_TXD2: Pin = Pin {
+pub const MII1_TXD2: Pin = Pin {
     offset: 0x920,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -852,9 +846,9 @@ const MII1_TXD2: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((17, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_17),
 };
-const MII1_TXD1: Pin = Pin {
+pub const MII1_TXD1: Pin = Pin {
     offset: 0x924,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -863,9 +857,9 @@ const MII1_TXD1: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((21, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_21),
 };
-const MII1_TXD0: Pin = Pin {
+pub const MII1_TXD0: Pin = Pin {
     offset: 0x928,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -874,9 +868,9 @@ const MII1_TXD0: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((28, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_28),
 };
-const MII1_TX_CLK: Pin = Pin {
+pub const MII1_TX_CLK: Pin = Pin {
     offset: 0x92C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -885,9 +879,9 @@ const MII1_TX_CLK: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((9, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_9),
 };
-const MII1_RX_CLK: Pin = Pin {
+pub const MII1_RX_CLK: Pin = Pin {
     offset: 0x930,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -896,9 +890,9 @@ const MII1_RX_CLK: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((10, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_10),
 };
-const MII1_RXD3: Pin = Pin {
+pub const MII1_RXD3: Pin = Pin {
     offset: 0x934,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -907,9 +901,9 @@ const MII1_RXD3: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((18, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_18),
 };
-const MII1_RXD2: Pin = Pin {
+pub const MII1_RXD2: Pin = Pin {
     offset: 0x938,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -918,9 +912,9 @@ const MII1_RXD2: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((19, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_19),
 };
-const MII1_RXD1: Pin = Pin {
+pub const MII1_RXD1: Pin = Pin {
     offset: 0x93C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -929,9 +923,9 @@ const MII1_RXD1: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((20, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_20),
 };
-const MII1_RXD0: Pin = Pin {
+pub const MII1_RXD0: Pin = Pin {
     offset: 0x940,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -940,9 +934,9 @@ const MII1_RXD0: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((21, GpioBank::Bank2)),
+    pin7: PinType::GpioPin(GPIO2_21),
 };
-const RMII1_REF_CLK: Pin = Pin {
+pub const RMII1_REF_CLK: Pin = Pin {
     offset: 0x944,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -951,9 +945,9 @@ const RMII1_REF_CLK: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((29, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_29),
 };
-const MDIO_DATA: Pin = Pin {
+pub const MDIO_DATA: Pin = Pin {
     offset: 0x948,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -962,9 +956,9 @@ const MDIO_DATA: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((0, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_0),
 };
-const MDIO_CLK: Pin = Pin {
+pub const MDIO_CLK: Pin = Pin {
     offset: 0x94C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -973,9 +967,9 @@ const MDIO_CLK: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((1, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_1),
 };
-const SPI0_SCLK: Pin = Pin {
+pub const SPI0_SCLK: Pin = Pin {
     offset: 0x950,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -984,9 +978,9 @@ const SPI0_SCLK: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((2, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_2),
 };
-const SPI0_D0: Pin = Pin {
+pub const SPI0_D0: Pin = Pin {
     offset: 0x954,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -995,9 +989,9 @@ const SPI0_D0: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((3, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_3),
 };
-const SPI0_D1: Pin = Pin {
+pub const SPI0_D1: Pin = Pin {
     offset: 0x958,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1006,9 +1000,9 @@ const SPI0_D1: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((4, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_4),
 };
-const SPI0_CS0: Pin = Pin {
+pub const SPI0_CS0: Pin = Pin {
     offset: 0x95C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1017,9 +1011,9 @@ const SPI0_CS0: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((5, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_5),
 };
-const SPI0_CS1: Pin = Pin {
+pub const SPI0_CS1: Pin = Pin {
     offset: 0x960,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1028,9 +1022,9 @@ const SPI0_CS1: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((6, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_6),
 };
-const ECAP0_IN_PWM0_OUT: Pin = Pin {
+pub const ECAP0_IN_PWM0_OUT: Pin = Pin {
     offset: 0x964,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1039,9 +1033,9 @@ const ECAP0_IN_PWM0_OUT: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((7, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_7),
 };
-const UART0_CTSN: Pin = Pin {
+pub const UART0_CTSN: Pin = Pin {
     offset: 0x968,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1050,9 +1044,9 @@ const UART0_CTSN: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((8, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_8),
 };
-const UART0_RTSN: Pin = Pin {
+pub const UART0_RTSN: Pin = Pin {
     offset: 0x96C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1061,9 +1055,9 @@ const UART0_RTSN: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((9, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_9),
 };
-const UART0_RXD: Pin = Pin {
+pub const UART0_RXD: Pin = Pin {
     offset: 0x970,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1072,9 +1066,9 @@ const UART0_RXD: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((10, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_10),
 };
-const UART0_TXD: Pin = Pin {
+pub const UART0_TXD: Pin = Pin {
     offset: 0x974,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1083,9 +1077,9 @@ const UART0_TXD: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((11, GpioBank::Bank1)),
+    pin7: PinType::GpioPin(GPIO1_11),
 };
-const UART1_CTSN: Pin = Pin {
+pub const UART1_CTSN: Pin = Pin {
     offset: 0x978,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1094,9 +1088,9 @@ const UART1_CTSN: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((12, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_12),
 };
-const UART1_RTSN: Pin = Pin {
+pub const UART1_RTSN: Pin = Pin {
     offset: 0x97C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1105,9 +1099,9 @@ const UART1_RTSN: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((13, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_13),
 };
-const UART1_RXD: Pin = Pin {
+pub const UART1_RXD: Pin = Pin {
     offset: 0x980,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1116,9 +1110,9 @@ const UART1_RXD: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((14, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_14),
 };
-const UART1_TXD: Pin = Pin {
+pub const UART1_TXD: Pin = Pin {
     offset: 0x984,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1127,9 +1121,9 @@ const UART1_TXD: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((15, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_15),
 };
-const I2C0_SDA: Pin = Pin {
+pub const I2C0_SDA: Pin = Pin {
     offset: 0x988,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1138,9 +1132,9 @@ const I2C0_SDA: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((5, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_5),
 };
-const I2C0_SCL: Pin = Pin {
+pub const I2C0_SCL: Pin = Pin {
     offset: 0x98C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1149,9 +1143,9 @@ const I2C0_SCL: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((6, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_6),
 };
-const MCASP0_ACLKX: Pin = Pin {
+pub const MCASP0_ACLKX: Pin = Pin {
     offset: 0x990,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1160,9 +1154,9 @@ const MCASP0_ACLKX: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((14, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_14),
 };
-const MCASP0_FSX: Pin = Pin {
+pub const MCASP0_FSX: Pin = Pin {
     offset: 0x994,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1171,9 +1165,9 @@ const MCASP0_FSX: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((15, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_15),
 };
-const MCASP0_AXR0: Pin = Pin {
+pub const MCASP0_AXR0: Pin = Pin {
     offset: 0x998,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1182,9 +1176,9 @@ const MCASP0_AXR0: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((16, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_16),
 };
-const MCASP0_AHCLKR: Pin = Pin {
+pub const MCASP0_AHCLKR: Pin = Pin {
     offset: 0x99C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1193,9 +1187,9 @@ const MCASP0_AHCLKR: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((17, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_17),
 };
-const MCASP0_ACLKR: Pin = Pin {
+pub const MCASP0_ACLKR: Pin = Pin {
     offset: 0x9A0,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1204,9 +1198,9 @@ const MCASP0_ACLKR: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((18, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_18),
 };
-const MCASP0_FSR: Pin = Pin {
+pub const MCASP0_FSR: Pin = Pin {
     offset: 0x9A4,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1215,9 +1209,9 @@ const MCASP0_FSR: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((19, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_19),
 };
-const MCASP0_AXR1: Pin = Pin {
+pub const MCASP0_AXR1: Pin = Pin {
     offset: 0x9A8,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1226,9 +1220,9 @@ const MCASP0_AXR1: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((20, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_20),
 };
-const MCASP0_AHCLKX: Pin = Pin {
+pub const MCASP0_AHCLKX: Pin = Pin {
     offset: 0x9AC,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1237,9 +1231,9 @@ const MCASP0_AHCLKX: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((21, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_21),
 };
-const XDMA_EVENT_INTR0: Pin = Pin {
+pub const XDMA_EVENT_INTR0: Pin = Pin {
     offset: 0x9B0,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1248,9 +1242,9 @@ const XDMA_EVENT_INTR0: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((19, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_19),
 };
-const XDMA_EVENT_INTR1: Pin = Pin {
+pub const XDMA_EVENT_INTR1: Pin = Pin {
     offset: 0x9B4,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1259,9 +1253,9 @@ const XDMA_EVENT_INTR1: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((20, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_20),
 };
-const WARMRSTN: Pin = Pin {
+pub const WARMRSTN: Pin = Pin {
     offset: 0x9B8,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1272,7 +1266,7 @@ const WARMRSTN: Pin = Pin {
     pin6: PinType::None,
     pin7: PinType::None,
 };
-const NNMI: Pin = Pin {
+pub const NNMI: Pin = Pin {
     offset: 0x9C0,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1283,7 +1277,7 @@ const NNMI: Pin = Pin {
     pin6: PinType::None,
     pin7: PinType::None,
 };
-const TMS: Pin = Pin {
+pub const TMS: Pin = Pin {
     offset: 0x9D0,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1294,7 +1288,7 @@ const TMS: Pin = Pin {
     pin6: PinType::None,
     pin7: PinType::None,
 };
-const TDI: Pin = Pin {
+pub const TDI: Pin = Pin {
     offset: 0x9D4,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1305,7 +1299,7 @@ const TDI: Pin = Pin {
     pin6: PinType::None,
     pin7: PinType::None,
 };
-const TDO: Pin = Pin {
+pub const TDO: Pin = Pin {
     offset: 0x9D8,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1316,7 +1310,7 @@ const TDO: Pin = Pin {
     pin6: PinType::None,
     pin7: PinType::None,
 };
-const TCK: Pin = Pin {
+pub const TCK: Pin = Pin {
     offset: 0x9DC,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1327,7 +1321,7 @@ const TCK: Pin = Pin {
     pin6: PinType::None,
     pin7: PinType::None,
 };
-const TRSTN: Pin = Pin {
+pub const TRSTN: Pin = Pin {
     offset: 0x9E0,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1338,7 +1332,7 @@ const TRSTN: Pin = Pin {
     pin6: PinType::None,
     pin7: PinType::None,
 };
-const EMU0: Pin = Pin {
+pub const EMU0: Pin = Pin {
     offset: 0x9E4,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1347,9 +1341,9 @@ const EMU0: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((7, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_7),
 };
-const EMU1: Pin = Pin {
+pub const EMU1: Pin = Pin {
     offset: 0x9E8,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1358,9 +1352,9 @@ const EMU1: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((8, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_8),
 };
-const RTC_PWRONRSTN: Pin = Pin {
+pub const RTC_PWRONRSTN: Pin = Pin {
     offset: 0x9F8,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1371,7 +1365,7 @@ const RTC_PWRONRSTN: Pin = Pin {
     pin6: PinType::None,
     pin7: PinType::None,
 };
-const PMIC_POWER_EN: Pin = Pin {
+pub const PMIC_POWER_EN: Pin = Pin {
     offset: 0x9FC,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1382,7 +1376,7 @@ const PMIC_POWER_EN: Pin = Pin {
     pin6: PinType::None,
     pin7: PinType::None,
 };
-const EXT_WAKEUP: Pin = Pin {
+pub const EXT_WAKEUP: Pin = Pin {
     offset: 0xA00,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1393,7 +1387,7 @@ const EXT_WAKEUP: Pin = Pin {
     pin6: PinType::None,
     pin7: PinType::None,
 };
-const USB0_DRVVBUS: Pin = Pin {
+pub const USB0_DRVVBUS: Pin = Pin {
     offset: 0xA1C,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1402,9 +1396,9 @@ const USB0_DRVVBUS: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((18, GpioBank::Bank0)),
+    pin7: PinType::GpioPin(GPIO0_18),
 };
-const USB1_DRVVBUS: Pin = Pin {
+pub const USB1_DRVVBUS: Pin = Pin {
     offset: 0xA34,
     pin0: PinType::None,
     pin1: PinType::None,
@@ -1413,5 +1407,5 @@ const USB1_DRVVBUS: Pin = Pin {
     pin4: PinType::None,
     pin5: PinType::None,
     pin6: PinType::None,
-    pin7: PinType::GpioPin((13, GpioBank::Bank3)),
+    pin7: PinType::GpioPin(GPIO3_13),
 };
