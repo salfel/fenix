@@ -65,11 +65,7 @@ impl TaskManager {
     fn cycle(&mut self) {
         let mut highest_priority = None;
 
-        for task in self.tasks.iter().flatten() {
-            if !task.state.executable() {
-                continue;
-            }
-
+        for task in self.tasks.iter().flatten().filter(|task| task.state.executable()) {
             match highest_priority {
                 None => highest_priority = Some((task.id, task.priority)),
                 Some((_, priority)) => {
@@ -123,7 +119,7 @@ impl TaskManager {
 
         set_executing(false);
 
-        kernel_loop();
+        self.cycle();
     }
 
     fn yield_context(&mut self, sp: usize, pc: usize, until: u32) {
@@ -136,7 +132,7 @@ impl TaskManager {
 
         set_executing(false);
 
-        kernel_loop();
+        self.cycle();
     }
 }
 
@@ -202,13 +198,11 @@ fn yield_context(sp: usize, pc: usize, until: u32) {
     }
 }
 
-pub fn kernel_loop() -> ! {
+pub fn cycle() {
     let task_manager = &raw mut TASK_MANAGER;
 
-    loop {
-        unsafe {
-            (*task_manager).cycle();
-        }
+    unsafe {
+        (*task_manager).cycle();
     }
 }
 

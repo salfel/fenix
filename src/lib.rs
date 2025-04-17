@@ -1,5 +1,7 @@
 #![no_std]
 
+use tasks::create_task;
+
 pub(crate) mod boards;
 pub mod internals;
 pub mod peripherals;
@@ -13,6 +15,13 @@ pub fn init() {
 
     peripherals::gpio::init();
     internals::sysclock::init();
+
+    let _ = create_task(idle, 255);
+}
+
+#[allow(clippy::empty_loop)]
+fn idle() {
+    loop {}
 }
 
 #[panic_handler]
