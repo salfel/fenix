@@ -1,5 +1,6 @@
 .global switch_context
 .global store_context
+.global yield_task
 .global should_switch
 
 switch_context:
@@ -48,6 +49,21 @@ restore_context:
     pop {{r0-r12, lr}}
 
     ldr pc, temp_pc
+
+yield_task:
+    stmfd sp!, {{r0-r12, lr}}
+
+    mrs r3, cpsr
+    push {{r3}}
+
+    mov r2, r0
+
+    mov r0, sp
+    mov r1, lr
+
+    ldr sp, temp_sp
+
+    b yield_context
 
 temp_sp: .word 0
 

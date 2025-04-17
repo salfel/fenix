@@ -1,5 +1,7 @@
 use core::arch::global_asm;
 
+use crate::internals::sysclock::ticks;
+
 const TASK_STACK_SIZE: usize = 1024;
 const MAX_TASKS: usize = 8;
 
@@ -47,20 +49,13 @@ impl TaskManager {
     }
 
     fn create_task(&mut self, entry_point: fn(), priority: u8) -> Result<(), TaskCreationError> {
-        for (i, task) in self.tasks.iter_mut().enumerate() {
+        for (id, task) in self.tasks.iter_mut().enumerate() {
             if task.is_none() {
-                let stack = [0; TASK_STACK_SIZE];
-
-                let new_task = Task {
-                    id: i as u32,
-                    sp: &stack as *const u8 as usize + TASK_STACK_SIZE,
-                    pc: entry_point as usize,
-                    priority,
-                    state: TaskState::Ready,
-                    stack,
-                };
+                let mut new_task = Task::new(id as u32, entry_point as usize, priority);
+                new_task.setup_stack();
 
                 *task = Some(new_task);
+                break;
             }
         }
 
@@ -79,8 +74,7 @@ impl TaskManager {
                 match highest_priority {
                     None => highest_priority = Some((task.id, task.priority)),
                     Some((_, priority)) => {
-                        let var_name = priority < task.priority;
-                        if var_name {
+                        if priority < task.priority {
                             highest_priority = Some((task.id, task.priority));
                         }
                     }
@@ -111,6 +105,12 @@ impl TaskManager {
                     restore_context(task.sp, task.pc);
                 }
             }
+            TaskState::Blocked(_) => {
+                task.state = TaskState::Running;
+                unsafe {
+                    restore_context(task.sp, task.pc);
+                }
+            }
             _ => {}
         }
     }
@@ -121,6 +121,19 @@ impl TaskManager {
             task.sp = sp;
             task.pc = pc;
             task.state = TaskState::Stored;
+        }
+
+        set_executing(false);
+
+        kernel_loop();
+    }
+
+    fn yield_context(&mut self, sp: usize, pc: usize, until: u32) {
+        let task = self.current();
+        if let Some(task) = task {
+            task.sp = sp;
+            task.pc = pc;
+            task.state = TaskState::Blocked(until);
         }
 
         set_executing(false);
@@ -138,11 +151,28 @@ struct Task {
     state: TaskState,
 }
 
+impl Task {
+    fn new(id: u32, pc: usize, priority: u8) -> Self {
+        Task {
+            id,
+            sp: 0,
+            pc,
+            priority,
+            state: TaskState::Ready,
+            stack: [0; TASK_STACK_SIZE],
+        }
+    }
+
+    fn setup_stack(&mut self) {
+        self.sp = self.stack.as_ptr() as usize + TASK_STACK_SIZE - 4;
+    }
+}
+
 enum TaskState {
     Ready,
     Stored,
     Running,
-    Blocked,
+    Blocked(u32),
 }
 
 impl TaskState {
@@ -151,7 +181,7 @@ impl TaskState {
             TaskState::Ready => true,
             TaskState::Stored => true,
             TaskState::Running => false,
-            TaskState::Blocked => false,
+            TaskState::Blocked(until) => ticks() >= *until,
         }
     }
 }
@@ -162,6 +192,15 @@ fn save_context(sp: usize, pc: usize) {
 
     unsafe {
         (*task_manager).save_context(sp, pc);
+    }
+}
+
+#[no_mangle]
+fn yield_context(sp: usize, pc: usize, until: u32) {
+    let task_manager = &raw mut TASK_MANAGER;
+
+    unsafe {
+        (*task_manager).yield_context(sp, pc, until);
     }
 }
 
@@ -182,6 +221,7 @@ pub fn create_task(entry_point: fn(), priority: u8) -> Result<(), TaskCreationEr
 }
 
 extern "C" {
+    pub fn yield_task(until: u32);
     fn switch_context(sp: usize, pc: usize);
     fn restore_context(sp: usize, pc: usize);
 }

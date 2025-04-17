@@ -1,4 +1,4 @@
-use crate::{tasks::executing, utils::nop};
+use crate::tasks::executing;
 
 use super::timer::{register_timer, Timer};
 
@@ -44,19 +44,13 @@ pub fn ticks() -> u32 {
     unsafe { (*sysclock).ticks() }
 }
 
-pub fn wait(ms: u32) {
-    let current_ticks = ticks();
-
-    loop {
-        if ticks() - current_ticks >= ms {
-            break;
-        }
-
-        // needed to prevent compiler optimizations
-        nop();
+pub fn sleep(ms: u32) {
+    unsafe {
+        yield_task(ticks() + ms);
     }
 }
 
 extern "C" {
+    fn yield_task(until: u32);
     static mut should_switch: bool;
 }
