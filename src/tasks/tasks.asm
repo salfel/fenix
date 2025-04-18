@@ -3,13 +3,16 @@
 .global yield_task
 .global should_switch
 
+.equ SYSTEM_MODE, 0x5F
+.equ SUPERVISOR_MODE, 0x53
+
 switch_context:
-    str sp, temp_sp
+    msr cpsr_c, #SYSTEM_MODE
     mov sp, r0
 
     blx r1
 
-    ldr sp, temp_sp
+    msr cpsr_c, #SUPERVISOR_MODE
 
     bx lr
 
@@ -24,7 +27,7 @@ store_context:
 
     str lr, temp_pc
 
-    msr cpsr_c, #0xD3
+    msr cpsr_c, #SYSTEM_MODE
     push {{r0-r12, lr}}
 
     ldr r0, temp_spsr
@@ -33,12 +36,12 @@ store_context:
     mov r0, sp
     ldr r1, temp_pc
 
-    ldr sp, temp_sp
+    msr cpsr_c, #SUPERVISOR_MODE
 
     b save_context
 
 restore_context:
-    str sp, temp_sp
+    msr cpsr_c, #SYSTEM_MODE
     mov sp, r0
 
     str r1, temp_pc
@@ -61,7 +64,7 @@ yield_task:
     mov r0, sp
     mov r1, lr
 
-    ldr sp, temp_sp
+    msr cpsr_c, #SUPERVISOR_MODE
 
     b yield_context
 
