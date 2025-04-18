@@ -17,7 +17,7 @@ pub fn init() {
     peripherals::gpio::init();
     internals::sysclock::init();
 
-    let _ = create_task(idle, 255);
+    create_task(idle, 255).unwrap();
 }
 
 fn idle() {

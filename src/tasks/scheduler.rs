@@ -4,6 +4,7 @@ const MAX_TASKS: usize = 8;
 
 static mut TASK_MANAGER: TaskManager = TaskManager::new();
 
+#[derive(Debug)]
 pub struct TaskCreationError;
 
 struct TaskManager {
