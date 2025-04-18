@@ -52,28 +52,21 @@ impl TaskManager {
     }
 
     fn cycle(&mut self) {
-        let mut highest_priority = None;
-
-        for task in self
+        let task_id = self
             .tasks
             .iter()
             .flatten()
             .filter(|task| task.state.executable())
-        {
-            match highest_priority {
-                None => highest_priority = Some((task.id, task.priority)),
-                Some((_, priority)) => {
-                    if task.priority < priority {
-                        highest_priority = Some((task.id, task.priority));
-                    }
+            .map(|task| (task.id, task.priority))
+            .reduce(|previous, current| {
+                if previous.1 < current.1 {
+                    previous
+                } else {
+                    current
                 }
-            }
-        }
-
-        let task_id = match highest_priority {
-            Some((id, _)) => id,
-            None => return,
-        };
+            })
+            .unwrap()
+            .0;
 
         self.current_task = task_id as usize;
         let task = self.current().unwrap();
