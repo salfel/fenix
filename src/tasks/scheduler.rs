@@ -45,7 +45,7 @@ impl TaskManager {
                     task.setup_stack();
                 }
 
-                break;
+                return Ok(());
             }
         }
 
