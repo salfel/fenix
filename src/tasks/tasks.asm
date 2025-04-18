@@ -1,7 +1,6 @@
 .global switch_context
 .global store_context
 .global yield_task
-.global should_switch
 
 .equ SYSTEM_MODE, 0x5F
 .equ SUPERVISOR_MODE, 0x53
@@ -19,9 +18,6 @@ switch_context:
 store_context:
     mrs r0, spsr
     str r0, temp_spsr
-
-    mov r0, #0
-    str r0, should_switch
 
     pop {{r0-r12, lr}}
 
@@ -72,5 +68,3 @@ temp_sp: .word 0
 
 temp_spsr: .word 0
 temp_pc: .word 0
-
-should_switch: .word 0

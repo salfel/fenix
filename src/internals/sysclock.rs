@@ -1,5 +1,3 @@
-use crate::tasks::executing;
-
 use super::timer::{register_timer, Timer};
 
 static mut SYSCLOCK: Sysclock = Sysclock::new();
@@ -22,9 +20,6 @@ impl Sysclock {
 
         unsafe {
             (*sysclock).ticks += 1;
-            if executing() {
-                should_switch = true;
-            }
         }
     }
 }
@@ -52,5 +47,4 @@ pub fn sleep(ms: u32) {
 
 extern "C" {
     fn yield_task(until: u32);
-    static mut should_switch: bool;
 }

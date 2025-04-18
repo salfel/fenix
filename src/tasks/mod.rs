@@ -9,16 +9,6 @@ global_asm!(include_str!("tasks.asm"));
 
 static mut TASK_MANAGER: TaskManager = TaskManager::new();
 
-pub static mut EXECUTING: bool = false;
-
-pub fn executing() -> bool {
-    unsafe { EXECUTING }
-}
-
-pub fn set_executing(value: bool) {
-    unsafe { EXECUTING = value }
-}
-
 pub struct TaskCreationError;
 
 struct TaskManager {
@@ -84,8 +74,6 @@ impl TaskManager {
         self.current_task = task_id as usize;
         let task = self.current().unwrap();
 
-        set_executing(true);
-
         match task.state {
             TaskState::Ready => {
                 task.state = TaskState::Running;
@@ -117,7 +105,6 @@ impl TaskManager {
             task.state = TaskState::Stored;
         }
 
-        set_executing(false);
 
         self.cycle();
     }
@@ -129,8 +116,6 @@ impl TaskManager {
             task.pc = pc;
             task.state = TaskState::Blocked(until);
         }
-
-        set_executing(false);
 
         self.cycle();
     }

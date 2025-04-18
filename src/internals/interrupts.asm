@@ -1,5 +1,3 @@
-.extern should_switch
-
 handle_interrupt:
     sub lr, lr, #4
     stmfd sp!, {{r0-r12, lr}}
@@ -13,9 +11,8 @@ handle_interrupt:
 
     pop {{r11}}
     msr spsr, r11 
-
-    ldr r0, should_switch
-    cmp r0, #1
+    and r11, r11, #0x1F
+    cmp r11, #0x1F
     beq store_context
 
     ldmfd sp!, {{r0-r12, pc}}^
