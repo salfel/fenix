@@ -5,7 +5,7 @@ use crate::internals::sysclock::ticks;
 const TASK_STACK_SIZE: usize = 1024;
 const MAX_TASKS: usize = 8;
 
-global_asm!(include_str!("tasks.asm"));
+global_asm!(include_str!("tasks.S"));
 
 static mut TASK_MANAGER: TaskManager = TaskManager::new();
 

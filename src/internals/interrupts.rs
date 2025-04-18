@@ -5,7 +5,7 @@ use crate::boards::bblack::internals::interrupts::{self, Register};
 
 pub use interrupts::Interrupt;
 
-global_asm!(include_str!("interrupts.asm"));
+global_asm!(include_str!("interrupts.S"));
 
 pub(crate) trait InterruptRegister {
     fn enable(&self, interrupt: Interrupt, priority: u8);
