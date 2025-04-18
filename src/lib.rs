@@ -1,6 +1,7 @@
 #![no_std]
 
 use tasks::create_task;
+use utils::nop;
 
 pub(crate) mod boards;
 pub mod internals;
@@ -19,9 +20,10 @@ pub fn init() {
     let _ = create_task(idle, 255);
 }
 
-#[allow(clippy::empty_loop)]
 fn idle() {
-    loop {}
+    loop {
+        nop();
+    }
 }
 
 #[panic_handler]

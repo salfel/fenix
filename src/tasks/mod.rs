@@ -41,10 +41,14 @@ impl TaskManager {
     fn create_task(&mut self, entry_point: fn(), priority: u8) -> Result<(), TaskCreationError> {
         for (id, task) in self.tasks.iter_mut().enumerate() {
             if task.is_none() {
-                let mut new_task = Task::new(id as u32, entry_point as usize, priority);
-                new_task.setup_stack();
+                let new_task = Task::new(id as u32, entry_point as usize, priority);
 
                 *task = Some(new_task);
+
+                if let Some(task) = task {
+                    task.setup_stack();
+                }
+
                 break;
             }
         }
