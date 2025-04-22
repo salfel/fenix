@@ -25,6 +25,7 @@ static PROGRAMS: &[&[u8]] = include_programs!();
 pub fn _start() {
     unsafe {
         setup_modes();
+        setup_caches();
         setup_exceptions();
     }
     mmu::initialize();
@@ -46,5 +47,6 @@ pub fn _start() {
 
 extern "C" {
     fn setup_modes();
+    fn setup_caches();
     fn setup_exceptions();
 }
