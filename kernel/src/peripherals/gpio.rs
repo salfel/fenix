@@ -72,7 +72,7 @@ fn handle_interrupts() {
     write_addr(GPIO1 + GPIO_IRQSTATUS_0, 1 << number);
 }
 
-pub fn enable_interrupt(pin: u32, interrupt: GpioInterrupt, handler: fn()) {
+pub fn register_interrupt(pin: u32, interrupt: GpioInterrupt, handler: fn()) {
     unsafe {
         GPIO_INTERRUPT_HANDLERS[pin as usize] = handler;
     }
