@@ -5,7 +5,6 @@ use super::clock::FuncClock;
 
 const TIMER_IRQSTATUS: u32 = 0x28;
 const TIMER_IRQENABLE_SET: u32 = 0x2C;
-const TIMER_IRQENABLE_CLR: u32 = 0x30;
 const TIMER_CONTROL: u32 = 0x38;
 const TIMER_COUNTER: u32 = 0x3C;
 const TIMER_LOAD: u32 = 0x40;
@@ -73,10 +72,6 @@ impl Timer {
         write_addr(self.timer.address() + TIMER_IRQENABLE_SET, 0x2);
     }
 
-    fn irq_disable(&self) {
-        write_addr(self.timer.address() + TIMER_IRQENABLE_CLR, 0x2);
-    }
-
     fn irq_acknowledge(&self) {
         write_addr(self.timer.address() + TIMER_IRQSTATUS, 0x2);
     }
@@ -88,10 +83,8 @@ impl Timer {
             let timer = get_timer(interrupt);
 
             if let Some(timer) = timer {
-                timer.irq_disable();
                 timer.irq_acknowledge();
                 (timer.handler)();
-                timer.irq_enable();
             }
         }
     }
