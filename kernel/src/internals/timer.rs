@@ -9,7 +9,7 @@ const TIMER_CONTROL: u32 = 0x38;
 const TIMER_COUNTER: u32 = 0x3C;
 const TIMER_LOAD: u32 = 0x40;
 
-static mut TIMERS: &mut [Option<Timer>; 7] = &mut [const { None }; 7];
+static mut TIMERS: &mut [Option<Timer>; 6] = &mut [const { None }; 6];
 
 pub fn register_timer(dm_timer: DmTimer, reload: u32, handler: fn()) {
     let timer = Timer::new(dm_timer, reload, handler);
@@ -93,12 +93,12 @@ impl Timer {
 #[repr(u32)]
 #[derive(Copy, Clone)]
 pub enum DmTimer {
-    Timer2 = 2,
-    Timer3 = 3,
-    Timer4 = 4,
-    Timer5 = 5,
-    Timer6 = 6,
-    Timer7 = 7,
+    Timer2,
+    Timer3,
+    Timer4,
+    Timer5,
+    Timer6,
+    Timer7,
 }
 
 impl DmTimer {
