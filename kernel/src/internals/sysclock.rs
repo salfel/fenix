@@ -1,24 +1,21 @@
-use shared::sync::mutex::Mutex;
-
 use super::timer::{self, DmTimer};
 
 pub fn initialize() {
     timer::register_timer(DmTimer::Timer2, 0xFFFF_FFE0, interrupt_handler);
 }
 
-pub(crate) static SYS_CLOCK: Mutex<u32> = Mutex::new(0);
+static mut SYS_CLOCK: u32 = 0;
 
 fn interrupt_handler() {
-    let mut ticks = SYS_CLOCK.lock();
-    *ticks += 1;
+    unsafe { SYS_CLOCK += 1 };
 
-    if *ticks % 10 == 0 {
+    if unsafe { SYS_CLOCK } % 10 == 0 {
         unsafe { yield_task() };
     }
 }
 
 pub fn millis() -> u32 {
-    *SYS_CLOCK.lock()
+    unsafe { SYS_CLOCK }
 }
 
 extern "C" {
