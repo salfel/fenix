@@ -60,7 +60,7 @@ impl Syscall<'_> {
                 pin: (pin, bank),
                 value,
             } => unsafe {
-                asm!("svc 0x4", in("r0") bank as u32, in("r1") pin, in("r2") value as u32);
+                asm!("svc 0x4", in("r0") bank as u32, in("r1") pin, in("r2") value as u32, lateout("r0") _);
                 None
             },
             Syscall::I2cWrite { address, data } => unsafe {
@@ -73,8 +73,7 @@ impl Syscall<'_> {
                 })
             },
             Syscall::Panic => unsafe {
-                asm!("svc 0x6");
-                None
+                asm!("svc 0x6", options(noreturn));
             },
             Syscall::Alloc { layout } => unsafe {
                 let ptr: u32;
@@ -86,7 +85,7 @@ impl Syscall<'_> {
                 })
             },
             Syscall::Dealloc { ptr, layout } => unsafe {
-                asm!("svc 0x8", in("r0") ptr, in("r1") layout.size(), in("r2") layout.align());
+                asm!("svc 0x8", in("r0") ptr, in("r1") layout.size(), in("r2") layout.align(), lateout("r0") _);
                 None
             },
         }
