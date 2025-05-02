@@ -12,6 +12,8 @@ It implements the following features:
 - GPIO
 - Pinmuxxing
 
+Users can also compile several programs, which are stored in the `include_programs` folder and are executed concurrently. Those interact via syscalls with the kernel.
+
 ## Setup
 
 ### Requirements
