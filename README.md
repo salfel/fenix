@@ -3,6 +3,15 @@
 Fenix is my final project for highschool at the technological highschool for electrical engineering at Merano.
 It is a WIP operating system for the AM335 controller and is paired with a custom designed board inspired by the beaglebone black.
 
+It implements the following features:
+- Multitasking
+- Paging
+- User/Kernel Privilege Differentiation
+- Syscalls
+- I2C
+- GPIO
+- Pinmuxxing
+
 ## Setup
 
 ### Requirements
