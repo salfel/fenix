@@ -10,5 +10,4 @@ switch_context:
     mov r2, #0x50
     msr spsr_c, r2
 
-    stmfd sp!, {r1}
-    ldmfd sp!, {pc}^
+    movs pc, r1
