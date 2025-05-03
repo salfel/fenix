@@ -23,7 +23,7 @@ global_asm!(
 "
 );
 
-pub fn wait(ms: u32) {
+pub fn sleep(ms: u32) {
     let until = millis() + ms;
     unsafe {
         yield_task(until);
