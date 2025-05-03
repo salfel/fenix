@@ -8,7 +8,7 @@ pub fn millis() -> u32 {
 
 global_asm!(
     "
-    wait_store:
+    yield_task:
         stmfd sp!, {{r0-r12, lr}}
 
         mov r2, r0
@@ -26,10 +26,10 @@ global_asm!(
 pub fn wait(ms: u32) {
     let until = millis() + ms;
     unsafe {
-        wait_store(until);
+        yield_task(until);
     }
 }
 
 extern "C" {
-    fn wait_store(ms: u32);
+    fn yield_task(ms: u32);
 }
