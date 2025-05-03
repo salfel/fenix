@@ -62,9 +62,7 @@ restore_context:
     pop {r0-r12, lr}
     msr cpsr_c, #0xD3
 
-    push {r0-r12}
-
-    ldmfd sp!, {r0-r12, pc}^
+    ldmfd sp!, {pc}^
 
 yield_task:
     mov r0, #0x1
