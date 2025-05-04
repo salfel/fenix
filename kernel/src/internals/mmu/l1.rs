@@ -6,12 +6,12 @@ const PAGE_SIZE: u32 = 1 << 20;
 const PAGE_SIZE_BITS: u32 = 20;
 const PAGE_TABLE_SIZE: usize = 4096;
 
-pub fn initialize() {
-    let peripheral_memory: Range<u32> = 0x4400_0000..0x8000_0000;
-    let kernel_memory: Range<u32> = 0x4020_0000..0x4040_0000;
+const PERIPHERAL_MEMORY: Range<u32> = 0x4400_0000..0x8000_0000;
+const KERNEL_MEMORY: Range<u32> = 0x4020_0000..0x4040_0000;
 
-    enable_memory_range(kernel_memory, AccessPermissions::Privileged);
-    enable_memory_range(peripheral_memory, AccessPermissions::Privileged);
+pub fn initialize() {
+    enable_memory_range(KERNEL_MEMORY, AccessPermissions::Privileged);
+    enable_memory_range(PERIPHERAL_MEMORY, AccessPermissions::Privileged);
 }
 
 fn enable_memory_range(range: Range<u32>, permissions: AccessPermissions) {
