@@ -2,6 +2,8 @@ use core::ops::Range;
 
 use super::l2::L2PageTable;
 
+const FAULT_PAGE_TABLE_ENTRY: u32 = 0x0;
+
 const PAGE_SIZE: u32 = 1 << 20;
 const PAGE_SIZE_BITS: u32 = 20;
 const PAGE_TABLE_SIZE: usize = 4096;
@@ -30,7 +32,7 @@ pub struct L1PageTable(pub [u32; PAGE_TABLE_SIZE]);
 
 impl L1PageTable {
     const fn new() -> Self {
-        L1PageTable([0; PAGE_TABLE_SIZE])
+        L1PageTable([FAULT_PAGE_TABLE_ENTRY; PAGE_TABLE_SIZE])
     }
 }
 
