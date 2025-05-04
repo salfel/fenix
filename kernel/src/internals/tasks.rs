@@ -152,10 +152,7 @@ impl Scheduler {
         let task_id = self.task_with_state(TaskState::Terminated)?.id;
 
         let code_page = L2SmallPageTableEntry::try_new(CODE_PAGE_LOCATION, Some(task_id as u32))?;
-        code_page.register();
-
         let data_page = L2SmallPageTableEntry::try_new(DATA_PAGE_LOCATION, Some(task_id as u32))?;
-        data_page.register();
 
         let dest = code_page.start() as *mut u8;
         unsafe {
