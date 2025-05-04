@@ -1,11 +1,11 @@
 use core::{alloc::GlobalAlloc, ptr};
 
-use crate::sync::mutex::Mutex;
+use crate::interrupts::CriticalSection;
 
 pub struct BumpAllocator {
     heap_start: usize,
     heap_end: usize,
-    next: Mutex<usize>,
+    next: CriticalSection<usize>,
 }
 
 impl BumpAllocator {
@@ -13,7 +13,7 @@ impl BumpAllocator {
         Self {
             heap_start: 0,
             heap_end: 0,
-            next: Mutex::new(0),
+            next: CriticalSection::new(0),
         }
     }
 
@@ -21,7 +21,7 @@ impl BumpAllocator {
         Self {
             heap_start: start,
             heap_end: 0,
-            next: Mutex::new(start),
+            next: CriticalSection::new(start),
         }
     }
 
