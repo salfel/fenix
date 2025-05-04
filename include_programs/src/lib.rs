@@ -10,8 +10,8 @@ pub fn include_programs(_input: TokenStream) -> TokenStream {
 
     let program_files = fs::read_dir(program_dir)
         .expect("No programs directory is present")
+        .flatten()
         .filter_map(|file| {
-            let file = file.unwrap();
             let path = file.path();
 
             if path.is_file() {
