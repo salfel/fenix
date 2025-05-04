@@ -10,11 +10,6 @@ const L2_FAULT_PAGE_TABLE_ENTRY: u32 = 0x0;
 
 pub fn initialize() {
     let l1_pointer = L1PointerTableEntry::new(&raw mut LEVEL2_PAGE_TABLE);
-    for i in 0..PAGE_TABLE_SIZE {
-        unsafe {
-            LEVEL2_PAGE_TABLE.0[i] = L2_FAULT_PAGE_TABLE_ENTRY;
-        }
-    }
 
     unsafe {
         LEVEL1_PAGE_TABLE.0[0] = l1_pointer.into();
@@ -29,7 +24,7 @@ pub struct L2PageTable([u32; PAGE_TABLE_SIZE]);
 
 impl L2PageTable {
     const fn new() -> Self {
-        L2PageTable([0; PAGE_TABLE_SIZE])
+        L2PageTable([L2_FAULT_PAGE_TABLE_ENTRY; PAGE_TABLE_SIZE])
     }
 }
 
