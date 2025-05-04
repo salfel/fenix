@@ -96,6 +96,10 @@ impl L2SmallPageTableEntry {
         }
 
         self.invalidate_tlb();
+
+        unsafe {
+            asm!("dsb", "isb");
+        }
     }
 
     pub fn start(&self) -> u32 {
