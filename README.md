@@ -47,3 +47,8 @@ rustup target add armv7a-none-eabi
 For compiling the project run `make`, for flashing the sd card `make flash`. If you have multiple external drives, you might have to change the sdX path to the sd card to the correct path
 
 When using the Beaglebone Black, simply insert the SD card and press the Switch No. 2 (S2) located on the top right of the board
+
+## Documentation
+
+The original documentation was written in german and can be found under `Projektdokumentation_de.pdf`.
+I have also included a engilsh version of the documentation under `Projectdocumentation_en.pdf`, this one was however translateted using deepl and thus may have been translated incorrectly.
